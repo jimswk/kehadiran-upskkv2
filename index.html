@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perakam Waktu UPSKK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 960px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+        .btn {
+            @apply py-3 px-6 font-semibold rounded-xl shadow transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2;
+        }
+        .btn-blue { @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300; }
+        .btn-green { @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-300; }
+        .btn-red { @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300; }
+        .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+        .input-field {
+            @apply mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border-2;
+        }
+        .message-box {
+            @apply p-4 rounded-xl mb-4 text-center font-medium shadow-md;
+        }
+        .message-box.info { @apply bg-blue-50 text-blue-800 border-l-4 border-blue-500; }
+        .message-box.error { @apply bg-red-50 text-red-800 border-l-4 border-red-500; }
+        .message-box.success { @apply bg-green-50 text-green-800 border-l-4 border-green-500; }
+        video {
+            border-radius: 12px;
+            transform: scaleX(-1);
+            width: 100%;
+            height: auto;
+            border: 2px solid #e2e8f0;
+        }
+        .table-container {
+            @apply overflow-x-auto rounded-xl shadow-lg;
+        }
+        table {
+            @apply min-w-full bg-white;
+        }
+        th {
+            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase bg-gray-50;
+        }
+        td {
+            @apply px-6 py-4 text-sm text-gray-700 border-t border-gray-200;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 1rem 1.5rem;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+            border-left: 5px solid #4ade80;
+        }
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .notification.success { border-left-color: #4ade80; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification-title {
+            font-weight: 600; font-size: 0.95rem; margin: 0; color: #1f2937;
+        }
+        .notification-time {
+            font-size: 0.85rem; color: #6b7280; margin: 0.25rem 0 0; }
+        .real-time-clock {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4f46e5;
+            text-align: center;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Popup Notification -->
+    <div id="notification" class="notification">
+        <p class="notification-title" id="notifTitle">Berjaya!</p>
+        <p class="notification-time" id="notifTime">10:30:15</p>
+    </div>
+
+    <div class="container">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu UPSKK</h1>
+            <p class="text-blue-100 mt-2">Kehadiran Berbasis Wajah & Lokasi</p>
+        </div>
+
+        <div id="statusMessage" class="message-box info hidden"></div>
+
+        <div id="loginPage" class="fade-in">
+            <div class="card mx-auto" style="max-width: 400px;">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">🔐 Log Masuk</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <input type="email" id="loginEmailInput" class="input-field" placeholder="user@upskk.gov.my">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <input type="password" id="loginPasswordInput" class="input-field" placeholder="••••••••">
+                    </div>
+                    <button id="loginBtn" class="btn btn-blue w-full mt-4">Log Masuk</button>
+                    <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="accountRegistrationPage" class="hidden fade-in">
+            <div class="card mx-auto" style="max-width: 450px;">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">📝 Pendaftaran Akaun</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh</label>
+                        <input type="text" id="registerNameInput" class="input-field" placeholder="Ali Bin Ahmad">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
+                        <input type="text" id="registerDepartmentInput" class="input-field" placeholder="Bahagian Teknologi">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <input type="email" id="registerEmailInput" class="input-field" placeholder="user@upskk.gov.my">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
+                    </div>
+                    <button id="registerAccountBtn" class="btn btn-green w-full mt-4">Daftar Sekarang</button>
+                    <button id="backToLoginBtn" class="btn btn-outline w-full mt-2">← Kembali ke Log Masuk</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="faceRegistrationPage" class="hidden fade-in">
+            <div class="card mx-auto" style="max-width: 450px;">
+                <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 Pendaftaran Wajah</h2>
+                <p class="text-center text-gray-600 mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
+                <video id="videoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
+                <button id="registerFaceSubmitBtn" class="btn btn-green w-full">Mula Daftar Wajah</button>
+                <button id="returnToLoginBtn" class="btn btn-outline w-full mt-3">Kembali</button>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden fade-in">
+            <div class="card">
+                <div class="text-center mb-4">
+                    <p class="text-2xl font-semibold text-gray-800" id="userName">Selamat Datang, Pengguna</p>
+                    <p class="text-sm text-gray-500" id="userIdDisplay">ID: -</p>
+                    <div class="real-time-clock" id="realTimeClock">00:00:00</div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Clock In/Out -->
+                    <div>
+                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
+                        <div class="bg-white p-5 rounded-xl shadow">
+                            <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
+                            <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
+                            <button id="faceScanBtn" class="btn btn-blue w-full" disabled>
+                                <span id="scanBtnText">Clock In / Out</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Generate PDF -->
+                    <div>
+                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📄 Jana Laporan</h3>
+                        <div class="bg-white p-5 rounded-xl shadow">
+                            <div class="grid md:grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tarikh Mula</label>
+                                    <input type="date" id="startDateInput" class="input-field text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tarikh Tamat</label>
+                                    <input type="date" id="endDateInput" class="input-field text-sm">
+                                </div>
+                            </div>
+                            <button id="generatePdfBtn" class="btn btn-green w-full">Jana PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📋 Jadual Kehadiran</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tarikh</th>
+                                    <th>Hari</th>
+                                    <th>Masuk</th>
+                                    <th>Keluar</th>
+                                    <th>Jam</th>
+                                    <th>OT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="text-center mt-6">
+                    <button id="signOutBtn" class="btn btn-red px-8">Log Keluar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
+            authDomain: "kehadiran-upskk.firebaseapp.com",
+            projectId: "kehadiran-upskk",
+            storageBucket: "kehadiran-upskk.firebasestorage.app",
+            messagingSenderId: "705500257324",
+            appId: "1:705500257324:web:692f800a74a2f8c3d18589",
+            measurementId: "G-FKGN5NLLTK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = 'default-app-id';
+        const officeCoordinates = {
+            latitude: 1.5329149992751578,
+            longitude: 110.35895714753464
+        };
+        const locationTolerance = 100;
+
+        let userId = null;
+        let isFaceRegistered = false;
+        let userData = null;
+        let videoStream = null;
+        let isProcessing = false;
+        let faceMatcher = null;
+
+        // Elements
+        const loginPageDiv = document.getElementById('loginPage');
+        const accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
+        const faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
+        const dashboardDiv = document.getElementById('dashboard');
+        const statusMessageDiv = document.getElementById('statusMessage');
+        const videoElement = document.getElementById('videoElement');
+        const scanVideoElement = document.getElementById('scanVideoElement');
+        const attendanceTableBody = document.getElementById('attendanceTableBody');
+        const userNameDisplay = document.getElementById('userName');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const faceScanBtn = document.getElementById('faceScanBtn');
+        const scanBtnText = document.getElementById('scanBtnText');
+        const registerFaceSubmitBtn = document.getElementById('registerFaceSubmitBtn');
+        const locationStatusEl = document.getElementById('locationStatus');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const realTimeClock = document.getElementById('realTimeClock');
+        const notification = document.getElementById('notification');
+        const notifTitle = document.getElementById('notifTitle');
+        const notifTime = document.getElementById('notifTime');
+
+        window.jsPDF = window.jspdf.jsPDF;
+
+        // Show Notification Popup
+        function showNotification(title, time, type = 'success') {
+            notifTitle.textContent = title;
+            notifTime.textContent = `Masa: ${time}`;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function showPage(pageId) {
+            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv].forEach(p => p.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+            stopCamera();
+            hideStatusMessage();
+        }
+
+        function showStatusMessage(message, type = 'info') {
+            statusMessageDiv.textContent = message;
+            statusMessageDiv.className = `message-box ${type}`;
+            statusMessageDiv.classList.remove('hidden');
+        }
+
+        function hideStatusMessage() {
+            statusMessageDiv.classList.add('hidden');
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+        }
+
+        async function startCamera(videoEl) {
+            stopCamera();
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoEl.srcObject = videoStream;
+            } catch (error) {
+                showStatusMessage('Gagal akses kamera. Benarkan akses.', 'error');
+            }
+        }
+
+        async function loadFaceModels() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/jimswk/kehadiran-upskk@main/weights';
+            try {
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                ]);
+                return true;
+            } catch (error) {
+                showStatusMessage('Gagal muat model wajah.', 'error');
+                return false;
+            }
+        }
+
+        function createFaceMatcher(descriptor) {
+            try {
+                const parsed = JSON.parse(descriptor);
+                const labeledDescriptors = [
+                    new faceapi.LabeledFaceDescriptors(userId, [new Float32Array(parsed)])
+                ];
+                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+            } catch (e) {
+                showStatusMessage('Data wajah rosak. Daftar semula.', 'error');
+            }
+        }
+
+        async function registerFaceAndGetDescriptor() {
+            const detections = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks().withFaceDescriptor();
+            return detections ? Array.from(detections.descriptor) : null;
+        }
+
+        window.handleAccountRegistration = async function() {
+            const name = document.getElementById('registerNameInput').value.trim();
+            const department = document.getElementById('registerDepartmentInput').value.trim();
+            const email = document.getElementById('registerEmailInput').value.trim();
+            const password = document.getElementById('registerPasswordInput').value.trim();
+            if (!name || !department || !email || !password) {
+                showStatusMessage('Semua medan diperlukan.', 'error');
+                return;
+            }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                userId = userCredential.user.uid;
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
+                    name, department, faceDescriptor: null
+                });
+                showStatusMessage('Berjaya daftar! Daftar wajah sekarang.', 'success');
+                showPage('faceRegistrationPage');
+            } catch (error) {
+                showStatusMessage(`Ralat: ${error.message}`, 'error');
+            }
+        };
+
+        window.handleEmailLogin = async function() {
+            const email = document.getElementById('loginEmailInput').value.trim();
+            const password = document.getElementById('loginPasswordInput').value.trim();
+            if (!email || !password) {
+                showStatusMessage('Sila isi e-mel dan kata laluan.', 'error');
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                const msg = error.code === 'auth/user-not-found' ? 'E-mel tidak wujud.' :
+                           error.code === 'auth/wrong-password' ? 'Kata laluan salah.' : error.message;
+                showStatusMessage(msg, 'error');
+            }
+        };
+
+        window.handleSignOut = async function() {
+            await signOut(auth);
+            showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
+            showPage('loginPage');
+        };
+
+        window.handleFaceRegistration = async function() {
+            if (isProcessing) return;
+            isProcessing = true;
+            registerFaceSubmitBtn.disabled = true;
+            scanBtnText.innerHTML = '<div class="loading"></div> Sedang daftar...';
+
+            await startCamera(videoElement);
+            const modelsLoaded = await loadFaceModels();
+            if (!modelsLoaded) {
+                isProcessing = false;
+                registerFaceSubmitBtn.disabled = false;
+                return;
+            }
+
+            showStatusMessage('Mengesan wajah...', 'info');
+            let faceDescriptor = null;
+            const startTime = Date.now();
+            while (Date.now() - startTime < 5000) {
+                faceDescriptor = await registerFaceAndGetDescriptor();
+                if (faceDescriptor) break;
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            if (!faceDescriptor) {
+                showStatusMessage('Wajah tidak dikesan. Cuba lagi.', 'error');
+                isProcessing = false;
+                registerFaceSubmitBtn.disabled = false;
+                return;
+            }
+
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), { faceDescriptor: JSON.stringify(faceDescriptor) }, { merge: true });
+            isFaceRegistered = true;
+            createFaceMatcher(JSON.stringify(faceDescriptor));
+            showNotification('Wajah berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
+            setTimeout(() => showPage('loginPage'), 1500);
+            isProcessing = false;
+            registerFaceSubmitBtn.disabled = false;
+        };
+
+        async function handleGeolocationCheck() {
+            faceScanBtn.disabled = true;
+            locationStatusEl.textContent = '📍 Mengesan lokasi...';
+            try {
+                const pos = await new Promise((res, rej) => {
+                    navigator.geolocation.getCurrentPosition(res, rej, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+                const { latitude, longitude } = pos.coords;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                if (distance <= locationTolerance) {
+                    locationStatusEl.textContent = `✅ Di dalam pejabat (${distance.toFixed(1)}m)`;
+                    faceScanBtn.disabled = false;
+                } else {
+                    locationStatusEl.textContent = `❌ Luar kawasan (${distance.toFixed(1)}m)`;
+                    faceScanBtn.disabled = true;
+                }
+            } catch (e) {
+                locationStatusEl.textContent = '❌ Gagal akses lokasi.';
+                faceScanBtn.disabled = true;
+            }
+        }
+
+        window.handleFaceCheck = async function() {
+            if (isProcessing) return;
+            isProcessing = true;
+            faceScanBtn.disabled = true;
+            scanBtnText.innerHTML = '<div class="loading"></div> Mengimbas...';
+
+            const modelsLoaded = await loadFaceModels();
+            if (!modelsLoaded) {
+                isProcessing = false;
+                faceScanBtn.disabled = false;
+                return;
+            }
+
+            await startCamera(scanVideoElement);
+
+            try {
+                await new Promise(r => setTimeout(r, 2000));
+                const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks().withFaceDescriptor();
+
+                if (detections) {
+                    const match = faceMatcher.findBestMatch(detections.descriptor);
+                    if (match.label === userId && match.distance < 0.6) {
+                        await window.handleClockAction();
+                    } else {
+                        showStatusMessage('Wajah tidak sepadan.', 'error');
+                    }
+                } else {
+                    showStatusMessage('Wajah tidak dikesan.', 'error');
+                }
+            } catch (e) {
+                showStatusMessage('Ralat sistem.', 'error');
+            } finally {
+                isProcessing = false;
+                faceScanBtn.disabled = false;
+                scanBtnText.textContent = 'Clock In / Out';
+                stopCamera();
+            }
+        };
+
+        window.handleClockAction = async function() {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                });
+                const { latitude, longitude } = position.coords;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                if (distance > locationTolerance) {
+                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+                    return;
+                }
+
+                const now = new Date();
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', getCurrentDate());
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists() && docSnap.data().clockIn) {
+                    const clockIn = docSnap.data().clockIn.toDate();
+                    const totalMilliseconds = now - clockIn;
+                    const totalHoursDecimal = totalMilliseconds / (1000 * 60 * 60);
+                    const clockOutTime = now.getHours() * 60 + now.getMinutes();
+                    const nominalClockOut = 17 * 60 + 30;
+                    let totalOTDecimal = 0;
+                    if (clockOutTime > nominalClockOut) {
+                        totalOTDecimal = (clockOutTime - nominalClockOut) / 60;
+                    }
+                    await setDoc(docRef, {
+                        clockOut: now,
+                        totalHours: totalHoursDecimal,
+                        totalOT: totalOTDecimal,
+                        locationOut: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+                } else {
+                    await setDoc(docRef, {
+                        date: now,
+                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                        clockIn: now,
+                        locationIn: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+                }
+                handleGeolocationCheck();
+            } catch (error) {
+                showStatusMessage('Gagal akses lokasi.', 'error');
+            }
+        };
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function formatDecimalToTime(decimalHours) {
+            if (decimalHours === null || isNaN(decimalHours) || decimalHours === 0) return '';
+            const hours = Math.floor(decimalHours);
+            const minutes = Math.round((decimalHours - hours) * 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        window.generatePDF = async function() {
+            const startDateStr = startDateInput.value;
+            const endDateStr = endDateInput.value;
+            if (!startDateStr || !endDateStr) {
+                alert('Sila isi tarikh mula dan tamat.');
+                return;
+            }
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+            if (start > end) {
+                alert('Tarikh mula tidak boleh melebihi tarikh tamat.');
+                return;
+            }
+
+            const q = query(collection(db, 'artifacts', appId, 'users', userId, 'attendance'), where('date', '>=', start), where('date', '<=', end));
+            const snap = await getDocs(q);
+            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            const doc = new jsPDF({ format: 'a4', unit: 'mm' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const marginX = 15;
+            let y = 20;
+
+            doc.setFont('times', 'bold');
+            doc.setFontSize(16);
+            doc.text('LAPORAN KEHADIRAN UPSKK', marginX, y);
+            y += 10;
+
+            doc.setFont('times', 'normal');
+            doc.setFontSize(10);
+            doc.text(`Nama: ${userData?.name || 'Pengguna'}`, marginX, y);
+            y += 5;
+            doc.text(`Jabatan: ${userData?.department || 'Tiada'}`, marginX, y);
+            y += 5;
+            doc.text(`Tarikh: ${startDateStr} hingga ${endDateStr}`, marginX, y);
+            y += 10;
+
+            const headers = [['Tarikh', 'Hari', 'Masuk', 'Keluar', 'Jam', 'OT']];
+            const rows = [];
+            let totalHours = 0, totalOT = 0;
+
+            const currentDate = new Date(start);
+            while (currentDate <= end) {
+                const dateString = currentDate.toISOString().slice(0, 10);
+                const record = data.find(d => d.date.toDate().toISOString().slice(0, 10) === dateString) || {};
+                const hours = record.totalHours || 0;
+                const ot = record.totalOT || 0;
+                totalHours += hours;
+                totalOT += ot;
+
+                rows.push([
+                    dateString,
+                    record.weekday || '-',
+                    record.clockIn ? record.clockIn.toDate().toLocaleTimeString('ms-MY') : '',
+                    record.clockOut ? record.clockOut.toDate().toLocaleTimeString('ms-MY') : '',
+                    formatDecimalToTime(hours),
+                    formatDecimalToTime(ot)
+                ]);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            rows.push(['JUMLAH', '', '', '', formatDecimalToTime(totalHours), formatDecimalToTime(totalOT)]);
+
+            doc.autoTable({
+                head: headers,
+                body: rows,
+                startY: y,
+                margin: { left: marginX, right: marginX },
+                theme: 'striped',
+                styles: { fontSize: 9 }
+            });
+
+            doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
+        };
+
+        function updateAttendanceTable(data) {
+            attendanceTableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
+                const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                const clockOutTime = item.clockOut ? item.clockOut.toDate() : null;
+                const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
+                const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4">${item.date.toDate().toISOString().slice(0, 10)}</td>
+                    <td class="px-6 py-4">${item.weekday}</td>
+                    <td class="px-6 py-4 ${clockInTime && (clockInTime.getHours() < 7 || (clockInTime.getHours() === 8 && clockInTime.getMinutes() > 30)) ? 'text-red-600 font-medium' : ''}">${clockInDisplay}</td>
+                    <td class="px-6 py-4 ${clockOutTime && (clockOutTime.getHours() < 16 || (clockOutTime.getHours() === 16 && clockOutTime.getMinutes() < 30)) ? 'text-red-600 font-medium' : ''}">${clockOutDisplay}</td>
+                    <td class="px-6 py-4 text-gray-500">${totalHours}</td>
+                    <td class="px-6 py-4 text-gray-500">${totalOT}</td>
+                `;
+                attendanceTableBody.appendChild(row);
+            });
+        }
+
+        function getCurrentDate() { return new Date().toISOString().slice(0, 10); }
+        function getStartOfMonth() { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; }
+        function getEndOfMonth() { const d = new Date(); d.setMonth(d.getMonth() + 1, 0); d.setHours(23, 59, 59, 999); return d; }
+
+        function initializeUI() {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+            startDateInput.value = startOfMonth;
+            endDateInput.value = endOfMonth;
+        }
+
+        // Real-time Clock
+        setInterval(() => {
+            realTimeClock.textContent = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // App Initialization
+        window.onload = async function() {
+            await loadFaceModels();
+            initializeUI();
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userIdDisplay.textContent = `ID: ${userId}`;
+                    const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                    const snap = await getDoc(userDocRef);
+                    if (snap.exists()) {
+                        userData = snap.data();
+                        userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
+                        if (userData.faceDescriptor) {
+                            isFaceRegistered = true;
+                            createFaceMatcher(userData.faceDescriptor);
+                        }
+                        const q = query(collection(db, 'artifacts', appId, 'users', userId, 'attendance'), where('date', '>=', getStartOfMonth()), where('date', '<=', getEndOfMonth()));
+                        onSnapshot(q, snap => {
+                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                            updateAttendanceTable(data);
+                        });
+                        if (!isFaceRegistered) {
+                            showPage('faceRegistrationPage');
+                        } else {
+                            showPage('dashboard');
+                            handleGeolocationCheck();
+                        }
+                    } else {
+                        showPage('faceRegistrationPage');
+                    }
+                } else {
+                    showPage('loginPage');
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
+            document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
+            document.getElementById('registerAccountBtn').addEventListener('click', window.handleAccountRegistration);
+            document.getElementById('backToLoginBtn').addEventListener('click', () => showPage('loginPage'));
+            document.getElementById('registerFaceSubmitBtn').addEventListener('click', window.handleFaceRegistration);
+            document.getElementById('returnToLoginBtn').addEventListener('click', () => showPage('loginPage'));
+            document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
+            document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
+            document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+        });
+    </script>
+</body>
+</html>
