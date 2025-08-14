@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Perakam Waktu UPSKK</title>
+    <title>Sistem Perakam Waktu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -133,7 +133,6 @@
     </style>
 </head>
 <body>
-    <!-- Popup Notification -->
     <div id="notification" class="notification">
         <p class="notification-title" id="notifTitle">Berjaya!</p>
         <p class="notification-time" id="notifTime">10:30:15</p>
@@ -141,7 +140,7 @@
 
     <div class="container">
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu</h1>
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu UPSKK</h1>
             <p class="text-blue-100 mt-2">Kehadiran Wajah & Lokasi</p>
         </div>
 
@@ -199,6 +198,7 @@
                 <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 Pendaftaran Wajah</h2>
                 <p class="text-center text-gray-600 mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
                 <video id="videoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
+                <canvas id="canvasElement" class="hidden"></canvas>
                 <button id="registerFaceSubmitBtn" class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
     Mula Daftar Wajah
 </button>
@@ -215,20 +215,17 @@
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-8">
-                    <!-- Clock In/Out -->
                     <div>
                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
                         <div class="bg-white p-5 rounded-xl shadow">
                             <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
                             <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
                             <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-    Clock In / Clock Out
-</button>
-                            <span id="scanBtnText">Clock In / Clock Out</span>
+                                <span id="scanBtnText">Clock In / Clock Out</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Generate PDF -->
                     <div>
                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📄 Jana Laporan</h3>
                         <div class="bg-white p-5 rounded-xl shadow">
@@ -249,7 +246,6 @@
                     </div>
                 </div>
 
-                <!-- Attendance Table -->
                 <div class="mt-8">
                     <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📋 Jadual Kehadiran</h3>
                     <div class="table-container">
@@ -301,7 +297,7 @@
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 200000;
+        const locationTolerance = 100;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -461,13 +457,14 @@
             if (isProcessing) return;
             isProcessing = true;
             registerFaceSubmitBtn.disabled = true;
-            scanBtnText.innerHTML = '<div class="loading"></div> Sedang daftar...';
+            registerFaceSubmitBtn.innerHTML = '<div class="loading"></div> Sedang daftar...';
 
             await startCamera(videoElement);
             const modelsLoaded = await loadFaceModels();
             if (!modelsLoaded) {
                 isProcessing = false;
                 registerFaceSubmitBtn.disabled = false;
+                registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
                 return;
             }
 
@@ -484,6 +481,7 @@
                 showStatusMessage('Wajah tidak dikesan. Cuba lagi.', 'error');
                 isProcessing = false;
                 registerFaceSubmitBtn.disabled = false;
+                registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
                 return;
             }
 
@@ -494,6 +492,7 @@
             setTimeout(() => showPage('loginPage'), 1500);
             isProcessing = false;
             registerFaceSubmitBtn.disabled = false;
+            registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
         };
 
         async function handleGeolocationCheck() {
@@ -526,12 +525,13 @@
             if (isProcessing) return;
             isProcessing = true;
             faceScanBtn.disabled = true;
-            scanBtnText.innerHTML = '<div class="loading"></div> Mengimbas...';
+            scanBtnText.innerHTML = '<span class="loading"></span> Mengimbas...';
 
             const modelsLoaded = await loadFaceModels();
             if (!modelsLoaded) {
                 isProcessing = false;
                 faceScanBtn.disabled = false;
+                scanBtnText.textContent = 'Clock In / Out';
                 return;
             }
 
@@ -557,7 +557,7 @@
             } finally {
                 isProcessing = false;
                 faceScanBtn.disabled = false;
-                scanBtnText.textContent = 'Clock In / Out';
+                scanBtnText.textContent = 'Clock In / Clock Out';
                 stopCamera();
             }
         };
@@ -620,14 +620,16 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
-
+        
         function formatDecimalToTime(decimalHours) {
-            if (decimalHours === null || isNaN(decimalHours) || decimalHours === 0) return '';
+            if (decimalHours === null || isNaN(decimalHours) || decimalHours === 0) {
+                return '';
+            }
             const hours = Math.floor(decimalHours);
             const minutes = Math.round((decimalHours - hours) * 60);
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
-
+        
         window.generatePDF = async function() {
             const startDateStr = startDateInput.value;
             const endDateStr = endDateInput.value;
@@ -746,20 +748,40 @@
             attendanceTableBody.innerHTML = '';
             data.forEach(item => {
                 const row = document.createElement('tr');
+                const date = item.date.toDate().toISOString().slice(0, 10);
+                const weekday = item.weekday;
+                
                 const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
-                const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                const clockInClasses = [];
+                if (clockInTime) {
+                    const nominalClockInStart = new Date(clockInTime.getFullYear(), clockInTime.getMonth(), clockInTime.getDate(), 7, 30);
+                    const nominalClockInEnd = new Date(clockInTime.getFullYear(), clockInTime.getMonth(), clockInTime.getDate(), 8, 30);
+                    if (clockInTime < nominalClockInStart || clockInTime > nominalClockInEnd) {
+                        clockInClasses.push('text-red-600');
+                    }
+                }
+                
                 const clockOutTime = item.clockOut ? item.clockOut.toDate() : null;
-                const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                const clockOutClasses = [];
+                if (clockOutTime) {
+                    const nominalClockOutStart = new Date(clockOutTime.getFullYear(), clockOutTime.getMonth(), clockOutTime.getDate(), 16, 30);
+                    if (clockOutTime < nominalClockOutStart) {
+                        clockOutClasses.push('text-red-600');
+                    }
+                }
+                
                 const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
 
                 row.innerHTML = `
-                    <td class="px-6 py-4">${item.date.toDate().toISOString().slice(0, 10)}</td>
-                    <td class="px-6 py-4">${item.weekday}</td>
-                    <td class="px-6 py-4 ${clockInTime && (clockInTime.getHours() < 7 || (clockInTime.getHours() === 8 && clockInTime.getMinutes() > 30)) ? 'text-red-600 font-medium' : ''}">${clockInDisplay}</td>
-                    <td class="px-6 py-4 ${clockOutTime && (clockOutTime.getHours() < 16 || (clockOutTime.getHours() === 16 && clockOutTime.getMinutes() < 30)) ? 'text-red-600 font-medium' : ''}">${clockOutDisplay}</td>
-                    <td class="px-6 py-4 text-gray-500">${totalHours}</td>
-                    <td class="px-6 py-4 text-gray-500">${totalOT}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${weekday}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm ${clockInClasses.join(' ')}">${clockInDisplay}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm ${clockOutClasses.join(' ')}">${clockOutDisplay}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${totalHours}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${totalOT}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
@@ -773,37 +795,54 @@
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+            
             startDateInput.value = startOfMonth;
             endDateInput.value = endOfMonth;
         }
-
+        
         // Real-time Clock
         setInterval(() => {
-            realTimeClock.textContent = new Date().toLocaleTimeString();
+            if (realTimeClock) {
+                realTimeClock.textContent = new Date().toLocaleTimeString();
+            }
         }, 1000);
 
-        // App Initialization
         window.onload = async function() {
             await loadFaceModels();
             initializeUI();
+
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
                     userIdDisplay.textContent = `ID: ${userId}`;
                     const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
                     const snap = await getDoc(userDocRef);
+
                     if (snap.exists()) {
                         userData = snap.data();
                         userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
+
                         if (userData.faceDescriptor) {
-                            isFaceRegistered = true;
-                            createFaceMatcher(userData.faceDescriptor);
+                            try {
+                                JSON.parse(userData.faceDescriptor);
+                                isFaceRegistered = true;
+                                createFaceMatcher(userData.faceDescriptor);
+                            } catch (e) {
+                                console.error("faceDescriptor rosak");
+                                isFaceRegistered = false;
+                            }
                         }
-                        const q = query(collection(db, 'artifacts', appId, 'users', userId, 'attendance'), where('date', '>=', getStartOfMonth()), where('date', '<=', getEndOfMonth()));
+
+                        const q = query(
+                            collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+                            where('date', '>=', getStartOfMonth()),
+                            where('date', '<=', getEndOfMonth())
+                        );
                         onSnapshot(q, snap => {
                             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                             updateAttendanceTable(data);
                         });
+
                         if (!isFaceRegistered) {
                             showPage('faceRegistrationPage');
                         } else {
