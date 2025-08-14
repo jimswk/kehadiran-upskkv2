@@ -333,6 +333,22 @@
 
         window.jsPDF = window.jspdf.jsPDF;
 
+        // Fungsi bantu untuk kemas kini elemen dengan selamat
+        function safeUpdate(element, text, type = null) {
+            if (element) {
+                element.textContent = text;
+                if (type && element.className.includes('message-box')) {
+                    element.className = `message-box ${type}`;
+                    element.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // Guna `safeUpdate` dalam kod
+        function showStatusMessage(message, type = 'info') {
+            safeUpdate(statusMessageDiv, message, type);
+        }
+        
         // Show Notification Popup
         function showNotification(title, time, type = 'success') {
             notifTitle.textContent = title;
@@ -497,7 +513,9 @@
 
         async function handleGeolocationCheck() {
             faceScanBtn.disabled = true;
-            locationStatusEl.textContent = '📍 Mengesan lokasi...';
+            if (locationStatusEl) {
+                locationStatusEl.textContent = 'Mengesan lokasi...';
+            }
             try {
                 const pos = await new Promise((res, rej) => {
                     navigator.geolocation.getCurrentPosition(res, rej, {
@@ -508,15 +526,13 @@
                 });
                 const { latitude, longitude } = pos.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-                if (distance <= locationTolerance) {
-                    locationStatusEl.textContent = `✅ Di dalam pejabat (${distance.toFixed(1)}m)`;
-                    faceScanBtn.disabled = false;
-                } else {
-                    locationStatusEl.textContent = `❌ Luar kawasan (${distance.toFixed(1)}m)`;
-                    faceScanBtn.disabled = true;
-                }
+                const message = distance <= locationTolerance 
+                    ? `Di dalam kawasan pejabat (${distance.toFixed(2)}m)` 
+                    : `Di luar kawasan pejabat (${distance.toFixed(2)}m)`;
+                safeUpdate(locationStatusEl, message);
+                faceScanBtn.disabled = distance > locationTolerance;
             } catch (e) {
-                locationStatusEl.textContent = '❌ Gagal akses lokasi.';
+                safeUpdate(locationStatusEl, 'Gagal akses lokasi.');
                 faceScanBtn.disabled = true;
             }
         }
