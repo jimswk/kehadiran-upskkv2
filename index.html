@@ -781,9 +781,8 @@
                 const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
                 const clockInClasses = [];
                 if (clockInTime) {
-                    const nominalClockInStart = new Date(clockInTime.getFullYear(), clockInTime.getMonth(), clockInTime.getDate(), 7, 30);
                     const nominalClockInEnd = new Date(clockInTime.getFullYear(), clockInTime.getMonth(), clockInTime.getDate(), 8, 30);
-                    if (clockInTime < nominalClockInStart || clockInTime > nominalClockInEnd) {
+                    if (clockInTime > nominalClockInEnd) {
                         clockInClasses.push('text-red-600');
                     }
                 }
