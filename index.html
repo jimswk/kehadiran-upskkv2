@@ -600,7 +600,7 @@
                 }
 
                 const now = new Date();
-                const todayDateId = getCurrentDateUTC(); // Gunakan tarikh UTC untuk ID dokumen
+                const todayDateId = getCurrentDateUTC();
                 const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
                 const docSnap = await getDoc(docRef);
 
@@ -774,8 +774,8 @@
             attendanceTableBody.innerHTML = '';
             data.forEach(item => {
                 const row = document.createElement('tr');
-                const date = item.date.toDate().toISOString().slice(0, 10);
-                const weekday = item.weekday;
+                const date = item.date.toDate().toLocaleDateString('en-CA'); // Gunakan toLocaleDateString untuk format tempatan
+                const weekday = item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' });
                 
                 const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
                 const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
