@@ -99,6 +99,14 @@
         }
         .notification.success { border-left-color: #4ade80; }
         .notification.error { border-left-color: #ef4444; }
+        .notification.left-aligned {
+            right: auto;
+            left: 20px;
+            transform: translateX(-120%);
+        }
+        .notification.left-aligned.show {
+            transform: translateX(0);
+        }
         .notification-title {
             font-weight: 600; font-size: 0.95rem; margin: 0; color: #1f2937;
         }
@@ -133,14 +141,19 @@
     </style>
 </head>
 <body>
-    <div id="notification" class="notification">
-        <p class="notification-title" id="notifTitle">Berjaya!</p>
-        <p class="notification-time" id="notifTime">10:30:15</p>
+    <div id="successNotification" class="notification success">
+        <p class="notification-title" id="successNotifTitle">Berjaya!</p>
+        <p class="notification-time" id="successNotifTime">10:30:15</p>
+    </div>
+
+    <div id="failNotification" class="notification error left-aligned">
+        <p class="notification-title" id="failNotifTitle">Gagal!</p>
+        <p class="notification-time" id="failNotifTime">10:30:15</p>
     </div>
 
     <div class="container">
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu UPSKK</h1>
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu</h1>
             <p class="text-blue-100 mt-2">Kehadiran Wajah & Lokasi</p>
         </div>
 
@@ -156,7 +169,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
-                        <input type="password" id="loginPasswordInput" class="input-field" placeholder="••••••••">
+                        <input type="password" id="loginPasswordInput" class="input-field" placeholder="Kata Laluan">
                     </div>
                     <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
                     Log Masuk</button>
@@ -179,11 +192,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
-                        <input type="email" id="registerEmailInput" class="input-field" placeholder="user@upskk.gov.my">
+                        <input type="email" id="registerEmailInput" class="input-field" placeholder="Masukkan Emel anda">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
-                        <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
+                        <input type="password" id="registerPasswordInput" class="input-field" placeholder="Kata Laluan">
                     </div>
                     <button id="registerAccountBtn" class="w-full py-3 px-6 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
     Daftar Akaun
@@ -324,21 +337,31 @@
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
         const realTimeClock = document.getElementById('realTimeClock');
-        const notification = document.getElementById('notification');
-        const notifTitle = document.getElementById('notifTitle');
-        const notifTime = document.getElementById('notifTime');
+        
+        // Notifikasi baharu
+        const successNotification = document.getElementById('successNotification');
+        const successNotifTitle = document.getElementById('successNotifTitle');
+        const successNotifTime = document.getElementById('successNotifTime');
+        const failNotification = document.getElementById('failNotification');
+        const failNotifTitle = document.getElementById('failNotifTitle');
+        const failNotifTime = document.getElementById('failNotifTime');
+
 
         window.jsPDF = window.jspdf.jsPDF;
         
         // Show Notification Popup
         function showNotification(title, time, type = 'success') {
-            notifTitle.textContent = title;
-            notifTime.textContent = `Masa: ${time}`;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
+            const targetNotif = type === 'success' ? successNotification : failNotification;
+            const targetTitle = type === 'success' ? successNotifTitle : failNotifTitle;
+            const targetTime = type === 'success' ? successNotifTime : failNotifTime;
+
+            targetTitle.textContent = title;
+            targetTime.textContent = `Masa: ${time}`;
+            targetNotif.className = `notification ${type} ${type === 'error' ? 'left-aligned' : ''}`;
+            targetNotif.classList.add('show');
 
             setTimeout(() => {
-                notification.classList.remove('show');
+                targetNotif.classList.remove('show');
             }, 4000);
         }
 
@@ -479,6 +502,7 @@
 
             if (!faceDescriptor) {
                 showStatusMessage('Wajah tidak dikesan. Cuba lagi.', 'error');
+                showNotification('Wajah tidak dikesan. Cuba lagi.', new Date().toLocaleTimeString(), 'error');
                 isProcessing = false;
                 registerFaceSubmitBtn.disabled = false;
                 registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
@@ -545,15 +569,16 @@
                 if (detections) {
                     const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
+                        showNotification('Wajah Berjaya Dikesan', new Date().toLocaleTimeString(), 'success');
                         await window.handleClockAction();
                     } else {
-                        showStatusMessage('Wajah tidak sepadan.', 'error');
+                        showNotification('Wajah Tidak Sepadan', new Date().toLocaleTimeString(), 'error');
                     }
                 } else {
-                    showStatusMessage('Wajah tidak dikesan.', 'error');
+                    showNotification('Wajah Tidak Dikesan', new Date().toLocaleTimeString(), 'error');
                 }
             } catch (e) {
-                showStatusMessage('Ralat sistem.', 'error');
+                showNotification('Ralat sistem.', new Date().toLocaleTimeString(), 'error');
             } finally {
                 isProcessing = false;
                 faceScanBtn.disabled = false;
@@ -575,10 +600,11 @@
                 }
 
                 const now = new Date();
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', getCurrentDate());
+                const todayDate = now.toISOString().slice(0, 10);
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDate);
                 const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists() && docSnap.data().clockIn) {
+                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
                     const clockIn = docSnap.data().clockIn.toDate();
                     const totalMilliseconds = now - clockIn;
                     const totalHoursDecimal = totalMilliseconds / (1000 * 60 * 60);
