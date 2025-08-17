@@ -401,7 +401,7 @@
         }
 
         async function loadFaceModels() {
-            const MODEL_URL = 'https://github.com/jimswk/kehadiran-upskkv2/tree/main/models';
+            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/jimswk/kehadiran-upskkv2@main/models';
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
