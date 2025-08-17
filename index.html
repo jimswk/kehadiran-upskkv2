@@ -349,6 +349,13 @@
         const failNotifTime = document.getElementById('failNotifTime');
 
         window.jsPDF = window.jspdf.jsPDF;
+
+        // Fungsi baru untuk euclideanDistance
+        function euclideanDistance(point1, point2) {
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
         
         // Show Notification Popup
         function showNotification(title, time, type = 'success') {
@@ -407,11 +414,13 @@
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL) // Tambahan untuk senyuman
+                    faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
                 ]);
+                console.log('Semua model wajah berjaya dimuatkan.');
                 return true;
             } catch (error) {
-                showStatusMessage('Gagal muat model wajah.', 'error');
+                console.error('Gagal memuatkan model wajah:', error);
+                showStatusMessage('Gagal muat model wajah. Sila semak sambungan internet dan URL model.', 'error');
                 return false;
             }
         }
@@ -564,7 +573,7 @@
             await startCamera(scanVideoElement);
             livenessInstructions.classList.remove('hidden');
 
-            const livenessInstructionsList = ['Sila senyum', 'Sila kedipkan mata', 'Sila angguk kepala'];
+            const livenessInstructionsList = ['Sila senyum', 'Sila kedipkan mata'];
             const randomInstruction = livenessInstructionsList[Math.floor(Math.random() * livenessInstructionsList.length)];
             livenessInstructions.textContent = randomInstruction;
 
@@ -578,8 +587,10 @@
                         if (randomInstruction === 'Sila kedipkan mata') {
                             const leftEye = detections.landmarks.getLeftEye();
                             const rightEye = detections.landmarks.getRightEye();
-                            const leftEyeDistance = faceapi.utils.euclideanDistance(leftEye[1], leftEye[4]);
-                            const rightEyeDistance = faceapi.utils.euclideanDistance(rightEye[1], rightEye[4]);
+
+                            const leftEyeDistance = euclideanDistance(leftEye[1], leftEye[4]);
+                            const rightEyeDistance = euclideanDistance(rightEye[1], rightEye[4]);
+
                             if (leftEyeDistance < 5 && rightEyeDistance < 5) {
                                 isLivenessActionDone = true;
                             }
@@ -587,17 +598,8 @@
                             if (detections.expressions.happy > 0.9) {
                                 isLivenessActionDone = true;
                             }
-                        } else if (randomInstruction === 'Sila angguk kepala') {
-                            // Ini adalah logik yang lebih canggih,
-                            // memerlukan perbandingan antara bingkai video.
-                            // Untuk implementasi mudah, kita boleh menggunakan pengesanan pergerakan y-axis.
-                            // Anda perlu menyimpan posisi bingkai sebelumnya.
-                            // Sebagai contoh mudah:
-                            // if (y-position of face changes significantly) { isLivenessActionDone = true; }
-                            // Logik ini perlu diimplementasi secara berasingan.
-                            // Untuk tujuan demo, kita anggap ia boleh dikesan.
-                            isLivenessActionDone = true; // Placeholder
-                        }
+                        } 
+                        // Tambahan untuk pengesanan angguk
                     }
                 }, 200);
 
@@ -829,7 +831,7 @@
             attendanceTableBody.innerHTML = '';
             data.forEach(item => {
                 const row = document.createElement('tr');
-                const date = item.date.toDate().toLocaleDateString('en-CA'); // Gunakan toLocaleDateString untuk format tempatan
+                const date = item.date.toDate().toLocaleDateString('en-CA'); 
                 const weekday = item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' });
                 
                 const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
