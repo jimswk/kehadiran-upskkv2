@@ -232,6 +232,7 @@
                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
                         <div class="bg-white p-5 rounded-xl shadow">
                             <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
+                            <p id="livenessInstruction" class="mb-3 text-center text-red-500 hidden"></p>
                             <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
                             <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                 <span id="scanBtnText">Clock In / Clock Out</span>
@@ -337,6 +338,7 @@
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
         const realTimeClock = document.getElementById('realTimeClock');
+        const livenessInstructionEl = document.getElementById('livenessInstruction');
         
         // Notifikasi baharu
         const successNotification = document.getElementById('successNotification');
@@ -345,7 +347,6 @@
         const failNotification = document.getElementById('failNotification');
         const failNotifTitle = document.getElementById('failNotifTitle');
         const failNotifTime = document.getElementById('failNotifTime');
-
 
         window.jsPDF = window.jspdf.jsPDF;
         
@@ -405,7 +406,8 @@
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
                 ]);
                 return true;
             } catch (error) {
@@ -549,23 +551,65 @@
             if (isProcessing) return;
             isProcessing = true;
             faceScanBtn.disabled = true;
-            scanBtnText.innerHTML = '<span class="loading"></span> Mengimbas...';
 
             const modelsLoaded = await loadFaceModels();
             if (!modelsLoaded) {
                 isProcessing = false;
                 faceScanBtn.disabled = false;
-                scanBtnText.textContent = 'Clock In / Out';
+                scanBtnText.textContent = 'Clock In / Clock Out';
                 return;
             }
 
             await startCamera(scanVideoElement);
 
+            const livenessInstructions = ['Anggukkan kepala anda', 'Gelengkan kepala anda', 'Senyum'];
+            const randomInstruction = livenessInstructions[Math.floor(Math.random() * livenessInstructions.length)];
+            
+            livenessInstructionEl.textContent = randomInstruction;
+            livenessInstructionEl.classList.remove('hidden');
+            scanBtnText.innerHTML = '<span class="loading"></span> Mengesan pergerakan...';
+            
+            let livenessPassed = false;
+            let lastDetections = null;
+            let detectionInterval = setInterval(async () => {
+                const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks().withFaceExpressions();
+
+                if (detections && lastDetections) {
+                    const deltaAngle = getHeadMovement(lastDetections.landmarks, detections.landmarks);
+                    const isSmiling = detections.expressions.happy > 0.5;
+
+                    if (randomInstruction.includes('Angguk') && deltaAngle.y > 0.1) {
+                        livenessPassed = true;
+                    } else if (randomInstruction.includes('Geleng') && deltaAngle.x > 0.1) {
+                        livenessPassed = true;
+                    } else if (randomInstruction.includes('Senyum') && isSmiling) {
+                        livenessPassed = true;
+                    }
+                }
+                lastDetections = detections;
+            }, 200);
+
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            clearInterval(detectionInterval);
+            
+            livenessInstructionEl.classList.add('hidden');
+            
+            if (!livenessPassed) {
+                showNotification('Pengesanan pergerakan gagal. Cuba lagi.', new Date().toLocaleTimeString(), 'error');
+                isProcessing = false;
+                faceScanBtn.disabled = false;
+                scanBtnText.textContent = 'Clock In / Clock Out';
+                stopCamera();
+                return;
+            }
+            
+            scanBtnText.innerHTML = '<span class="loading"></span> Mengesan wajah...';
+            
             try {
-                await new Promise(r => setTimeout(r, 2000));
                 const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks().withFaceDescriptor();
-
+                
                 if (detections) {
                     const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
@@ -578,7 +622,7 @@
                     showNotification('Wajah Tidak Dikesan', new Date().toLocaleTimeString(), 'error');
                 }
             } catch (e) {
-                showNotification('Ralat sistem.', new Date().toLocaleTimeString(), 'error');
+                showNotification('Ralat sistem. ' + e.message, new Date().toLocaleTimeString(), 'error');
             } finally {
                 isProcessing = false;
                 faceScanBtn.disabled = false;
@@ -586,6 +630,16 @@
                 stopCamera();
             }
         };
+
+        function getHeadMovement(lastLandmarks, currentLandmarks) {
+            const lastNose = lastLandmarks.getNose();
+            const currentNose = currentLandmarks.getNose();
+            
+            const deltaX = Math.abs(currentNose[0].x - lastNose[0].x);
+            const deltaY = Math.abs(currentNose[0].y - lastNose[0].y);
+
+            return { x: deltaX, y: deltaY };
+        }
 
         window.handleClockAction = async function() {
             try {
