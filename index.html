@@ -408,7 +408,7 @@
         }
 
         async function loadFaceModels() {
-            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/jimswk/kehadiran-upskkv2@main/models';
+            const MODEL_URL = 'https://jimswk.github.io/kehadiran-upskkv2/main/model/';
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -879,18 +879,14 @@
             return `${year}-${month}-${day}`;
         }
         
-        function getStartOfMonthUTC() { 
-            const d = new Date(); 
-            d.setUTCHours(0,0,0,0); 
-            d.setUTCDate(1); 
-            return d; 
+        function getStartOfMonthLocal() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), 1);
         }
-        
-        function getEndOfMonthUTC() { 
-            const d = new Date(); 
-            d.setUTCMonth(d.getUTCMonth() + 1, 0); 
-            d.setUTCHours(23, 59, 59, 999); 
-            return d; 
+
+        function getEndOfMonthLocal() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         }
 
         function initializeUI() {
@@ -937,8 +933,8 @@
                         
                         const q = query(
                             collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                            where('date', '>=', getStartOfMonthUTC()),
-                            where('date', '<=', getEndOfMonthUTC())
+                            where('date', '>=', getStartOfMonthLocal()),
+                            where('date', '<=', getEndOfMonthLocal())
                         );
                         onSnapshot(q, snap => {
                             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
