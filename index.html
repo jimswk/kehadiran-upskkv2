@@ -311,7 +311,7 @@
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 1000;
+        const locationTolerance = 250;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -408,7 +408,7 @@
         }
 
         async function loadFaceModels() {
-            const MODEL_URL = 'https://jimswk.github.io/kehadiran-upskkv2/main/model/';
+            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/jimswk/kehadiran-upskk@main/models';
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
