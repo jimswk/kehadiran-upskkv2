@@ -408,7 +408,7 @@
         }
 
         async function loadFaceModels() {
-            const MODEL_URL = 'https://cdn.jsdelivr.net/gh/jimswk/kehadiran-upskkv2@main/models';
+            const MODEL_URL = 'https://jimswk.github.io/kehadiran-upskkv2/main/model/';
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -669,15 +669,18 @@
                     const lunchBreakHours = 1;
                     let totalOTDecimal = 0;
                     
-                    // Logik pengiraan yang sepadan dengan lampiran anda.
+                    // Logik pengiraan yang diubahsuai
                     let totalWorkHoursClean = totalHoursDecimal - lunchBreakHours;
                     if (totalWorkHoursClean > normalWorkHours) {
                         totalOTDecimal = totalWorkHoursClean - normalWorkHours;
+                        totalHoursDecimal = totalHoursDecimal - lunchBreakHours;
+                    } else {
+                        totalHoursDecimal = totalWorkHoursClean;
                     }
 
                     await setDoc(docRef, {
                         clockOut: now,
-                        totalHours: totalWorkHoursClean,
+                        totalHours: totalHoursDecimal,
                         totalOT: totalOTDecimal,
                         locationOut: { lat: latitude, lng: longitude }
                     }, { merge: true });
@@ -726,18 +729,10 @@
                 return;
             }
 
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
-
-            if (start > end) {
-                alert('Tarikh Mula tidak boleh melebihi Tarikh Tamat.');
-                return;
-            }
-
             const q = query(
                 collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                where(FieldPath.documentId(), '>=', startDateStr),
-                where(FieldPath.documentId(), '<=', endDateStr)
+                where('__name__', '>=', startDateStr),
+                where('__name__', '<=', endDateStr)
             );
             const snap = await getDocs(q);
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -835,7 +830,7 @@
             attendanceTableBody.innerHTML = '';
             data.forEach(item => {
                 const row = document.createElement('tr');
-                const date = item.date.toDate().toLocaleDateString('en-CA'); 
+                const date = item.id;
                 const weekday = item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' });
                 
                 const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
@@ -933,10 +928,12 @@
                             }
                         }
                         
+                        const startOfMonthStr = getStartOfMonthLocal();
+                        const endOfMonthStr = getEndOfMonthLocal();
                         const q = query(
                             collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                            where(FieldPath.documentId(), '>=', getStartOfMonthLocal()),
-                            where(FieldPath.documentId(), '<=', getEndOfMonthLocal())
+                            where('__name__', '>=', startOfMonthStr),
+                            where('__name__', '<=', endOfMonthStr)
                         );
                         onSnapshot(q, snap => {
                             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
