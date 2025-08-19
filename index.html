@@ -673,7 +673,7 @@
                     let totalWorkHoursClean = totalHoursDecimal - lunchBreakHours;
                     if (totalWorkHoursClean > normalWorkHours) {
                         totalOTDecimal = totalWorkHoursClean - normalWorkHours;
-                        totalHoursDecimal = totalHoursDecimal - lunchBreakHours;
+                        totalHoursDecimal = totalWorkHoursClean;
                     } else {
                         totalHoursDecimal = totalWorkHoursClean;
                     }
@@ -726,6 +726,14 @@
 
             if (!startDateStr || !endDateStr) {
                 alert('Sila masukkan Tarikh Mula dan Tarikh Tamat.');
+                return;
+            }
+
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+
+            if (start > end) {
+                alert('Tarikh Mula tidak boleh melebihi Tarikh Tamat.');
                 return;
             }
 
