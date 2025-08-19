@@ -291,7 +291,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
@@ -311,7 +311,7 @@
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 250;
+        const locationTolerance = 1000;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -666,15 +666,18 @@
                     let totalHoursDecimal = totalMilliseconds / (1000 * 60 * 60);
                     
                     const normalWorkHours = 8;
+                    const lunchBreakHours = 1;
                     let totalOTDecimal = 0;
                     
-                    if (totalHoursDecimal > normalWorkHours) {
-                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                    // Logik pengiraan yang sepadan dengan lampiran anda.
+                    let totalWorkHoursClean = totalHoursDecimal - lunchBreakHours;
+                    if (totalWorkHoursClean > normalWorkHours) {
+                        totalOTDecimal = totalWorkHoursClean - normalWorkHours;
                     }
 
                     await setDoc(docRef, {
                         clockOut: now,
-                        totalHours: totalHoursDecimal,
+                        totalHours: totalWorkHoursClean,
                         totalOT: totalOTDecimal,
                         locationOut: { lat: latitude, lng: longitude }
                     }, { merge: true });
@@ -706,7 +709,7 @@
         }
         
         function formatDecimalToTime(decimalHours) {
-            if (decimalHours === null || isNaN(decimalHours) || decimalHours === 0) {
+            if (decimalHours === null || isNaN(decimalHours) || decimalHours <= 0) {
                 return '';
             }
             const hours = Math.floor(decimalHours);
@@ -733,8 +736,8 @@
 
             const q = query(
                 collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                where('date', '>=', start),
-                where('date', '<=', end)
+                where(FieldPath.documentId(), '>=', startDateStr),
+                where(FieldPath.documentId(), '<=', endDateStr)
             );
             const snap = await getDocs(q);
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -790,7 +793,7 @@
                 const dateString = currentDate.toISOString().slice(0, 10);
                 const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
 
-                const record = data.find(d => d.date.toDate().toISOString().slice(0, 10) === dateString) || {};
+                const record = data.find(d => d.id === dateString) || {};
                 const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                 const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                 const hours = record.totalHours ? record.totalHours : null;
@@ -880,18 +883,18 @@
         
         function getStartOfMonthLocal() {
             const now = new Date();
-            return new Date(now.getFullYear(), now.getMonth(), 1);
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
         }
 
         function getEndOfMonthLocal() {
             const now = new Date();
-            return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
         }
 
         function initializeUI() {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+            const startOfMonth = getStartOfMonthLocal();
+            const endOfMonth = getEndOfMonthLocal();
             
             startDateInput.value = startOfMonth;
             endDateInput.value = endOfMonth;
@@ -932,8 +935,8 @@
                         
                         const q = query(
                             collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                            where('date', '>=', getStartOfMonthLocal()),
-                            where('date', '<=', getEndOfMonthLocal())
+                            where(FieldPath.documentId(), '>=', getStartOfMonthLocal()),
+                            where(FieldPath.documentId(), '<=', getEndOfMonthLocal())
                         );
                         onSnapshot(q, snap => {
                             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
