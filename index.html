@@ -666,16 +666,11 @@
                     let totalHoursDecimal = totalMilliseconds / (1000 * 60 * 60);
                     
                     const normalWorkHours = 8;
-                    const lunchBreakHours = 1;
                     let totalOTDecimal = 0;
                     
-                    // Logik pengiraan yang diubahsuai
-                    let totalWorkHoursClean = totalHoursDecimal - lunchBreakHours;
-                    if (totalWorkHoursClean > normalWorkHours) {
-                        totalOTDecimal = totalWorkHoursClean - normalWorkHours;
-                        totalHoursDecimal = totalWorkHoursClean;
-                    } else {
-                        totalHoursDecimal = totalWorkHoursClean;
+                    // Logik pengiraan yang sepadan dengan lampiran anda.
+                    if (totalHoursDecimal > normalWorkHours) {
+                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
                     }
 
                     await setDoc(docRef, {
