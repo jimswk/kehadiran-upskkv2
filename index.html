@@ -662,13 +662,17 @@
 
                 if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
                     const clockIn = docSnap.data().clockIn.toDate();
-                    const totalMilliseconds = now - clockIn;
-                    let totalHoursDecimal = totalMilliseconds / (1000 * 60 * 60);
-                    
+
+                    // --- Perubahan di sini: Mengira perbezaan dalam minit sahaja
+                    const clockInMinutes = clockIn.getHours() * 60 + clockIn.getMinutes();
+                    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                    const totalMinutes = nowMinutes - clockInMinutes;
+                    let totalHoursDecimal = totalMinutes / 60;
+                    // --- Tamat perubahan
+
                     const normalWorkHours = 8;
                     let totalOTDecimal = 0;
                     
-                    // Logik pengiraan yang sepadan dengan lampiran anda.
                     if (totalHoursDecimal > normalWorkHours) {
                         totalOTDecimal = totalHoursDecimal - normalWorkHours;
                     }
