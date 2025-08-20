@@ -644,60 +644,56 @@
         };
 
         window.handleClockAction = async function() {
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-                });
-                const { latitude, longitude } = position.coords;
-                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-                if (distance > locationTolerance) {
-                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-                    return;
-                }
+try {
+const position = await new Promise((resolve, reject) => {
+navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+});
+const { latitude, longitude } = position.coords;
+const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+if (distance > locationTolerance) {
+showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+return;
+}
 
-                const now = new Date();
-                const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-                const docSnap = await getDoc(docRef);
+const now = new Date();
+const todayDateId = getCurrentDateLocal();
+const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-                    const clockIn = docSnap.data().clockIn.toDate();
+if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+const clockIn = docSnap.data().clockIn.toDate();
 
-                    // --- Perubahan di sini: Mengira perbezaan dalam minit sahaja
-                    const clockInMinutes = clockIn.getHours() * 60 + clockIn.getMinutes();
-                    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-                    const totalMinutes = nowMinutes - clockInMinutes;
-                    let totalHoursDecimal = totalMinutes / 60;
-                    // --- Tamat perubahan
+const diffMs = now.getTime() - clockIn.getTime();
+const totalMinutes = Math.floor(diffMs / 60000);
+const totalHoursDecimal = totalMinutes / 60;
 
-                    const normalWorkHours = 8;
-                    let totalOTDecimal = 0;
-                    
-                    if (totalHoursDecimal > normalWorkHours) {
-                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
-                    }
+const normalWorkHours = 8;
+let totalOTDecimal = 0;
+if (totalHoursDecimal > normalWorkHours) {
+totalOTDecimal = totalHoursDecimal - normalWorkHours;
+}
 
-                    await setDoc(docRef, {
-                        clockOut: now,
-                        totalHours: totalHoursDecimal,
-                        totalOT: totalOTDecimal,
-                        locationOut: { lat: latitude, lng: longitude }
-                    }, { merge: true });
-                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-                } else {
-                    await setDoc(docRef, {
-                        date: now,
-                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-                        clockIn: now,
-                        locationIn: { lat: latitude, lng: longitude }
-                    }, { merge: true });
-                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-                }
-                handleGeolocationCheck();
-            } catch (error) {
-                showStatusMessage('Gagal akses lokasi.', 'error');
-            }
-        };
+await setDoc(docRef, {
+clockOut: now,
+totalHours: totalHoursDecimal,
+totalOT: totalOTDecimal,
+locationOut: { lat: latitude, lng: longitude }
+}, { merge: true });
+showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+} else {
+await setDoc(docRef, {
+date: now,
+weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+clockIn: now,
+locationIn: { lat: latitude, lng: longitude }
+}, { merge: true });
+showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+}
+handleGeolocationCheck();
+} catch (error) {
+showStatusMessage('Gagal akses lokasi.', 'error');
+}
+};
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
