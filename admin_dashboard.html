@@ -278,7 +278,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Konfigurasi Firebase Anda
         const firebaseConfig = {
@@ -296,7 +296,6 @@
         const auth = getAuth(app);
         const appId = 'default-app-id';
 
-        // Elements
         const loginPage = document.getElementById('loginPage');
         const dashboardPage = document.getElementById('dashboardPage');
         const adminLoginForm = document.getElementById('adminLoginForm');
@@ -321,14 +320,12 @@
         
         let allUsersData = [];
 
-        // Fungsi untuk menampilkan halaman
         function showPage(pageId) {
             const pages = document.querySelectorAll('.content-page');
             pages.forEach(page => page.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
         }
 
-        // Fungsi navigasi sidebar
         usersNav.addEventListener('click', (e) => {
             e.preventDefault();
             showPage('usersPage');
@@ -343,7 +340,6 @@
             usersNav.classList.remove('active');
         });
 
-        // Logika otentikasi admin dengan Firebase Auth
         adminLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = adminEmailInput.value;
@@ -351,15 +347,12 @@
 
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Cek status admin di Firestore
                 const userDocRef = doc(db, 'artifacts', appId, 'users', userCredential.user.uid, 'profile', 'data');
                 const userSnap = await getDoc(userDocRef);
                 
                 if (userSnap.exists() && userSnap.data().isAdmin) {
-                    // Login berhasil, tampilkan dashboard
                     renderDashboard();
                 } else {
-                    // Bukan admin, log out dan tampilkan pesan
                     await signOut(auth);
                     statusMessage.textContent = 'Akses ditolak. Anda bukan admin.';
                     statusMessage.classList.remove('hidden');
@@ -377,7 +370,6 @@
             showPage('usersPage');
         }
 
-        // Muat data pengguna dan isi tabel
         async function loadUsers() {
             const usersRef = collection(db, 'artifacts', appId, 'users');
             const querySnapshot = await getDocs(usersRef);
@@ -421,7 +413,6 @@
             }
         }
 
-        // Muat data kehadiran untuk pengguna yang dipilih
         function loadAttendance(userId) {
             if (!userId) {
                 attendanceTableBody.innerHTML = '';
@@ -584,7 +575,6 @@
             window.location.reload();
         });
 
-        // Cek status login saat halaman dimuat
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
