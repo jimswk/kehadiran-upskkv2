@@ -598,16 +598,19 @@
                 const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
                 if (resizedDetections) {
-                    const match = faceMatcher.findBestMatch(detections.descriptor);
-                    
-                    const label = match.label === userId ? userData.name : "Wajah Tidak Dikenali";
+                    // Draw bounding box
                     const box = resizedDetections.detection.box;
-                    const drawBox = new faceapi.draw.DrawBox(box, { label: `${label} (${match.distance.toFixed(2)})` });
+                    const drawBox = new faceapi.draw.DrawBox(box, { label: 'Wajah Terdeteksi' });
                     drawBox.draw(overlayCanvas);
 
+                    // Draw facial landmarks
                     faceapi.draw.drawFaceLandmarks(overlayCanvas, resizedDetections);
+
+                    // Draw face expressions
                     faceapi.draw.drawFaceExpressions(overlayCanvas, resizedDetections);
 
+                    // Check for a match
+                    const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
                         clearInterval(scanInterval);
                         stopCamera();
