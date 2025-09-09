@@ -519,8 +519,7 @@
             showPage('loginPage');
         };
         
-        // Log masuk admin
-        window.handleAdminLogin = async function() {
+        window.handleAdminLogin = function() {
             window.location.href = 'admin_dashboard.html';
         };
 
@@ -718,7 +717,6 @@
                 });
                 const { latitude, longitude } = position.coords;
                 
-                // Ambil radius dari data pengguna yang dimuat saat login
                 const currentRadius = userData.radius || defaultLocationTolerance;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
                 
@@ -992,7 +990,6 @@
                         userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
                         userIdDisplay.textContent = `ID: ${userId}`;
                         
-                        // Ambil radius yang telah diset oleh admin, jika ada
                         const userRadius = userData.radius || defaultLocationTolerance;
                         
                         if (userData.faceDescriptor) {
