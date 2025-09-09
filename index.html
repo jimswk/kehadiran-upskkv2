@@ -880,7 +880,6 @@
                 currentDate.setDate(currentDate.getDate() + 1);
             }
 
-            // Baris Statistik dalam jadual
             doc.setFont('times', 'bold');
             doc.rect(tableMarginX, y, tableWidth, rowHeight);
             
@@ -1035,7 +1034,7 @@
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
-            document.getElementById('goToAdminBtn').addEventListener('click', () => window.location.href = 'admin_dashboard.html');
+            document.getElementById('goToAdminBtn').addEventListener('click', window.handleAdminLogin);
         });
     </script>
 </body>
