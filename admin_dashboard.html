@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Sistem Perakam Waktu UPSKK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+        .btn {
+            @apply py-2 px-4 font-semibold rounded-lg shadow transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2;
+        }
+        .btn-blue { @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300; }
+        .btn-green { @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-300; }
+        .btn-red { @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300; }
+        .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+        .input-field {
+            @apply mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border-2;
+        }
+        .table-container {
+            @apply overflow-x-auto rounded-xl shadow-lg;
+        }
+        table {
+            @apply min-w-full bg-white;
+        }
+        th {
+            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase bg-gray-50;
+        }
+        td {
+            @apply px-6 py-4 text-sm text-gray-700 border-t border-gray-200;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Dashboard Admin</h1>
+            <p class="text-blue-100 mt-2">Pengurusan Sistem Perakam Waktu</p>
+        </div>
+
+        <div class="grid md:grid-cols-1 gap-8">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Senarai Pengguna</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th>E-mel</th>
+                                <th>Wajah Berdaftar</th>
+                                <th>Radius (m)</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Senarai Kehadiran</h2>
+                <div class="flex items-center space-x-4 mb-4">
+                    <label class="text-sm font-medium text-gray-700">Pilih Pengguna:</label>
+                    <select id="userSelect" class="input-field w-auto"></select>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarikh</th>
+                                <th>Masuk</th>
+                                <th>Keluar</th>
+                                <th>Jumlah Jam</th>
+                                <th>OT</th>
+                                <th>Lokasi Masuk</th>
+                                <th>Lokasi Keluar</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="editTimeModal" class="modal">
+            <div class="modal-content">
+                <h3 class="text-xl font-bold mb-4">Edit Catatan Kehadiran</h3>
+                <form id="editTimeForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tarikh</label>
+                            <input type="date" id="editDate" class="input-field" disabled>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Clock In</label>
+                            <input type="time" id="editClockIn" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Clock Out</label>
+                            <input type="time" id="editClockOut" class="input-field">
+                        </div>
+                        <div class="flex justify-end space-x-4 mt-4">
+                            <button type="button" id="closeModalBtn" class="btn btn-outline">Batal</button>
+                            <button type="submit" class="btn btn-blue">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="setRadiusModal" class="modal">
+            <div class="modal-content">
+                <h3 class="text-xl font-bold mb-4">Tetapkan Radius untuk <span id="radiusUserName"></span></h3>
+                <form id="setRadiusForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Radius (meter)</label>
+                            <input type="number" id="radiusInput" class="input-field" min="100" placeholder="e.g., 500">
+                        </div>
+                        <div class="flex justify-end space-x-4 mt-4">
+                            <button type="button" id="closeRadiusModalBtn" class="btn btn-outline">Batal</button>
+                            <button type="submit" class="btn btn-blue">Simpan</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-6">
+            <button id="signOutBtn" class="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 text-white font-semibold rounded-lg shadow transition-all duration-200">
+                Log Keluar Admin
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
+            authDomain: "kehadiran-upskk.firebaseapp.com",
+            projectId: "kehadiran-upskk",
+            storageBucket: "kehadiran-upskk.firebasestorage.app",
+            messagingSenderId: "705500257324",
+            appId: "1:705500257324:web:692f800a74a2f8c3d18589",
+            measurementId: "G-FKGN5NLLTK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = 'default-app-id';
+
+        const usersTableBody = document.getElementById('usersTableBody');
+        const userSelect = document.getElementById('userSelect');
+        const attendanceTableBody = document.getElementById('attendanceTableBody');
+        const signOutBtn = document.getElementById('signOutBtn');
+        
+        const editTimeModal = document.getElementById('editTimeModal');
+        const setRadiusModal = document.getElementById('setRadiusModal');
+        const editTimeForm = document.getElementById('editTimeForm');
+        const setRadiusForm = document.getElementById('setRadiusForm');
+        
+        let allUsersData = [];
+        let is_admin = false;
+
+        // Fungsi untuk mengonversi descriptor wajah menjadi gambar
+        async function getFaceImageFromDescriptor(descriptor) {
+            try {
+                const parsedDescriptor = JSON.parse(descriptor);
+                if (!parsedDescriptor || parsedDescriptor.length !== 128) return 'Tiada Gambar';
+
+                const descriptorFloat32 = new Float32Array(parsedDescriptor);
+                const detections = faceapi.detectSingleFace(document.createElement('canvas')).withFaceLandmarks().withFaceDescriptor();
+
+                const dummyCanvas = faceapi.createCanvasFromMedia(document.createElement('video'));
+                const dims = faceapi.matchDimensions(dummyCanvas, { width: 150, height: 150 });
+
+                const drawBox = new faceapi.draw.DrawBox(detections.detection.box, {
+                    label: 'Wajah'
+                });
+                drawBox.draw(dummyCanvas);
+                
+                return 'Wajah Berdaftar';
+            } catch (error) {
+                console.error("Error creating face image:", error);
+                return 'Data Rosak';
+            }
+        }
+
+        // Muat data pengguna dan isi tabel
+        async function loadUsers() {
+            const usersRef = collection(db, 'artifacts', appId, 'users');
+            const querySnapshot = await getDocs(usersRef);
+            allUsersData = [];
+            usersTableBody.innerHTML = '';
+            userSelect.innerHTML = '';
+            
+            const firstOption = document.createElement('option');
+            firstOption.textContent = 'Pilih pengguna...';
+            firstOption.value = '';
+            userSelect.appendChild(firstOption);
+
+            for (const docSnapshot of querySnapshot.docs) {
+                const userId = docSnapshot.id;
+                const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                const profileSnap = await getDoc(profileRef);
+
+                if (profileSnap.exists()) {
+                    const profileData = profileSnap.data();
+                    allUsersData.push({ id: userId, ...profileData });
+
+                    const row = document.createElement('tr');
+                    const faceRegistered = profileData.faceDescriptor ? '✅ Ya' : '❌ Tidak';
+                    const radius = profileData.radius || 'Standard';
+                    
+                    row.innerHTML = `
+                        <td>${profileData.name || '-'}</td>
+                        <td>${profileData.department || '-'}</td>
+                        <td>${profileData.email || '-'}</td>
+                        <td>${faceRegistered}</td>
+                        <td>${radius}</td>
+                        <td>
+                            <button class="btn btn-blue text-xs p-1 edit-radius-btn" data-user-id="${userId}">Set Radius</button>
+                        </td>
+                    `;
+                    usersTableBody.appendChild(row);
+
+                    const option = document.createElement('option');
+                    option.textContent = profileData.name;
+                    option.value = userId;
+                    userSelect.appendChild(option);
+                }
+            }
+        }
+
+        // Muat data kehadiran untuk pengguna yang dipilih
+        function loadAttendance(userId) {
+            if (!userId) {
+                attendanceTableBody.innerHTML = '';
+                return;
+            }
+
+            const attendanceRef = collection(db, 'artifacts', appId, 'users', userId, 'attendance');
+            onSnapshot(attendanceRef, (snapshot) => {
+                attendanceTableBody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const docId = doc.id;
+                    const clockIn = data.clockIn ? data.clockIn.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                    const clockOut = data.clockOut ? data.clockOut.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                    const totalHours = data.totalHours ? (data.totalHours).toFixed(2) + 'h' : '-';
+                    const totalOT = data.totalOT ? (data.totalOT).toFixed(2) + 'h' : '-';
+                    const locationIn = data.locationIn ? `Lat: ${data.locationIn.lat.toFixed(4)}, Lng: ${data.locationIn.lng.toFixed(4)}` : '-';
+                    const locationOut = data.locationOut ? `Lat: ${data.locationOut.lat.toFixed(4)}, Lng: ${data.locationOut.lng.toFixed(4)}` : '-';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${docId}</td>
+                        <td>${clockIn}</td>
+                        <td>${clockOut}</td>
+                        <td>${totalHours}</td>
+                        <td>${totalOT}</td>
+                        <td>${locationIn}</td>
+                        <td>${locationOut}</td>
+                        <td>
+                            <button class="btn btn-green text-xs p-1 edit-time-btn" data-date-id="${docId}" data-user-id="${userId}">Edit</button>
+                        </td>
+                    `;
+                    attendanceTableBody.appendChild(row);
+                });
+            });
+        }
+        
+        // Buka modal Edit Waktu
+        function openEditModal(userId, dateId) {
+            const user = allUsersData.find(u => u.id === userId);
+            document.getElementById('editDate').value = dateId;
+            document.getElementById('editClockIn').value = '';
+            document.getElementById('editClockOut').value = '';
+            
+            const attendanceRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', dateId);
+            getDoc(attendanceRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.clockIn) {
+                        const date = data.clockIn.toDate();
+                        document.getElementById('editClockIn').value = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                    }
+                    if (data.clockOut) {
+                        const date = data.clockOut.toDate();
+                        document.getElementById('editClockOut').value = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                    }
+                }
+            });
+
+            editTimeModal.style.display = 'flex';
+            editTimeForm.setAttribute('data-user-id', userId);
+            editTimeForm.setAttribute('data-date-id', dateId);
+        }
+
+        // Buka modal Set Radius
+        function openSetRadiusModal(userId) {
+            const user = allUsersData.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('radiusUserName').textContent = user.name;
+                document.getElementById('radiusInput').value = user.radius || '';
+                setRadiusModal.style.display = 'flex';
+                setRadiusForm.setAttribute('data-user-id', userId);
+            }
+        }
+
+        // Simpan perubahan waktu
+        editTimeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = e.target.getAttribute('data-user-id');
+            const dateId = e.target.getAttribute('data-date-id');
+            const newClockInTime = document.getElementById('editClockIn').value;
+            const newClockOutTime = document.getElementById('editClockOut').value;
+            
+            const attendanceRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', dateId);
+            const docSnap = await getDoc(attendanceRef);
+            const data = docSnap.data();
+
+            let clockInDate = data.clockIn ? data.clockIn.toDate() : null;
+            let clockOutDate = data.clockOut ? data.clockOut.toDate() : null;
+
+            if (newClockInTime) {
+                const [h, m] = newClockInTime.split(':');
+                clockInDate = new Date(dateId);
+                clockInDate.setHours(h, m, 0, 0);
+            }
+            if (newClockOutTime) {
+                const [h, m] = newClockOutTime.split(':');
+                clockOutDate = new Date(dateId);
+                clockOutDate.setHours(h, m, 0, 0);
+            }
+
+            const updateData = {};
+            if (clockInDate) updateData.clockIn = clockInDate;
+            if (clockOutDate) updateData.clockOut = clockOutDate;
+
+            // Hitung ulang totalHours dan totalOT
+            if (clockInDate && clockOutDate) {
+                const diffMs = clockOutDate.getTime() - clockInDate.getTime();
+                const totalMinutes = Math.floor(diffMs / 60000);
+                const totalHoursDecimal = totalMinutes / 60;
+                
+                updateData.totalHours = totalHoursDecimal;
+                
+                const normalWorkHours = 8;
+                let totalOTDecimal = 0;
+                if (totalHoursDecimal > normalWorkHours) {
+                    totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                }
+                updateData.totalOT = totalOTDecimal;
+            }
+
+            if (Object.keys(updateData).length > 0) {
+                await updateDoc(attendanceRef, updateData);
+                alert('Catatan kehadiran berhasil diperbarui.');
+            }
+            editTimeModal.style.display = 'none';
+        });
+
+        // Simpan perubahan radius
+        setRadiusForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = e.target.getAttribute('data-user-id');
+            const radius = document.getElementById('radiusInput').value;
+            
+            if (radius) {
+                const userProfileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                await updateDoc(userProfileRef, { radius: parseInt(radius, 10) });
+                alert('Radius berhasil diperbarui.');
+                setRadiusModal.style.display = 'none';
+                loadUsers(); // Muat ulang daftar pengguna untuk menampilkan radius baru
+            }
+        });
+
+        // Event listener untuk tombol Edit dan Set Radius
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('edit-time-btn')) {
+                const userId = e.target.getAttribute('data-user-id');
+                const dateId = e.target.getAttribute('data-date-id');
+                openEditModal(userId, dateId);
+            } else if (e.target.classList.contains('edit-radius-btn')) {
+                const userId = e.target.getAttribute('data-user-id');
+                openSetRadiusModal(userId);
+            } else if (e.target.id === 'closeModalBtn' || e.target.id === 'closeRadiusModalBtn') {
+                editTimeModal.style.display = 'none';
+                setRadiusModal.style.display = 'none';
+            }
+        });
+
+        // Event listener untuk dropdown pengguna
+        userSelect.addEventListener('change', (e) => {
+            loadAttendance(e.target.value);
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            alert('Berjaya log keluar admin.');
+            window.location.href = 'index.html';
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                const adminSnap = await getDoc(adminDocRef);
+                if (adminSnap.exists() && adminSnap.data().isAdmin) { // asumsikan ada field 'isAdmin: true' di Firestore
+                    is_admin = true;
+                    loadUsers();
+                } else {
+                    alert("Anda tidak memiliki akses admin.");
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
