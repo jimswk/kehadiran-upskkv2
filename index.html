@@ -199,6 +199,7 @@
                     <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
                     Log Masuk</button>
                     <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
+                    <button id="goToAdminBtn" class="btn btn-outline w-full mt-2">Log Masuk Admin</button>
                 </div>
             </div>
         </div>
@@ -341,7 +342,7 @@
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 1500;
+        const defaultLocationTolerance = 1000;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -517,6 +518,11 @@
             showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
             showPage('loginPage');
         };
+        
+        // Log masuk admin
+        window.handleAdminLogin = async function() {
+            window.location.href = 'admin_dashboard.html';
+        };
 
         window.handleFaceRegistration = async function() {
             if (isProcessing) return;
@@ -561,9 +567,12 @@
             registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
         };
 
-        async function handleGeolocationCheck() {
+        async function handleGeolocationCheck(locationToleranceOverride) {
             faceScanBtn.disabled = true;
             locationStatusEl.textContent = '📍 Mengesan lokasi...';
+            
+            const currentRadius = locationToleranceOverride || defaultLocationTolerance;
+
             try {
                 const pos = await new Promise((res, rej) => {
                     navigator.geolocation.getCurrentPosition(res, rej, {
@@ -574,7 +583,8 @@
                 });
                 const { latitude, longitude } = pos.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-                if (distance <= locationTolerance) {
+
+                if (distance <= currentRadius) {
                     locationStatusEl.textContent = `✅ Di dalam pejabat (${distance.toFixed(1)}m)`;
                     faceScanBtn.disabled = false;
                 } else {
@@ -702,56 +712,60 @@
         };
 
         window.handleClockAction = async function() {
-try {
-const position = await new Promise((resolve, reject) => {
-navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-});
-const { latitude, longitude } = position.coords;
-const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-if (distance > locationTolerance) {
-showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-return;
-}
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                });
+                const { latitude, longitude } = position.coords;
+                
+                // Ambil radius dari data pengguna yang dimuat saat login
+                const currentRadius = userData.radius || defaultLocationTolerance;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                
+                if (distance > currentRadius) {
+                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+                    return;
+                }
 
-const now = new Date();
-const todayDateId = getCurrentDateLocal();
-const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-const docSnap = await getDoc(docRef);
+                const now = new Date();
+                const todayDateId = getCurrentDateLocal();
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docSnap = await getDoc(docRef);
 
-if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-const clockIn = docSnap.data().clockIn.toDate();
+                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+                    const clockIn = docSnap.data().clockIn.toDate();
 
-const diffMs = now.getTime() - clockIn.getTime();
-const totalMinutes = Math.floor(diffMs / 60000);
-const totalHoursDecimal = totalMinutes / 60;
+                    const diffMs = now.getTime() - clockIn.getTime();
+                    const totalMinutes = Math.floor(diffMs / 60000);
+                    const totalHoursDecimal = totalMinutes / 60;
 
-const normalWorkHours = 8;
-let totalOTDecimal = 0;
-if (totalHoursDecimal > normalWorkHours) {
-totalOTDecimal = totalHoursDecimal - normalWorkHours;
-}
+                    const normalWorkHours = 8;
+                    let totalOTDecimal = 0;
+                    if (totalHoursDecimal > normalWorkHours) {
+                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                    }
 
-await setDoc(docRef, {
-clockOut: now,
-totalHours: totalHoursDecimal,
-totalOT: totalOTDecimal,
-locationOut: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-} else {
-await setDoc(docRef, {
-date: now,
-weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-clockIn: now,
-locationIn: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-}
-handleGeolocationCheck();
-} catch (error) {
-showStatusMessage('Gagal akses lokasi.', 'error');
-}
-};
+                    await setDoc(docRef, {
+                        clockOut: now,
+                        totalHours: totalHoursDecimal,
+                        totalOT: totalOTDecimal,
+                        locationOut: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+                } else {
+                    await setDoc(docRef, {
+                        date: now,
+                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                        clockIn: now,
+                        locationIn: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+                }
+                handleGeolocationCheck(currentRadius);
+            } catch (error) {
+                showStatusMessage('Gagal akses lokasi.', 'error');
+            }
+        };
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
@@ -978,6 +992,9 @@ showStatusMessage('Gagal akses lokasi.', 'error');
                         userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
                         userIdDisplay.textContent = `ID: ${userId}`;
                         
+                        // Ambil radius yang telah diset oleh admin, jika ada
+                        const userRadius = userData.radius || defaultLocationTolerance;
+                        
                         if (userData.faceDescriptor) {
                             try {
                                 JSON.parse(userData.faceDescriptor);
@@ -1005,7 +1022,7 @@ showStatusMessage('Gagal akses lokasi.', 'error');
                             showPage('faceRegistrationPage');
                         } else {
                             showPage('dashboard');
-                            handleGeolocationCheck();
+                            handleGeolocationCheck(userRadius);
                         }
                     } else {
                         showPage('faceRegistrationPage');
@@ -1026,6 +1043,7 @@ showStatusMessage('Gagal akses lokasi.', 'error');
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+            document.getElementById('goToAdminBtn').addEventListener('click', window.handleAdminLogin);
         });
     </script>
 </body>
