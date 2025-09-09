@@ -584,6 +584,7 @@
             window.location.reload();
         });
 
+        // Cek status login saat halaman dimuat
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
