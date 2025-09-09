@@ -59,23 +59,12 @@
         .message-box.info { @apply bg-blue-50 text-blue-800 border-l-4 border-blue-500; }
         .message-box.error { @apply bg-red-50 text-red-800 border-l-4 border-red-500; }
         .message-box.success { @apply bg-green-50 text-green-800 border-l-4 border-green-500; }
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: auto;
-        }
         video {
             border-radius: 12px;
             transform: scaleX(-1);
             width: 100%;
             height: auto;
             border: 2px solid #e2e8f0;
-        }
-        .overlay-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            transform: scaleX(-1);
         }
         .table-container {
             @apply overflow-x-auto rounded-xl shadow-lg;
@@ -149,6 +138,31 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 10;
+        }
+        .face-box {
+            position: absolute;
+            border: 2px solid #2196F3;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -221,7 +235,9 @@
             <div class="card mx-auto" style="max-width: 450px;">
                 <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 Pendaftaran Wajah</h2>
                 <p class="text-center text-gray-600 mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
-                <video id="videoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
+                <div class="video-wrapper">
+                    <video id="videoElement" autoplay muted playsinline class="w-full h-auto"></video>
+                </div>
                 <canvas id="canvasElement" class="hidden"></canvas>
                 <button id="registerFaceSubmitBtn" class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
     Mula Daftar Wajah
@@ -243,10 +259,11 @@
                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
                         <div class="bg-white p-5 rounded-xl shadow">
                             <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
-                            <div class="video-container">
-                                <video id="scanVideoElement" autoplay muted playsinline></video>
-                                <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+                            <div class="video-wrapper">
+                                <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto"></video>
+                                <div id="faceOverlay" class="video-overlay"></div>
                             </div>
+                            <p id="livenessInstructions" class="text-center text-lg font-semibold text-purple-600 mb-4 hidden"></p>
                             <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                 <span id="scanBtnText">Clock In / Clock Out</span>
                             </button>
@@ -332,7 +349,6 @@
         let videoStream = null;
         let isProcessing = false;
         let faceMatcher = null;
-        let scanInterval = null;
 
         // Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -352,7 +368,8 @@
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
         const realTimeClock = document.getElementById('realTimeClock');
-        const overlayCanvas = document.getElementById('overlayCanvas');
+        const livenessInstructions = document.getElementById('livenessInstructions');
+        const faceOverlay = document.getElementById('faceOverlay');
         
         // Notifikasi baharu
         const successNotification = document.getElementById('successNotification');
@@ -364,6 +381,14 @@
 
         window.jsPDF = window.jspdf.jsPDF;
 
+        // Fungsi baru untuk euclideanDistance
+        function euclideanDistance(point1, point2) {
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Show Notification Popup
         function showNotification(title, time, type = 'success') {
             const targetNotif = type === 'success' ? successNotification : failNotification;
             const targetTitle = type === 'success' ? successNotifTitle : failNotifTitle;
@@ -397,10 +422,6 @@
         }
 
         function stopCamera() {
-            if (scanInterval) {
-                clearInterval(scanInterval);
-                scanInterval = null;
-            }
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
@@ -581,104 +602,156 @@
             }
 
             await startCamera(scanVideoElement);
+            livenessInstructions.classList.remove('hidden');
 
-            scanVideoElement.addEventListener('play', () => {
-                const displaySize = { width: scanVideoElement.videoWidth, height: scanVideoElement.videoHeight };
-                faceapi.matchDimensions(overlayCanvas, displaySize);
+            const livenessInstructionsList = ['Sila senyum'];
+            const randomInstruction = livenessInstructionsList[0];
+            livenessInstructions.textContent = randomInstruction;
+
+            let faceDetectionInterval = setInterval(async () => {
+                const videoEl = scanVideoElement;
+                const displaySize = { width: videoEl.videoWidth, height: videoEl.videoHeight };
+                if (displaySize.width === 0 || displaySize.height === 0) return;
+
+                const detections = await faceapi.detectAllFaces(videoEl, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceExpressions();
+                
+                faceOverlay.innerHTML = '';
+                if (detections.length > 0) {
+                    const bestMatch = detections[0];
+                    const box = bestMatch.detection.box;
+
+                    const scaleX = videoEl.clientWidth / videoEl.videoWidth;
+                    const scaleY = videoEl.clientHeight / videoEl.videoHeight;
+                    
+                    const scaledBox = {
+                        x: box.x * scaleX,
+                        y: box.y * scaleY,
+                        width: box.width * scaleX,
+                        height: box.height * scaleY
+                    };
+
+                    const faceBox = document.createElement('div');
+                    faceBox.className = 'face-box';
+                    faceBox.style.left = `${scaledBox.x}px`;
+                    faceBox.style.top = `${scaledBox.y}px`;
+                    faceBox.style.width = `${scaledBox.width}px`;
+                    faceBox.style.height = `${scaledBox.height}px`;
+                    faceOverlay.appendChild(faceBox);
+                    faceOverlay.style.display = 'block';
+                } else {
+                    faceOverlay.style.display = 'none';
+                }
+            }, 100);
+
+            const checkLiveness = new Promise((resolve, reject) => {
+                let isLivenessActionDone = false;
+                let detectionInterval = setInterval(async () => {
+                    const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
+                        .withFaceLandmarks().withFaceExpressions();
+                    
+                    if (detections) {
+                        if (detections.expressions.happy > 0.9) {
+                            isLivenessActionDone = true;
+                        }
+                    }
+                }, 200);
+
+                setTimeout(() => {
+                    clearInterval(detectionInterval);
+                    if (isLivenessActionDone) {
+                        resolve(true);
+                    } else {
+                        reject(new Error(`Liveness check failed. Sila senyum anda gagal dikesan.`));
+                    }
+                }, 5000);
             });
-            
-            scanInterval = setInterval(async () => {
+
+            try {
+                await checkLiveness;
+                clearInterval(faceDetectionInterval);
+                livenessInstructions.classList.add('hidden');
+                scanBtnText.innerHTML = '<span class="loading"></span> Mengesan wajah...';
+
+                await new Promise(r => setTimeout(r, 1000));
                 const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks().withFaceDescriptor();
 
-                const displaySize = { width: scanVideoElement.offsetWidth, height: scanVideoElement.offsetHeight };
-                faceapi.matchDimensions(overlayCanvas, displaySize);
-                overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                
-                const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-                if (resizedDetections) {
-                    // Draw bounding box
-                    const box = resizedDetections.detection.box;
-                    const drawBox = new faceapi.draw.DrawBox(box, { label: 'Wajah Terdeteksi' });
-                    drawBox.draw(overlayCanvas);
-
-                    // Draw facial landmarks
-                    faceapi.draw.drawFaceLandmarks(overlayCanvas, resizedDetections);
-
-                    // Draw face expressions
-                    faceapi.draw.drawFaceExpressions(overlayCanvas, resizedDetections);
-
-                    // Check for a match
+                if (detections) {
                     const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
-                        clearInterval(scanInterval);
-                        stopCamera();
                         showNotification('Wajah Berjaya Dikesan', new Date().toLocaleTimeString(), 'success');
                         await window.handleClockAction();
-                        isProcessing = false;
-                        faceScanBtn.disabled = false;
-                        scanBtnText.textContent = 'Clock In / Clock Out';
                     } else {
-                        scanBtnText.textContent = `Tidak Sepadan (${match.distance.toFixed(2)})`;
+                        showNotification('Wajah Tidak Sepadan', new Date().toLocaleTimeString(), 'error');
                     }
                 } else {
-                    scanBtnText.textContent = 'Wajah Tidak Dikesan';
+                    showNotification('Wajah Tidak Dikesan', new Date().toLocaleTimeString(), 'error');
                 }
-            }, 100);
+            } catch (e) {
+                showNotification(e.message, new Date().toLocaleTimeString(), 'error');
+            } finally {
+                isProcessing = false;
+                faceScanBtn.disabled = false;
+                scanBtnText.textContent = 'Clock In / Clock Out';
+                livenessInstructions.classList.add('hidden');
+                stopCamera();
+                faceOverlay.style.display = 'none';
+                faceOverlay.innerHTML = '';
+            }
         };
 
         window.handleClockAction = async function() {
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-                });
-                const { latitude, longitude } = position.coords;
-                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-                if (distance > locationTolerance) {
-                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-                    return;
-                }
+try {
+const position = await new Promise((resolve, reject) => {
+navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+});
+const { latitude, longitude } = position.coords;
+const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+if (distance > locationTolerance) {
+showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+return;
+}
 
-                const now = new Date();
-                const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-                const docSnap = await getDoc(docRef);
+const now = new Date();
+const todayDateId = getCurrentDateLocal();
+const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-                    const clockIn = docSnap.data().clockIn.toDate();
+if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+const clockIn = docSnap.data().clockIn.toDate();
 
-                    const diffMs = now.getTime() - clockIn.getTime();
-                    const totalMinutes = Math.floor(diffMs / 60000);
-                    const totalHoursDecimal = totalMinutes / 60;
+const diffMs = now.getTime() - clockIn.getTime();
+const totalMinutes = Math.floor(diffMs / 60000);
+const totalHoursDecimal = totalMinutes / 60;
 
-                    const normalWorkHours = 8;
-                    let totalOTDecimal = 0;
-                    if (totalHoursDecimal > normalWorkHours) {
-                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
-                    }
+const normalWorkHours = 8;
+let totalOTDecimal = 0;
+if (totalHoursDecimal > normalWorkHours) {
+totalOTDecimal = totalHoursDecimal - normalWorkHours;
+}
 
-                    await setDoc(docRef, {
-                        clockOut: now,
-                        totalHours: totalHoursDecimal,
-                        totalOT: totalOTDecimal,
-                        locationOut: { lat: latitude, lng: longitude }
-                    }, { merge: true });
-                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-                } else {
-                    await setDoc(docRef, {
-                        date: now,
-                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-                        clockIn: now,
-                        locationIn: { lat: latitude, lng: longitude }
-                    }, { merge: true });
-                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-                }
-                handleGeolocationCheck();
-            } catch (error) {
-                showStatusMessage('Gagal akses lokasi.', 'error');
-            }
-        };
+await setDoc(docRef, {
+clockOut: now,
+totalHours: totalHoursDecimal,
+totalOT: totalOTDecimal,
+locationOut: { lat: latitude, lng: longitude }
+}, { merge: true });
+showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+} else {
+await setDoc(docRef, {
+date: now,
+weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+clockIn: now,
+locationIn: { lat: latitude, lng: longitude }
+}, { merge: true });
+showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+}
+handleGeolocationCheck();
+} catch (error) {
+showStatusMessage('Gagal akses lokasi.', 'error');
+}
+};
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
