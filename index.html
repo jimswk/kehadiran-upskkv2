@@ -324,7 +324,7 @@
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 20000;
+        const locationTolerance = 1000;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -598,19 +598,16 @@
                 const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
                 if (resizedDetections) {
-                    // Draw bounding box
+                    const match = faceMatcher.findBestMatch(detections.descriptor);
+                    
+                    const label = match.label === userId ? userData.name : "Wajah Tidak Dikenali";
                     const box = resizedDetections.detection.box;
-                    const drawBox = new faceapi.draw.DrawBox(box, { label: 'Wajah Terdeteksi' });
+                    const drawBox = new faceapi.draw.DrawBox(box, { label: `${label} (${match.distance.toFixed(2)})` });
                     drawBox.draw(overlayCanvas);
 
-                    // Draw facial landmarks
                     faceapi.draw.drawFaceLandmarks(overlayCanvas, resizedDetections);
-
-                    // Draw face expressions
                     faceapi.draw.drawFaceExpressions(overlayCanvas, resizedDetections);
 
-                    // Check for a match
-                    const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
                         clearInterval(scanInterval);
                         stopCamera();
