@@ -59,12 +59,23 @@
         .message-box.info { @apply bg-blue-50 text-blue-800 border-l-4 border-blue-500; }
         .message-box.error { @apply bg-red-50 text-red-800 border-l-4 border-red-500; }
         .message-box.success { @apply bg-green-50 text-green-800 border-l-4 border-green-500; }
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
         video {
             border-radius: 12px;
             transform: scaleX(-1);
             width: 100%;
             height: auto;
             border: 2px solid #e2e8f0;
+        }
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
         }
         .table-container {
             @apply overflow-x-auto rounded-xl shadow-lg;
@@ -232,8 +243,10 @@
                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
                         <div class="bg-white p-5 rounded-xl shadow">
                             <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
-                            <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto mb-4"></video>
-                            <p id="livenessInstructions" class="text-center text-lg font-semibold text-purple-600 mb-4 hidden"></p>
+                            <div class="video-container">
+                                <video id="scanVideoElement" autoplay muted playsinline></video>
+                                <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+                            </div>
                             <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                 <span id="scanBtnText">Clock In / Clock Out</span>
                             </button>
@@ -319,6 +332,7 @@
         let videoStream = null;
         let isProcessing = false;
         let faceMatcher = null;
+        let scanInterval = null;
 
         // Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -338,7 +352,7 @@
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
         const realTimeClock = document.getElementById('realTimeClock');
-        const livenessInstructions = document.getElementById('livenessInstructions');
+        const overlayCanvas = document.getElementById('overlayCanvas');
         
         // Notifikasi baharu
         const successNotification = document.getElementById('successNotification');
@@ -350,14 +364,6 @@
 
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Fungsi baru untuk euclideanDistance
-        function euclideanDistance(point1, point2) {
-            const dx = point2.x - point1.x;
-            const dy = point2.y - point1.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-        
-        // Show Notification Popup
         function showNotification(title, time, type = 'success') {
             const targetNotif = type === 'success' ? successNotification : failNotification;
             const targetTitle = type === 'success' ? successNotifTitle : failNotifTitle;
@@ -391,6 +397,10 @@
         }
 
         function stopCamera() {
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
@@ -571,129 +581,104 @@
             }
 
             await startCamera(scanVideoElement);
-            livenessInstructions.classList.remove('hidden');
 
-            const livenessInstructionsList = ['Sila senyum', 'Sila kedipkan mata'];
-            const randomInstruction = livenessInstructionsList[Math.floor(Math.random() * livenessInstructionsList.length)];
-            livenessInstructions.textContent = randomInstruction;
-
-            const checkLiveness = new Promise((resolve, reject) => {
-                let isLivenessActionDone = false;
-                let detectionInterval = setInterval(async () => {
-                    const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
-                        .withFaceLandmarks().withFaceExpressions();
-                    
-                    if (detections) {
-                        if (randomInstruction === 'Sila kedipkan mata') {
-                            const leftEye = detections.landmarks.getLeftEye();
-                            const rightEye = detections.landmarks.getRightEye();
-
-                            const leftEyeDistance = euclideanDistance(leftEye[1], leftEye[4]);
-                            const rightEyeDistance = euclideanDistance(rightEye[1], rightEye[4]);
-
-                            if (leftEyeDistance < 5 && rightEyeDistance < 5) {
-                                isLivenessActionDone = true;
-                            }
-                        } else if (randomInstruction === 'Sila senyum') {
-                            if (detections.expressions.happy > 0.9) {
-                                isLivenessActionDone = true;
-                            }
-                        } 
-                    }
-                }, 200);
-
-                setTimeout(() => {
-                    clearInterval(detectionInterval);
-                    if (isLivenessActionDone) {
-                        resolve(true);
-                    } else {
-                        reject(new Error(`Liveness check failed. ${randomInstruction} anda gagal dikesan.`));
-                    }
-                }, 5000);
+            scanVideoElement.addEventListener('play', () => {
+                const displaySize = { width: scanVideoElement.videoWidth, height: scanVideoElement.videoHeight };
+                faceapi.matchDimensions(overlayCanvas, displaySize);
             });
-
-            try {
-                await checkLiveness;
-                livenessInstructions.classList.add('hidden');
-                scanBtnText.innerHTML = '<span class="loading"></span> Mengesan wajah...';
-
-                await new Promise(r => setTimeout(r, 1000));
+            
+            scanInterval = setInterval(async () => {
                 const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks().withFaceDescriptor();
 
-                if (detections) {
+                const displaySize = { width: scanVideoElement.offsetWidth, height: scanVideoElement.offsetHeight };
+                faceapi.matchDimensions(overlayCanvas, displaySize);
+                overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+                if (resizedDetections) {
+                    // Draw bounding box
+                    const box = resizedDetections.detection.box;
+                    const drawBox = new faceapi.draw.DrawBox(box, { label: 'Wajah Terdeteksi' });
+                    drawBox.draw(overlayCanvas);
+
+                    // Draw facial landmarks
+                    faceapi.draw.drawFaceLandmarks(overlayCanvas, resizedDetections);
+
+                    // Draw face expressions
+                    faceapi.draw.drawFaceExpressions(overlayCanvas, resizedDetections);
+
+                    // Check for a match
                     const match = faceMatcher.findBestMatch(detections.descriptor);
                     if (match.label === userId && match.distance < 0.6) {
+                        clearInterval(scanInterval);
+                        stopCamera();
                         showNotification('Wajah Berjaya Dikesan', new Date().toLocaleTimeString(), 'success');
                         await window.handleClockAction();
+                        isProcessing = false;
+                        faceScanBtn.disabled = false;
+                        scanBtnText.textContent = 'Clock In / Clock Out';
                     } else {
-                        showNotification('Wajah Tidak Sepadan', new Date().toLocaleTimeString(), 'error');
+                        scanBtnText.textContent = `Tidak Sepadan (${match.distance.toFixed(2)})`;
                     }
                 } else {
-                    showNotification('Wajah Tidak Dikesan', new Date().toLocaleTimeString(), 'error');
+                    scanBtnText.textContent = 'Wajah Tidak Dikesan';
                 }
-            } catch (e) {
-                showNotification(e.message, new Date().toLocaleTimeString(), 'error');
-            } finally {
-                isProcessing = false;
-                faceScanBtn.disabled = false;
-                scanBtnText.textContent = 'Clock In / Clock Out';
-                livenessInstructions.classList.add('hidden');
-                stopCamera();
-            }
+            }, 100);
         };
 
         window.handleClockAction = async function() {
-try {
-const position = await new Promise((resolve, reject) => {
-navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-});
-const { latitude, longitude } = position.coords;
-const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-if (distance > locationTolerance) {
-showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-return;
-}
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                });
+                const { latitude, longitude } = position.coords;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                if (distance > locationTolerance) {
+                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+                    return;
+                }
 
-const now = new Date();
-const todayDateId = getCurrentDateLocal();
-const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-const docSnap = await getDoc(docRef);
+                const now = new Date();
+                const todayDateId = getCurrentDateLocal();
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docSnap = await getDoc(docRef);
 
-if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-const clockIn = docSnap.data().clockIn.toDate();
+                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+                    const clockIn = docSnap.data().clockIn.toDate();
 
-const diffMs = now.getTime() - clockIn.getTime();
-const totalMinutes = Math.floor(diffMs / 60000);
-const totalHoursDecimal = totalMinutes / 60;
+                    const diffMs = now.getTime() - clockIn.getTime();
+                    const totalMinutes = Math.floor(diffMs / 60000);
+                    const totalHoursDecimal = totalMinutes / 60;
 
-const normalWorkHours = 8;
-let totalOTDecimal = 0;
-if (totalHoursDecimal > normalWorkHours) {
-totalOTDecimal = totalHoursDecimal - normalWorkHours;
-}
+                    const normalWorkHours = 8;
+                    let totalOTDecimal = 0;
+                    if (totalHoursDecimal > normalWorkHours) {
+                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                    }
 
-await setDoc(docRef, {
-clockOut: now,
-totalHours: totalHoursDecimal,
-totalOT: totalOTDecimal,
-locationOut: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-} else {
-await setDoc(docRef, {
-date: now,
-weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-clockIn: now,
-locationIn: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-}
-handleGeolocationCheck();
-} catch (error) {
-showStatusMessage('Gagal akses lokasi.', 'error');
-}
-};
+                    await setDoc(docRef, {
+                        clockOut: now,
+                        totalHours: totalHoursDecimal,
+                        totalOT: totalOTDecimal,
+                        locationOut: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+                } else {
+                    await setDoc(docRef, {
+                        date: now,
+                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                        clockIn: now,
+                        locationIn: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+                }
+                handleGeolocationCheck();
+            } catch (error) {
+                showStatusMessage('Gagal akses lokasi.', 'error');
+            }
+        };
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
