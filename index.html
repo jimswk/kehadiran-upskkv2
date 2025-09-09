@@ -199,7 +199,6 @@
                     <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
                     Log Masuk</button>
                     <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
-                    <button id="goToAdminBtn" class="btn btn-outline w-full mt-2">Log Masuk Admin</button>
                 </div>
             </div>
         </div>
@@ -519,53 +518,6 @@
             showPage('loginPage');
         };
         
-        window.handleAdminLogin = function() {
-            window.location.href = 'admin_dashboard.html';
-        };
-
-        window.handleFaceRegistration = async function() {
-            if (isProcessing) return;
-            isProcessing = true;
-            registerFaceSubmitBtn.disabled = true;
-            registerFaceSubmitBtn.innerHTML = '<div class="loading"></div> Sedang daftar...';
-
-            await startCamera(videoElement);
-            const modelsLoaded = await loadFaceModels();
-            if (!modelsLoaded) {
-                isProcessing = false;
-                registerFaceSubmitBtn.disabled = false;
-                registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
-                return;
-            }
-
-            showStatusMessage('Mengesan wajah...', 'info');
-            let faceDescriptor = null;
-            const startTime = Date.now();
-            while (Date.now() - startTime < 5000) {
-                faceDescriptor = await registerFaceAndGetDescriptor();
-                if (faceDescriptor) break;
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-            if (!faceDescriptor) {
-                showStatusMessage('Wajah tidak dikesan. Cuba lagi.', 'error');
-                showNotification('Wajah tidak dikesan. Cuba lagi.', new Date().toLocaleTimeString(), 'error');
-                isProcessing = false;
-                registerFaceSubmitBtn.disabled = false;
-                registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
-                return;
-            }
-
-            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), { faceDescriptor: JSON.stringify(faceDescriptor) }, { merge: true });
-            isFaceRegistered = true;
-            createFaceMatcher(JSON.stringify(faceDescriptor));
-            showNotification('Wajah berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
-            setTimeout(() => showPage('loginPage'), 1500);
-            isProcessing = false;
-            registerFaceSubmitBtn.disabled = false;
-            registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
-        };
-
         async function handleGeolocationCheck(locationToleranceOverride) {
             faceScanBtn.disabled = true;
             locationStatusEl.textContent = '📍 Mengesan lokasi...';
@@ -1040,7 +992,6 @@
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
-            document.getElementById('goToAdminBtn').addEventListener('click', window.handleAdminLogin);
         });
     </script>
 </body>
