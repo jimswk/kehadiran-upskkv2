@@ -12,7 +12,7 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f0f4f8; /* Warna latar belakang korporat yang lembut */
+            background-color: #f0f4f8; 
             min-height: 100vh;
             margin: 0;
             padding: 2rem;
@@ -197,7 +197,6 @@
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
             authDomain: "kehadiran-upskk.firebaseapp.com",
@@ -226,7 +225,6 @@
         let allUsersData = [];
         let is_admin = false;
 
-        // Muat data pengguna dan isi tabel
         async function loadUsers() {
             const usersRef = collection(db, 'artifacts', appId, 'users');
             const querySnapshot = await getDocs(usersRef);
@@ -272,7 +270,6 @@
             }
         }
 
-        // Muat data kehadiran untuk pengguna yang dipilih
         function loadAttendance(userId) {
             if (!userId) {
                 attendanceTableBody.innerHTML = '';
@@ -310,7 +307,6 @@
             });
         }
         
-        // Buka modal Edit Waktu
         function openEditModal(userId, dateId) {
             const user = allUsersData.find(u => u.id === userId);
             document.getElementById('editDate').value = dateId;
@@ -337,7 +333,6 @@
             editTimeForm.setAttribute('data-date-id', dateId);
         }
 
-        // Buka modal Set Radius
         function openSetRadiusModal(userId) {
             const user = allUsersData.find(u => u.id === userId);
             if (user) {
@@ -348,7 +343,6 @@
             }
         }
 
-        // Simpan perubahan waktu
         editTimeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const userId = e.target.getAttribute('data-user-id');
@@ -378,7 +372,6 @@
             if (clockInDate) updateData.clockIn = clockInDate;
             if (clockOutDate) updateData.clockOut = clockOutDate;
 
-            // Hitung ulang totalHours dan totalOT
             if (clockInDate && clockOutDate) {
                 const diffMs = clockOutDate.getTime() - clockInDate.getTime();
                 const totalMinutes = Math.floor(diffMs / 60000);
@@ -401,7 +394,6 @@
             editTimeModal.style.display = 'none';
         });
 
-        // Simpan perubahan radius
         setRadiusForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const userId = e.target.getAttribute('data-user-id');
@@ -412,11 +404,10 @@
                 await updateDoc(userProfileRef, { radius: parseInt(radius, 10) });
                 alert('Radius berhasil diperbarui.');
                 setRadiusModal.style.display = 'none';
-                loadUsers(); // Muat ulang daftar pengguna untuk menampilkan radius baru
+                loadUsers(); 
             }
         });
 
-        // Event listener untuk tombol Edit dan Set Radius
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('edit-time-btn')) {
                 const userId = e.target.getAttribute('data-user-id');
@@ -432,7 +423,6 @@
             }
         });
 
-        // Event listener untuk dropdown pengguna
         userSelect.addEventListener('change', (e) => {
             loadAttendance(e.target.value);
         });
@@ -445,7 +435,6 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Asumsi: Admin dapat dikenal dari field 'isAdmin' di Firestore
                 const adminDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
                 const adminSnap = await getDoc(adminDocRef);
                 if (adminSnap.exists() && adminSnap.data().isAdmin) {
