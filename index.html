@@ -43,17 +43,6 @@
             transform: translateY(-5px);
             box-shadow: 0 30px 60px rgba(0,0,0,0.15);
         }
-        .card.glassmorphism {
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-        }
-        .card.glassmorphism:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2);
-        }
         .btn {
             @apply py-3 px-6 font-semibold rounded-xl shadow transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2;
         }
@@ -62,19 +51,7 @@
         .btn-red { @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300; }
         .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
         .input-field {
-            @apply mt-1 block w-full rounded-full shadow-sm sm:text-sm px-6 py-3 border-2;
-            background-color: rgba(255, 255, 255, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .input-field::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        .input-field:focus {
-            outline: none;
-            background-color: rgba(255, 255, 255, 0.4);
-            border-color: rgba(255, 255, 255, 0.5);
+            @apply mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border-2;
         }
         .message-box {
             @apply p-4 rounded-xl mb-4 text-center font-medium shadow-md;
@@ -208,7 +185,7 @@
         <div id="statusMessage" class="message-box info hidden"></div>
 
         <div id="loginPage" class="fade-in">
-            <div class="card glassmorphism mx-auto" style="max-width: 400px;">
+            <div class="card mx-auto" style="max-width: 400px;">
                 <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">🔐 Log Masuk</h2>
                 <div class="space-y-4">
                     <div>
@@ -1053,3 +1030,4 @@ showStatusMessage('Gagal akses lokasi.', 'error');
     </script>
 </body>
 </html>
+
