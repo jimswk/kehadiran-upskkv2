@@ -8,11 +8,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary-color: #64748b;
+            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--background-gradient);
             background-attachment: fixed;
             min-height: 100vh;
             margin: 0;
@@ -20,129 +31,234 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            color: #374151;
         }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 var(--glass-shadow);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
         .container {
             max-width: 960px;
             width: 100%;
             margin: 2rem auto;
-            padding: 2rem;
+            padding: 1rem;
             animation: fadeIn 0.6s ease-out;
         }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
-        }
+        
         .btn {
-            @apply py-3 px-6 font-semibold rounded-xl shadow transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2;
+            @apply py-3 px-6 font-medium rounded-xl transition-all duration-200 transform focus:outline-none focus:ring-2;
         }
-        .btn-blue { @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300; }
-        .btn-green { @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-300; }
-        .btn-red { @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300; }
-        .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+        
+        .btn-primary { 
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover { 
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-light);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(79, 70, 229, 0.05);
+            transform: translateY(-2px);
+        }
+        
         .input-field {
-            @apply mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border-2;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.875rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 0.95rem;
         }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .input-field::placeholder {
+            color: #9ca3af;
+        }
+        
+        label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
         .message-box {
-            @apply p-4 rounded-xl mb-4 text-center font-medium shadow-md;
+            @apply p-4 rounded-xl mb-4 text-center font-medium;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
-        .message-box.info { @apply bg-blue-50 text-blue-800 border-l-4 border-blue-500; }
-        .message-box.error { @apply bg-red-50 text-red-800 border-l-4 border-red-500; }
-        .message-box.success { @apply bg-green-50 text-green-800 border-l-4 border-green-500; }
+        
+        .message-box.info { 
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .message-box.error { 
+            border-left: 4px solid #ef4444;
+            color: #b91c1c;
+        }
+        
+        .message-box.success { 
+            border-left: 4px solid #10b981;
+            color: #047857;
+        }
+        
         video {
             border-radius: 12px;
             transform: scaleX(-1);
             width: 100%;
             height: auto;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1);
         }
+        
         .table-container {
-            @apply overflow-x-auto rounded-xl shadow-lg;
+            @apply overflow-x-auto rounded-xl;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        table {
-            @apply min-w-full bg-white;
-        }
+        
         th {
-            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase bg-gray-50;
+            @apply px-6 py-4 text-left text-xs font-semibold uppercase;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
+        
         td {
-            @apply px-6 py-4 text-sm text-gray-700 border-t border-gray-200;
+            @apply px-6 py-4 text-sm border-t;
+            border-color: rgba(255, 255, 255, 0.3);
         }
+        
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
             max-width: 320px;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             padding: 1rem 1.5rem;
             transform: translateX(120%);
             opacity: 0;
             transition: all 0.4s ease;
             z-index: 1000;
-            border-left: 5px solid #4ade80;
+            border-left: 4px solid;
         }
+        
         .notification.show {
             transform: translateX(0);
             opacity: 1;
         }
-        .notification.success { border-left-color: #4ade80; }
-        .notification.error { border-left-color: #ef4444; }
+        
+        .notification.success { 
+            border-left-color: #10b981;
+            color: #047857;
+        }
+        
+        .notification.error { 
+            border-left-color: #ef4444;
+            color: #b91c1c;
+        }
+        
         .notification.left-aligned {
             right: auto;
             left: 20px;
             transform: translateX(-120%);
         }
+        
         .notification.left-aligned.show {
             transform: translateX(0);
         }
+        
         .notification-title {
-            font-weight: 600; font-size: 0.95rem; margin: 0; color: #1f2937;
+            font-weight: 600; 
+            font-size: 0.95rem; 
+            margin: 0; 
         }
+        
         .notification-time {
-            font-size: 0.85rem; color: #6b7280; margin: 0.25rem 0 0; }
+            font-size: 0.85rem; 
+            opacity: 0.8; 
+            margin: 0.25rem 0 0; 
+        }
+        
         .real-time-clock {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #4f46e5;
+            color: white;
             text-align: center;
             margin: 10px 0;
-            animation: pulse 2s infinite;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
+        
         .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid var(--primary-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 8px;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
         .video-wrapper {
             position: relative;
             width: 100%;
             height: auto;
+            border-radius: 12px;
+            overflow: hidden;
         }
+        
         .video-overlay {
             position: absolute;
             top: 0;
@@ -152,16 +268,62 @@
             display: none;
             z-index: 10;
         }
+        
         .face-box {
             position: absolute;
-            border: 2px solid #2196F3;
-            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
             animation: pulse-border 1.5s infinite;
+            border-radius: 8px;
         }
+        
         @keyframes pulse-border {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.05); opacity: 0.7; }
             100% { transform: scale(1); opacity: 1; }
+        }
+        
+        h1, h2, h3 {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .card-title {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .section-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+        
+        .text-content {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 1.5rem 0;
         }
     </style>
 </head>
@@ -178,141 +340,151 @@
 
     <div class="container">
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu UPSKK</h1>
-            <p class="text-blue-100 mt-2">Kehadiran Wajah & Lokasi</p>
+            <h1 class="page-title">Sistem Perakam Waktu UPSKK</h1>
+            <p class="page-subtitle">Kehadiran Wajah & Lokasi</p>
         </div>
 
         <div id="statusMessage" class="message-box info hidden"></div>
 
         <div id="loginPage" class="fade-in">
-            <div class="card mx-auto" style="max-width: 400px;">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">🔐 Log Masuk</h2>
+            <div class="glass-card mx-auto" style="max-width: 400px;">
+                <h2 class="card-title">🔐 Log Masuk</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <label>E-mel</label>
                         <input type="email" id="loginEmailInput" class="input-field" placeholder="masukkan emel anda">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <label>Kata Laluan</label>
                         <input type="password" id="loginPasswordInput" class="input-field" placeholder="••••••••">
                     </div>
                     <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-                    Log Masuk</button>
+                        Log Masuk
                     <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
+                    </button>
                 </div>
             </div>
         </div>
 
         <div id="accountRegistrationPage" class="hidden fade-in">
-            <div class="card mx-auto" style="max-width: 450px;">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">📝 Pendaftaran Akaun</h2>
+            <div class="glass-card mx-auto" style="max-width: 450px;">
+                <h2 class="card-title">📝 Pendaftaran Akaun</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh</label>
+                        <label>Nama Penuh</label>
                         <input type="text" id="registerNameInput" class="input-field" placeholder="Ali Bin Ahmad">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
+                        <label>Jabatan</label>
                         <input type="text" id="registerDepartmentInput" class="input-field" placeholder="Bahagian Teknologi">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <label>E-mel</label>
                         <input type="email" id="registerEmailInput" class="input-field" placeholder="user@upskk.gov.my">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <label>Kata Laluan</label>
                         <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
                     </div>
-                    <button id="registerAccountBtn" class="w-full py-3 px-6 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Daftar Akaun
-</button>
-                    <button id="backToLoginBtn" class="btn btn-outline w-full mt-2">← Kembali ke Log Masuk</button>
+                    <button id="registerAccountBtn" class="btn btn-primary w-full">
+                        Daftar Akaun
+                    </button>
+                    <button id="backToLoginBtn" class="btn btn-secondary w-full mt-2">
+                        ← Kembali ke Log Masuk
+                    </button>
                 </div>
             </div>
         </div>
 
         <div id="faceRegistrationPage" class="hidden fade-in">
-            <div class="card mx-auto" style="max-width: 450px;">
-                <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 Pendaftaran Wajah</h2>
-                <p class="text-center text-gray-600 mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
+            <div class="glass-card mx-auto" style="max-width: 450px;">
+                <h2 class="card-title">📸 Pendaftaran Wajah</h2>
+                <p class="text-content text-center mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
                 <div class="video-wrapper">
                     <video id="videoElement" autoplay muted playsinline class="w-full h-auto"></video>
                 </div>
                 <canvas id="canvasElement" class="hidden"></canvas>
-                <button id="registerFaceSubmitBtn" class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Mula Daftar Wajah
-</button>
-                <button id="returnToLoginBtn" class="btn btn-outline w-full mt-3">Kembali</button>
+                <button id="registerFaceSubmitBtn" class="btn btn-primary w-full mt-4">
+                    Mula Daftar Wajah
+                </button>
+                <button id="returnToLoginBtn" class="btn btn-secondary w-full mt-3">
+                    Kembali
+                </button>
             </div>
         </div>
 
         <div id="dashboard" class="hidden fade-in">
-            <div class="card">
-                <div class="text-center mb-4">
-                    <p class="text-2xl font-semibold text-gray-800" id="userName">Selamat Datang, Pengguna</p>
-                    <p class="text-sm text-gray-500" id="userIdDisplay">ID: -</p>
+            <div class="glass-card">
+                <div class="text-center mb-6">
+                    <p class="text-2xl font-semibold text-white" id="userName">Selamat Datang, Pengguna</p>
+                    <p class="text-content text-sm" id="userIdDisplay">ID: -</p>
                     <div class="real-time-clock" id="realTimeClock">00:00:00</div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-8">
+                <div class="grid md:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
-                        <div class="bg-white p-5 rounded-xl shadow">
-                            <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
+                        <h3 class="section-title">⏱️ Clock In / Out</h3>
+                        <div class="glass-card p-5">
+                            <p class="mb-3 text-center text-content" id="locationStatus">📍 Mengesan lokasi...</p>
                             <div class="video-wrapper">
                                 <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto"></video>
                                 <div id="faceOverlay" class="video-overlay"></div>
                             </div>
-                            <p id="livenessInstructions" class="text-center text-lg font-semibold text-purple-600 mb-4 hidden"></p>
-                            <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <p id="livenessInstructions" class="text-center text-lg font-semibold text-white mb-4 hidden"></p>
+                            <button id="faceScanBtn" class="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                 <span id="scanBtnText">Clock In / Clock Out</span>
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📄 Jana Laporan</h3>
-                        <div class="bg-white p-5 rounded-xl shadow">
-                            <div class="grid md:grid-cols-2 gap-3 mb-4">
+                        <h3 class="section-title">📄 Jana Laporan</h3>
+                        <div class="glass-card p-5">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Tarikh Mula</label>
-                                    <input type="date" id="startDateInput" class="input-field text-sm">
+                                    <label>Dari:</label>
+                                    <input type="date" id="reportStartDate" class="input-field">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Tarikh Tamat</label>
-                                    <input type="date" id="endDateInput" class="input-field text-sm">
+                                    <label>Hingga:</label>
+                                    <input type="date" id="reportEndDate" class="input-field">
                                 </div>
                             </div>
-                            <button id="generatePdfBtn" class="w-full py-3 px-6 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Jana Laporan PDF
-</button>
+                            <button id="generateReportBtn" class="btn btn-primary w-full mt-4">
+                                Jana Laporan
+                            </button>
+                            <div id="reportContainer" class="mt-4 hidden"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-8">
-                    <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📋 Jadual Kehadiran</h3>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tarikh</th>
-                                    <th>Hari</th>
-                                    <th>Masuk</th>
-                                    <th>Keluar</th>
-                                    <th>Jam</th>
-                                    <th>OT</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attendanceTableBody"></tbody>
-                        </table>
-                    </div>
+                <div class="divider"></div>
+
+                <h3 class="section-title">📋 Rekod Kehadiran</h3>
+                <div class="table-container mt-4">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th>Tarikh</th>
+                                <th>Clock In</th>
+                                <th>Clock Out</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceRecords">
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-gray-500">
+                                    Tiada rekod kehadiran
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="text-center mt-6">
-                    <button id="signOutBtn" class="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 text-white font-semibold rounded-lg shadow transition-all duration-200">
-    Log Keluar
-</button>
+                    <button id="logoutBtn" class="btn btn-secondary">
+                        Log Keluar
+                    </button>
                 </div>
             </div>
         </div>
