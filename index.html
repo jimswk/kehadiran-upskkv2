@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,149 +9,339 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 960px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+        .card.glassmorphism {
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+        .card.glassmorphism:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2);
+        }
+        .btn {
+            @apply py-3 px-6 font-semibold rounded-xl shadow transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2;
+        }
+        .btn-blue { @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-300; }
+        .btn-green { @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-300; }
+        .btn-red { @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300; }
+        .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+        .input-field {
+            @apply mt-1 block w-full rounded-full shadow-sm sm:text-sm px-6 py-3 border-2;
+            background-color: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .input-field:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .message-box {
+            @apply p-4 rounded-xl mb-4 text-center font-medium shadow-md;
+        }
+        .message-box.info { @apply bg-blue-50 text-blue-800 border-l-4 border-blue-500; }
+        .message-box.error { @apply bg-red-50 text-red-800 border-l-4 border-red-500; }
+        .message-box.success { @apply bg-green-50 text-green-800 border-l-4 border-green-500; }
+        video {
+            border-radius: 12px;
+            transform: scaleX(-1);
+            width: 100%;
+            height: auto;
+            border: 2px solid #e2e8f0;
+        }
+        .table-container {
+            @apply overflow-x-auto rounded-xl shadow-lg;
+        }
+        table {
+            @apply min-w-full bg-white;
+        }
+        th {
+            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase bg-gray-50;
+        }
+        td {
+            @apply px-6 py-4 text-sm text-gray-700 border-t border-gray-200;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 1rem 1.5rem;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+            border-left: 5px solid #4ade80;
+        }
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .notification.success { border-left-color: #4ade80; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification.left-aligned {
+            right: auto;
+            left: 20px;
+            transform: translateX(-120%);
+        }
+        .notification.left-aligned.show {
+            transform: translateX(0);
+        }
+        .notification-title {
+            font-weight: 600; font-size: 0.95rem; margin: 0; color: #1f2937;
+        }
+        .notification-time {
+            font-size: 0.85rem; color: #6b7280; margin: 0.25rem 0 0; }
+        .real-time-clock {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4f46e5;
+            text-align: center;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 10;
+        }
+        .face-box {
+            position: absolute;
+            border: 2px solid #2196F3;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
-    <!-- Success Notification -->
-    <div id="success-notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        Berjaya! <span id="success-time">10:30:15</span>
+<body>
+    <div id="successNotification" class="notification success">
+        <p class="notification-title" id="successNotifTitle">Berjaya!</p>
+        <p class="notification-time" id="successNotifTime">10:30:15</p>
     </div>
 
-    <!-- Failure Notification -->
-    <div id="failure-notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        Gagal! <span id="failure-time">10:30:15</span>
+    <div id="failNotification" class="notification error left-aligned">
+        <p class="notification-title" id="failNotifTitle">Gagal!</p>
+        <p class="notification-time" id="failNotifTime">10:30:15</p>
     </div>
 
-    <!-- Main Container -->
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <!-- Login Section -->
-        <div id="login-section" class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Sistem Perakam Waktu UPSKK</h2>
-            <p class="text-center text-gray-600 mb-6">Kehadiran Wajah & Lokasi</p>
-            <div class="space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium">E-mel</label>
-                    <input type="email" id="email" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="E-mel">
-                </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium">Kata Laluan</label>
-                    <input type="password" id="password" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Kata Laluan">
-                </div>
-                <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Log Masuk</button>
-                <p class="text-center text-sm text-blue-600 cursor-pointer hover:underline" onclick="showSection('register-section')">Daftar Akaun Baru</p>
-            </div>
+    <div class="container">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">Sistem Perakam Waktu UPSKK</h1>
+            <p class="text-blue-100 mt-2">Kehadiran Wajah & Lokasi</p>
         </div>
 
-        <!-- Register Section -->
-        <div id="register-section" class="hidden w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Pendaftaran Akaun</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="full-name" class="block text-sm font-medium">Nama Penuh</label>
-                    <input type="text" id="full-name" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nama Penuh">
-                </div>
-                <div>
-                    <label for="department" class="block text-sm font-medium">Jabatan</label>
-                    <input type="text" id="department" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Jabatan">
-                </div>
-                <div>
-                    <label for="reg-email" class="block text-sm font-medium">E-mel</label>
-                    <input type="email" id="reg-email" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="E-mel">
-                </div>
-                <div>
-                    <label for="reg-password" class="block text-sm font-medium">Kata Laluan</label>
-                    <input type="password" id="reg-password" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Kata Laluan">
-                </div>
-                <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Daftar Akaun</button>
-                <p class="text-center text-sm text-blue-600 cursor-pointer hover:underline" onclick="showSection('login-section')">Kembali ke Log Masuk</p>
-            </div>
-        </div>
+        <div id="statusMessage" class="message-box info hidden"></div>
 
-        <!-- Face Registration Section -->
-        <div id="face-register-section" class="hidden w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Pendaftaran Wajah</h2>
-            <p class="text-center text-gray-600 mb-6">Hadapkan wajah anda ke kamera selama 5 saat.</p>
-            <div class="flex justify-center mb-4">
-                <div class="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <!-- Placeholder for camera feed -->
-                    <span class="text-gray-500">Kamera</span>
-                </div>
-            </div>
-            <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Mula Daftar Wajah</button>
-            <p class="text-center text-sm text-blue-600 cursor-pointer hover:underline mt-4" onclick="showSection('login-section')">Kembali</p>
-        </div>
-
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="hidden w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Selamat Datang, Pengguna</h2>
-            <p class="text-center text-gray-600 mb-4">ID: -</p>
-            <p class="text-center text-gray-600 mb-6">00:00:00</p>
-
-            <!-- Clock In/Out -->
-            <div class="space-y-4">
-                <div class="text-center">
-                    <p class="text-sm text-gray-600">📍 Mengesan lokasi...</p>
-                    <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 mt-2">Clock In / Clock Out</button>
-                </div>
-
-                <!-- Report Generation -->
-                <div class="space-y-2">
-                    <h3 class="text-lg font-semibold">Jana Laporan</h3>
+        <div id="loginPage" class="fade-in">
+            <div class="card glassmorphism mx-auto" style="max-width: 400px;">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">🔐 Log Masuk</h2>
+                <div class="space-y-4">
                     <div>
-                        <label for="start-date" class="block text-sm font-medium">Tarikh Mula</label>
-                        <input type="date" id="start-date" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <input type="email" id="loginEmailInput" class="input-field" placeholder="masukkan emel anda">
                     </div>
                     <div>
-                        <label for="end-date" class="block text-sm font-medium">Tarikh Tamat</label>
-                        <input type="date" id="end-date" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <input type="password" id="loginPasswordInput" class="input-field" placeholder="••••••••">
                     </div>
-                    <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Jana Laporan PDF</button>
+                    <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+                    Log Masuk</button>
+                    <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="accountRegistrationPage" class="hidden fade-in">
+            <div class="card mx-auto" style="max-width: 450px;">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">📝 Pendaftaran Akaun</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh</label>
+                        <input type="text" id="registerNameInput" class="input-field" placeholder="Ali Bin Ahmad">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
+                        <input type="text" id="registerDepartmentInput" class="input-field" placeholder="Bahagian Teknologi">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mel</label>
+                        <input type="email" id="registerEmailInput" class="input-field" placeholder="user@upskk.gov.my">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan</label>
+                        <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
+                    </div>
+                    <button id="registerAccountBtn" class="w-full py-3 px-6 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+    Daftar Akaun
+</button>
+                    <button id="backToLoginBtn" class="btn btn-outline w-full mt-2">← Kembali ke Log Masuk</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="faceRegistrationPage" class="hidden fade-in">
+            <div class="card mx-auto" style="max-width: 450px;">
+                <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">📸 Pendaftaran Wajah</h2>
+                <p class="text-center text-gray-600 mb-4">Hadapkan wajah anda ke kamera selama 5 saat.</p>
+                <div class="video-wrapper">
+                    <video id="videoElement" autoplay muted playsinline class="w-full h-auto"></video>
+                </div>
+                <canvas id="canvasElement" class="hidden"></canvas>
+                <button id="registerFaceSubmitBtn" class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+    Mula Daftar Wajah
+</button>
+                <button id="returnToLoginBtn" class="btn btn-outline w-full mt-3">Kembali</button>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden fade-in">
+            <div class="card">
+                <div class="text-center mb-4">
+                    <p class="text-2xl font-semibold text-gray-800" id="userName">Selamat Datang, Pengguna</p>
+                    <p class="text-sm text-gray-500" id="userIdDisplay">ID: -</p>
+                    <div class="real-time-clock" id="realTimeClock">00:00:00</div>
                 </div>
 
-                <!-- Attendance Table -->
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">Jadual Kehadiran</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="bg-gray-200">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Clock In / Out</h3>
+                        <div class="bg-white p-5 rounded-xl shadow">
+                            <p class="mb-3 text-center text-gray-600" id="locationStatus">📍 Mengesan lokasi...</p>
+                            <div class="video-wrapper">
+                                <video id="scanVideoElement" autoplay muted playsinline class="w-full h-auto"></video>
+                                <div id="faceOverlay" class="video-overlay"></div>
+                            </div>
+                            <p id="livenessInstructions" class="text-center text-lg font-semibold text-purple-600 mb-4 hidden"></p>
+                            <button id="faceScanBtn" class="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                <span id="scanBtnText">Clock In / Clock Out</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📄 Jana Laporan</h3>
+                        <div class="bg-white p-5 rounded-xl shadow">
+                            <div class="grid md:grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tarikh Mula</label>
+                                    <input type="date" id="startDateInput" class="input-field text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tarikh Tamat</label>
+                                    <input type="date" id="endDateInput" class="input-field text-sm">
+                                </div>
+                            </div>
+                            <button id="generatePdfBtn" class="w-full py-3 px-6 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+    Jana Laporan PDF
+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-center text-gray-800 mb-4">📋 Jadual Kehadiran</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <th class="p-2">Tarikh</th>
-                                    <th class="p-2">Hari</th>
-                                    <th class="p-2">Masuk</th>
-                                    <th class="p-2">Keluar</th>
-                                    <th class="p-2">Jam</th>
-                                    <th class="p-2">OT</th>
+                                    <th>Tarikh</th>
+                                    <th>Hari</th>
+                                    <th>Masuk</th>
+                                    <th>Keluar</th>
+                                    <th>Jam</th>
+                                    <th>OT</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Sample data -->
-                                <tr>
-                                    <td class="p-2">-</td>
-                                    <td class="p-2">-</td>
-                                    <td class="p-2">-</td>
-                                    <td class="p-2">-</td>
-                                    <td class="p-2">-</td>
-                                    <td class="p-2">-</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="attendanceTableBody"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Logout -->
-                <button class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 mt-4">Log Keluar</button>
+                <div class="text-center mt-6">
+                    <button id="signOutBtn" class="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 text-white font-semibold rounded-lg shadow transition-all duration-200">
+    Log Keluar
+</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
-    function showSection(sectionId) {
-            const sections = ['login-section', 'register-section', 'face-register-section', 'dashboard-section'];
-            sections.forEach(id => {
-            document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(sectionId).classList.remove('hidden');   
-        }
-        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
