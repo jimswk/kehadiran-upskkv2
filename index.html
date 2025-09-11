@@ -1128,30 +1128,38 @@
         }
 
         async function loadAdminData() {
+    try {
+        // Ganti dengan query yang lebih spesifik
+        const usersCollectionRef = collection(db, 'artifacts', appId, 'users');
+        const usersSnapshot = await getDocs(usersCollectionRef);
+
+        const users = [];
+        const promises = usersSnapshot.docs.map(async (userDoc) => {
             try {
-                const usersCollectionRef = collectionGroup(db, 'profile');
-                const usersSnapshot = await getDocs(usersCollectionRef);
-
-                const users = [];
-                usersSnapshot.forEach(docSnap => {
-                    const user = docSnap.data();
-                    const userId = docSnap.ref.parent.parent.id;
-                    users.push({ ...user, id: userId });
-                });
-
-                updateUserTable(users);
-                populateUserSelectAdmin(users);
-                
-                const settingsDoc = await getDoc(doc(db, 'artifacts', appId, 'settings', 'config'));
-                if (settingsDoc.exists()) {
-                    radiusInput.value = settingsDoc.data().locationTolerance;
-                    locationTolerance = settingsDoc.data().locationTolerance;
+                const profileDoc = await getDoc(doc(db, 'artifacts', appId, 'users', userDoc.id, 'profile', 'data'));
+                if (profileDoc.exists()) {
+                    users.push({ ...profileDoc.data(), id: userDoc.id });
                 }
-
             } catch (error) {
-                console.error('Error loading admin data:', error);
+                console.error(`Error loading profile for user ${userDoc.id}:`, error);
             }
+        });
+
+        await Promise.all(promises);
+        updateUserTable(users);
+        populateUserSelectAdmin(users);
+        
+        // Load settings
+        const settingsDoc = await getDoc(doc(db, 'artifacts', appId, 'settings', 'config'));
+        if (settingsDoc.exists()) {
+            radiusInput.value = settingsDoc.data().locationTolerance;
+            locationTolerance = settingsDoc.data().locationTolerance;
         }
+    } catch (error) {
+        console.error('Error loading admin data:', error);
+        showNotification('Gagal memuat data admin', new Date().toLocaleTimeString(), 'error');
+    }
+}
         
         function updateUserTable(users) {
             userTableBodyAdmin.innerHTML = '';
