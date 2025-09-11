@@ -199,6 +199,7 @@
                     <button id="loginBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
                     Log Masuk</button>
                     <button id="goToRegisterBtn" class="btn btn-outline w-full mt-2">Daftar Akaun Baru</button>
+                    <button id="goToAdminLoginBtn" class="btn btn-outline w-full mt-2">Log Masuk Pentadbir</button>
                 </div>
             </div>
         </div>
@@ -224,8 +225,8 @@
                         <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
                     </div>
                     <button id="registerAccountBtn" class="w-full py-3 px-6 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Daftar Akaun
-</button>
+                        Daftar Akaun
+                    </button>
                     <button id="backToLoginBtn" class="btn btn-outline w-full mt-2">← Kembali ke Log Masuk</button>
                 </div>
             </div>
@@ -240,8 +241,8 @@
                 </div>
                 <canvas id="canvasElement" class="hidden"></canvas>
                 <button id="registerFaceSubmitBtn" class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Mula Daftar Wajah
-</button>
+                    Mula Daftar Wajah
+                </button>
                 <button id="returnToLoginBtn" class="btn btn-outline w-full mt-3">Kembali</button>
             </div>
         </div>
@@ -284,8 +285,8 @@
                                 </div>
                             </div>
                             <button id="generatePdfBtn" class="w-full py-3 px-6 bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
-    Jana Laporan PDF
-</button>
+                                Jana Laporan PDF
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -311,8 +312,106 @@
 
                 <div class="text-center mt-6">
                     <button id="signOutBtn" class="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 text-white font-semibold rounded-lg shadow transition-all duration-200">
-    Log Keluar
-</button>
+                        Log Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminDashboard" class="hidden container">
+            <section id="adminLoginSection" class="flex items-center justify-center min-h-screen">
+                <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+                    <h2 class="text-xl font-semibold mb-4 text-center">Log Masuk Pentadbir</h2>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">E-mel</label>
+                        <input type="email" id="adminEmail" class="border p-2 rounded w-full" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">Kata Laluan</label>
+                        <input type="password" id="adminPassword" class="border p-2 rounded w-full" required>
+                    </div>
+                    <button id="adminLoginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">Log Masuk</button>
+                    <p id="adminLoginError" class="text-red-500 text-sm mt-2 hidden"></p>
+                </div>
+            </section>
+
+            <div id="adminPanel" class="container mx-auto p-6 hidden">
+                <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6">
+                    <h1 class="text-2xl font-bold">Dashboard Pentadbir - Sistem Perakam Waktu UPSKK</h1>
+                    <button id="adminLogoutBtn" class="mt-2 bg-red-500 hover:bg-red-600 px-4 py-2 rounded">Log Keluar</button>
+                </header>
+
+                <div class="flex space-x-4 mb-6">
+                    <button id="userManagementTab" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Pengurusan Pengguna</button>
+                    <button id="attendanceTab" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Pengurusan Kehadiran</button>
+                    <button id="settingsTab" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Tetapan</button>
+                </div>
+
+                <section id="userManagement" class="hidden">
+                    <h2 class="text-xl font-semibold mb-4">Pengurusan Pengguna</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="border p-2">ID</th>
+                                    <th class="border p-2">Nama</th>
+                                    <th class="border p-2">E-mel</th>
+                                    <th class="border p-2">Jabatan</th>
+                                    <th class="border p-2">Daftar Wajah</th>
+                                    <th class="border p-2">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBodyAdmin"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="attendanceManagement" class="hidden">
+                    <h2 class="text-xl font-semibold mb-4">Pengurusan Kehadiran</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium">Pilih Pengguna:</label>
+                            <select id="userSelectAdmin" class="border p-2 rounded w-full"></select>
+                        </div>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="border p-2">Tarikh</th>
+                                    <th class="border p-2">Hari</th>
+                                    <th class="border p-2">Masuk</th>
+                                    <th class="border p-2">Keluar</th>
+                                    <th class="border p-2">Jam</th>
+                                    <th class="border p-2">OT</th>
+                                    <th class="border p-2">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBodyAdmin"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="settings" class="hidden">
+                    <h2 class="text-xl font-semibold mb-4">Tetapan</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-medium">Tetapan Radius Lokasi</h3>
+                            <label class="block text-sm font-medium">Radius (meter):</label>
+                            <input type="number" id="radiusInput" class="border p-2 rounded w-full" value="100">
+                            <button id="saveRadiusBtn" class="mt-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Simpan Radius</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <div id="editAttendanceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-4">Edit Kehadiran</h3>
+                        <label class="block text-sm font-medium">Masuk:</label>
+                        <input type="datetime-local" id="editClockIn" class="border p-2 rounded w-full mb-2">
+                        <label class="block text-sm font-medium">Keluar:</label>
+                        <input type="datetime-local" id="editClockOut" class="border p-2 rounded w-full mb-2">
+                        <button id="saveAttendanceBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Simpan</button>
+                        <button id="cancelAttendanceBtn" class="ml-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Batal</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -321,7 +420,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath, collectionGroup, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
@@ -337,11 +436,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const appId = 'default-app-id';
-        const officeCoordinates = {
+        let officeCoordinates = {
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 1500;
+        let locationTolerance = 1500;
 
         let userId = null;
         let isFaceRegistered = false;
@@ -349,6 +448,7 @@
         let videoStream = null;
         let isProcessing = false;
         let faceMatcher = null;
+        let editingAttendanceRecordId = null;
 
         // Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -370,6 +470,33 @@
         const realTimeClock = document.getElementById('realTimeClock');
         const livenessInstructions = document.getElementById('livenessInstructions');
         const faceOverlay = document.getElementById('faceOverlay');
+        const goToAdminLoginBtn = document.getElementById('goToAdminLoginBtn');
+        
+        // Admin Elements
+        const adminDashboardDiv = document.getElementById('adminDashboard');
+        const adminLoginSection = document.getElementById('adminLoginSection');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminEmailInput = document.getElementById('adminEmail');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const adminLoginError = document.getElementById('adminLoginError');
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        const userManagementTab = document.getElementById('userManagementTab');
+        const attendanceTab = document.getElementById('attendanceTab');
+        const settingsTab = document.getElementById('settingsTab');
+        const userManagementSection = document.getElementById('userManagement');
+        const attendanceManagementSection = document.getElementById('attendanceManagement');
+        const settingsSection = document.getElementById('settings');
+        const userTableBodyAdmin = document.getElementById('userTableBodyAdmin');
+        const attendanceTableBodyAdmin = document.getElementById('attendanceTableBodyAdmin');
+        const userSelectAdmin = document.getElementById('userSelectAdmin');
+        const editAttendanceModal = document.getElementById('editAttendanceModal');
+        const editClockIn = document.getElementById('editClockIn');
+        const editClockOut = document.getElementById('editClockOut');
+        const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+        const cancelAttendanceBtn = document.getElementById('cancelAttendanceBtn');
+        const radiusInput = document.getElementById('radiusInput');
+        const saveRadiusBtn = document.getElementById('saveRadiusBtn');
         
         // Notifikasi baharu
         const successNotification = document.getElementById('successNotification');
@@ -405,7 +532,7 @@
         }
 
         function showPage(pageId) {
-            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv].forEach(p => p.classList.add('hidden'));
+            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminDashboardDiv].forEach(p => p.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
             stopCamera();
             hideStatusMessage();
@@ -487,7 +614,7 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 userId = userCredential.user.uid;
                 await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
-                    name, department, faceDescriptor: null
+                    name, department, faceDescriptor: null, isAdmin: false
                 });
                 showStatusMessage('Berjaya daftar! Daftar wajah sekarang.', 'success');
                 showPage('faceRegistrationPage');
@@ -512,11 +639,37 @@
             }
         };
 
+        window.handleAdminLogin = async function() {
+            const email = adminEmailInput.value.trim();
+            const password = adminPasswordInput.value.trim();
+            adminLoginError.classList.add('hidden');
+            if (!email || !password) {
+                adminLoginError.textContent = 'Sila masukkan e-mel dan kata laluan.';
+                adminLoginError.classList.remove('hidden');
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                adminLoginError.textContent = `Ralat log masuk: ${error.message}`;
+                adminLoginError.classList.remove('hidden');
+            }
+        };
+        
         window.handleSignOut = async function() {
             await signOut(auth);
             showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
             showPage('loginPage');
         };
+
+        window.handleAdminSignOut = async function() {
+            await signOut(auth);
+            showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
+            adminDashboardDiv.classList.remove('hidden');
+            adminLoginSection.classList.remove('hidden');
+            adminPanel.classList.add('hidden');
+        };
+
 
         window.handleFaceRegistration = async function() {
             if (isProcessing) return;
@@ -702,56 +855,56 @@
         };
 
         window.handleClockAction = async function() {
-try {
-const position = await new Promise((resolve, reject) => {
-navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-});
-const { latitude, longitude } = position.coords;
-const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-if (distance > locationTolerance) {
-showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-return;
-}
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                });
+                const { latitude, longitude } = position.coords;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                if (distance > locationTolerance) {
+                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+                    return;
+                }
 
-const now = new Date();
-const todayDateId = getCurrentDateLocal();
-const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-const docSnap = await getDoc(docRef);
+                const now = new Date();
+                const todayDateId = getCurrentDateLocal();
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docSnap = await getDoc(docRef);
 
-if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-const clockIn = docSnap.data().clockIn.toDate();
+                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+                    const clockIn = docSnap.data().clockIn.toDate();
 
-const diffMs = now.getTime() - clockIn.getTime();
-const totalMinutes = Math.floor(diffMs / 60000);
-const totalHoursDecimal = totalMinutes / 60;
+                    const diffMs = now.getTime() - clockIn.getTime();
+                    const totalMinutes = Math.floor(diffMs / 60000);
+                    const totalHoursDecimal = totalMinutes / 60;
 
-const normalWorkHours = 8;
-let totalOTDecimal = 0;
-if (totalHoursDecimal > normalWorkHours) {
-totalOTDecimal = totalHoursDecimal - normalWorkHours;
-}
+                    const normalWorkHours = 8;
+                    let totalOTDecimal = 0;
+                    if (totalHoursDecimal > normalWorkHours) {
+                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                    }
 
-await setDoc(docRef, {
-clockOut: now,
-totalHours: totalHoursDecimal,
-totalOT: totalOTDecimal,
-locationOut: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-} else {
-await setDoc(docRef, {
-date: now,
-weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-clockIn: now,
-locationIn: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-}
-handleGeolocationCheck();
-} catch (error) {
-showStatusMessage('Gagal akses lokasi.', 'error');
-}
-};
+                    await setDoc(docRef, {
+                        clockOut: now,
+                        totalHours: totalHoursDecimal,
+                        totalOT: totalOTDecimal,
+                        locationOut: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+                } else {
+                    await setDoc(docRef, {
+                        date: now,
+                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                        clockIn: now,
+                        locationIn: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+                }
+                handleGeolocationCheck();
+            } catch (error) {
+                showStatusMessage('Gagal akses lokasi.', 'error');
+            }
+        };
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
@@ -962,50 +1115,234 @@ showStatusMessage('Gagal akses lokasi.', 'error');
                 realTimeClock.textContent = new Date().toLocaleTimeString();
             }
         }, 1000);
+        
+        // Admin functions
+        function showAdminPanel() {
+            adminLoginSection.classList.add('hidden');
+            adminPanel.classList.remove('hidden');
+        }
+
+        function toggleAdminSection(sectionId) {
+            [userManagementSection, attendanceManagementSection, settingsSection].forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        async function loadAdminData() {
+            try {
+                const usersCollectionRef = collectionGroup(db, 'profile');
+                const usersSnapshot = await getDocs(usersCollectionRef);
+
+                const users = [];
+                usersSnapshot.forEach(docSnap => {
+                    const user = docSnap.data();
+                    const userId = docSnap.ref.parent.parent.id;
+                    users.push({ ...user, id: userId });
+                });
+
+                updateUserTable(users);
+                populateUserSelectAdmin(users);
+                
+                const settingsDoc = await getDoc(doc(db, 'artifacts', appId, 'settings', 'config'));
+                if (settingsDoc.exists()) {
+                    radiusInput.value = settingsDoc.data().locationTolerance;
+                    locationTolerance = settingsDoc.data().locationTolerance;
+                }
+
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
+        }
+        
+        function updateUserTable(users) {
+            userTableBodyAdmin.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const faceStatus = user.faceDescriptor ? 'Telah Daftar' : 'Belum Daftar';
+                row.innerHTML = `
+                    <td class="border p-2">${user.id}</td>
+                    <td class="border p-2">${user.name}</td>
+                    <td class="border p-2">${user.email}</td>
+                    <td class="border p-2">${user.department}</td>
+                    <td class="border p-2">${faceStatus}</td>
+                    <td class="border p-2">
+                        <button onclick="deleteUserAdmin('${user.id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">Padam</button>
+                    </td>
+                `;
+                userTableBodyAdmin.appendChild(row);
+            });
+        }
+
+        function populateUserSelectAdmin(users) {
+            userSelectAdmin.innerHTML = '<option value="">Pilih Pengguna</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                userSelectAdmin.appendChild(option);
+            });
+        }
+
+        async function loadUserAttendanceAdmin(selectedUserId) {
+            const tbody = attendanceTableBodyAdmin;
+            tbody.innerHTML = '';
+            if (!selectedUserId) return;
+
+            const attendanceRef = collection(db, 'artifacts', appId, 'users', selectedUserId, 'attendance');
+            const q = query(attendanceRef);
+            const snap = await getDocs(q);
+
+            snap.docs.forEach(doc => {
+                const record = { id: doc.id, ...doc.data() };
+                const row = document.createElement('tr');
+                const clockInDisplay = record.clockIn ? record.clockIn.toDate().toLocaleString() : '-';
+                const clockOutDisplay = record.clockOut ? record.clockOut.toDate().toLocaleString() : '-';
+                const totalHoursDisplay = record.totalHours ? formatDecimalToTime(record.totalHours) : '-';
+                const otDisplay = record.totalOT ? formatDecimalToTime(record.totalOT) : '-';
+
+                row.innerHTML = `
+                    <td class="border p-2">${record.id}</td>
+                    <td class="border p-2">${record.weekday}</td>
+                    <td class="border p-2">${clockInDisplay}</td>
+                    <td class="border p-2">${clockOutDisplay}</td>
+                    <td class="border p-2">${totalHoursDisplay}</td>
+                    <td class="border p-2">${otDisplay}</td>
+                    <td class="border p-2">
+                        <button onclick="editAttendance('${record.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        window.editAttendance = async function(recordId) {
+            editingAttendanceRecordId = recordId;
+            const selectedUserId = userSelectAdmin.value;
+            if (!selectedUserId) return;
+
+            const docRef = doc(db, 'artifacts', appId, 'users', selectedUserId, 'attendance', recordId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.clockIn) {
+                    editClockIn.value = data.clockIn.toDate().toISOString().slice(0, 16);
+                }
+                if (data.clockOut) {
+                    editClockOut.value = data.clockOut.toDate().toISOString().slice(0, 16);
+                }
+                editAttendanceModal.classList.remove('hidden');
+            }
+        };
+
+        window.saveAttendanceChanges = async function() {
+            if (!editingAttendanceRecordId) return;
+
+            const clockIn = editClockIn.value ? new Date(editClockIn.value) : null;
+            const clockOut = editClockOut.value ? new Date(editClockOut.value) : null;
+
+            if (clockIn && clockOut && clockIn > clockOut) {
+                alert('Masa Keluar tidak boleh lebih awal dari Masa Masuk.');
+                return;
+            }
+
+            const totalMs = clockOut.getTime() - clockIn.getTime();
+            const totalHoursDecimal = totalMs / (1000 * 60 * 60);
+            const totalOTDecimal = totalHoursDecimal > 8 ? totalHoursDecimal - 8 : 0;
+            
+            const selectedUserId = userSelectAdmin.value;
+            const docRef = doc(db, 'artifacts', appId, 'users', selectedUserId, 'attendance', editingAttendanceRecordId);
+
+            try {
+                await setDoc(docRef, {
+                    clockIn: clockIn,
+                    clockOut: clockOut,
+                    totalHours: totalHoursDecimal,
+                    totalOT: totalOTDecimal
+                }, { merge: true });
+
+                alert('Kehadiran berjaya dikemaskini!');
+                editAttendanceModal.classList.add('hidden');
+                loadUserAttendanceAdmin(selectedUserId);
+            } catch (error) {
+                console.error('Error saving attendance:', error);
+                alert('Gagal mengemaskini kehadiran.');
+            }
+        };
+        
+        window.deleteUserAdmin = async function(userIdToDelete) {
+            if (!confirm('Adakah anda pasti mahu memadam pengguna ini? Ini akan memadam semua data mereka.')) return;
+
+            try {
+                // Delete attendance records
+                const attendanceDocs = await getDocs(collection(db, 'artifacts', appId, 'users', userIdToDelete, 'attendance'));
+                const deletePromises = attendanceDocs.docs.map(d => deleteDoc(d.ref));
+                await Promise.all(deletePromises);
+
+                // Delete user profile data
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userIdToDelete, 'profile', 'data'));
+                
+                // You'll need to manually delete the user from Firebase Authentication console
+                // Or set up a Cloud Function for this.
+                alert('Pengguna berjaya dipadam. Sila padam secara manual di Firebase Auth.');
+                loadAdminData();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Gagal memadam pengguna.');
+            }
+        };
 
         window.onload = async function() {
             await loadFaceModels();
             initializeUI();
-
+            
             onAuthStateChanged(auth, async (user) => {
+                [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminDashboardDiv].forEach(p => p.classList.add('hidden'));
+
                 if (user) {
-                    userId = user.uid;
-                    const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                    const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
                     const snap = await getDoc(userDocRef);
 
                     if (snap.exists()) {
                         userData = snap.data();
-                        userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
-                        userIdDisplay.textContent = `ID: ${userId}`;
-                        
-                        if (userData.faceDescriptor) {
-                            try {
-                                JSON.parse(userData.faceDescriptor);
-                                isFaceRegistered = true;
-                                createFaceMatcher(userData.faceDescriptor);
-                            } catch (e) {
-                                console.error("faceDescriptor rosak");
-                                isFaceRegistered = false;
-                            }
-                        }
-                        
-                        const startOfMonthStr = getStartOfMonthLocal();
-                        const endOfMonthStr = getEndOfMonthLocal();
-                        const q = query(
-                            collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                            where('__name__', '>=', startOfMonthStr),
-                            where('__name__', '<=', endOfMonthStr)
-                        );
-                        onSnapshot(q, snap => {
-                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            updateAttendanceTable(data);
-                        });
-
-                        if (!isFaceRegistered) {
-                            showPage('faceRegistrationPage');
+                        if (userData.isAdmin) {
+                            showAdminPanel();
+                            adminDashboardDiv.classList.remove('hidden');
+                            loadAdminData();
+                            toggleAdminSection('userManagement');
                         } else {
-                            showPage('dashboard');
-                            handleGeolocationCheck();
+                            dashboardDiv.classList.remove('hidden');
+                            userNameDisplay.textContent = `Selamat Datang, ${userData.name}`;
+                            userIdDisplay.textContent = `ID: ${user.uid}`;
+                            
+                            if (userData.faceDescriptor) {
+                                try {
+                                    JSON.parse(userData.faceDescriptor);
+                                    isFaceRegistered = true;
+                                    createFaceMatcher(userData.faceDescriptor);
+                                } catch (e) {
+                                    console.error("faceDescriptor rosak");
+                                    isFaceRegistered = false;
+                                }
+                            }
+                            
+                            const startOfMonthStr = getStartOfMonthLocal();
+                            const endOfMonthStr = getEndOfMonthLocal();
+                            const q = query(
+                                collection(db, 'artifacts', appId, 'users', user.uid, 'attendance'),
+                                where('__name__', '>=', startOfMonthStr),
+                                where('__name__', '<=', endOfMonthStr)
+                            );
+                            onSnapshot(q, snap => {
+                                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                updateAttendanceTable(data);
+                            });
+
+                            if (!isFaceRegistered) {
+                                showPage('faceRegistrationPage');
+                            } else {
+                                showPage('dashboard');
+                                handleGeolocationCheck();
+                            }
                         }
                     } else {
                         showPage('faceRegistrationPage');
@@ -1019,6 +1356,11 @@ showStatusMessage('Gagal akses lokasi.', 'error');
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
             document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
+            document.getElementById('goToAdminLoginBtn').addEventListener('click', () => {
+                showPage('adminDashboard');
+                adminLoginSection.classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+            });
             document.getElementById('registerAccountBtn').addEventListener('click', window.handleAccountRegistration);
             document.getElementById('backToLoginBtn').addEventListener('click', () => showPage('loginPage'));
             document.getElementById('registerFaceSubmitBtn').addEventListener('click', window.handleFaceRegistration);
@@ -1026,6 +1368,32 @@ showStatusMessage('Gagal akses lokasi.', 'error');
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+
+            // Admin Event Listeners
+            adminLoginBtn.addEventListener('click', window.handleAdminLogin);
+            adminLogoutBtn.addEventListener('click', window.handleAdminSignOut);
+            userManagementTab.addEventListener('click', () => { toggleAdminSection('userManagement'); loadAdminData(); });
+            attendanceTab.addEventListener('click', () => { toggleAdminSection('attendanceManagement'); loadUserAttendanceAdmin(userSelectAdmin.value); });
+            settingsTab.addEventListener('click', () => toggleAdminSection('settings'));
+            userSelectAdmin.addEventListener('change', (e) => loadUserAttendanceAdmin(e.target.value));
+            saveAttendanceBtn.addEventListener('click', window.saveAttendanceChanges);
+            cancelAttendanceBtn.addEventListener('click', () => editAttendanceModal.classList.add('hidden'));
+
+            saveRadiusBtn.addEventListener('click', async () => {
+                const newTolerance = parseInt(radiusInput.value);
+                if (isNaN(newTolerance)) {
+                    alert('Sila masukkan nombor yang sah.');
+                    return;
+                }
+                locationTolerance = newTolerance;
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'settings', 'config'), { locationTolerance: newTolerance }, { merge: true });
+                    alert('Radius lokasi berjaya disimpan.');
+                } catch (error) {
+                    console.error('Error saving radius:', error);
+                    alert('Gagal menyimpan radius.');
+                }
+            });
         });
     </script>
 </body>
