@@ -537,8 +537,8 @@
         const scanBtnText = document.getElementById('scanBtnText');
         const registerFaceSubmitBtn = document.getElementById('registerFaceSubmitBtn');
         const locationStatusEl = document.getElementById('locationStatus');
-        const startDateInput = document.getElementById('startDateInput');
-        const endDateInput = document.getElementById('endDateInput');
+        const startDateInput = document.getElementById('reportStartDate');
+        const endDateInput = document.getElementById('reportEndDate');
         const realTimeClock = document.getElementById('realTimeClock');
         const livenessInstructions = document.getElementById('livenessInstructions');
         const faceOverlay = document.getElementById('faceOverlay');
@@ -1196,7 +1196,7 @@ showStatusMessage('Gagal akses lokasi.', 'error');
             document.getElementById('registerFaceSubmitBtn').addEventListener('click', window.handleFaceRegistration);
             document.getElementById('returnToLoginBtn').addEventListener('click', () => showPage('loginPage'));
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
-            document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
+            document.getElementById('generateReportBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
         });
     </script>
