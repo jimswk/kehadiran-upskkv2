@@ -11,9 +11,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <style>
+        :root {
+            --primary-color: #4a90e2; /* Blue */
+            --background-dark: #1f2937; /* Dark Gray */
+            --surface-dark: #374151; /* Slightly Lighter Dark Gray */
+            --text-light: #f3f4f6; /* Off-White */
+            --text-muted: #9ca3af; /* Muted Gray */
+            --border-color: #4b5563; /* Darker Gray */
+            --red-color: #ef4444;
+            --green-color: #10b981;
+            --blue-color: #3b82f6;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fc;
+            background-color: var(--background-dark);
+            color: var(--text-light);
             min-height: 100vh;
         }
         .layout-container {
@@ -24,12 +37,12 @@
             align-items: center;
             justify-content: space-between;
             white-space: nowrap;
-            border-bottom: 1px solid #e7ebf3;
+            border-bottom: 1px solid var(--border-color);
             padding-left: 2.5rem;
             padding-right: 2.5rem;
             padding-top: 1rem;
             padding-bottom: 1rem;
-            background-color: white;
+            background-color: var(--surface-dark);
         }
         .main-content {
             flex: 1;
@@ -42,10 +55,10 @@
             margin-right: auto;
         }
         .card {
-            background-color: white;
+            background-color: var(--surface-dark);
             padding: 1.5rem;
             border-radius: 0.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         .btn-primary {
             display: flex;
@@ -56,7 +69,7 @@
             height: 3rem;
             padding-left: 1.25rem;
             padding-right: 1.25rem;
-            background-color: #135bec;
+            background-color: var(--primary-color);
             color: white;
             font-weight: 700;
             transition-property: background-color;
@@ -64,7 +77,7 @@
             transition-duration: 150ms;
         }
         .btn-primary:hover {
-            background-color: #104ab3;
+            background-color: #3b74b1;
         }
         .btn-secondary {
             display: flex;
@@ -76,15 +89,15 @@
             height: 2.75rem;
             padding-left: 1rem;
             padding-right: 1rem;
-            background-color: #e5e7eb;
-            color: #1f2937;
+            background-color: var(--border-color);
+            color: var(--text-light);
             font-weight: 700;
             transition-property: background-color;
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 150ms;
         }
         .btn-secondary:hover {
-            background-color: #d1d5db;
+            background-color: #6b7280;
         }
         .input-field {
             display: flex;
@@ -94,9 +107,9 @@
             resize: none;
             overflow: hidden;
             border-radius: 0.375rem;
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-            background-color: white;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            background-color: var(--background-dark);
             height: 3rem;
             padding: 0.75rem;
             font-size: 0.875rem;
@@ -107,7 +120,10 @@
             outline: 0;
             ring: 2px;
             ring-offset: 2px;
-            ring-color: #135bec;
+            ring-color: var(--primary-color);
+        }
+        .input-field::placeholder {
+            color: var(--text-muted);
         }
         .table-container {
             overflow-x: auto;
@@ -117,8 +133,8 @@
             text-align: left;
         }
         .table-container thead tr {
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
+            background-color: #374151;
+            border-bottom: 1px solid var(--border-color);
         }
         .table-container th {
             padding-left: 1rem;
@@ -128,10 +144,10 @@
             font-size: 0.875rem;
             line-height: 1.25rem;
             font-weight: 500;
-            color: #4b5563;
+            color: var(--text-muted);
         }
         .table-container tbody tr {
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--border-color);
         }
         .table-container tbody tr:last-child {
             border-bottom-width: 0;
@@ -143,19 +159,19 @@
             padding-bottom: 0.75rem;
             font-size: 0.875rem;
             line-height: 1.25rem;
-            color: #374151;
+            color: var(--text-light);
         }
         .message-box {
             @apply p-4 rounded-md mb-4 text-center font-medium shadow-sm;
         }
-        .message-box.info { @apply bg-blue-50 text-blue-800 border border-blue-200; }
-        .message-box.error { @apply bg-red-50 text-red-800 border border-red-200; }
-        .message-box.success { @apply bg-green-50 text-green-800 border border-green-200; }
+        .message-box.info { @apply bg-blue-900 text-blue-200 border border-blue-400; }
+        .message-box.error { @apply bg-red-900 text-red-200 border border-red-400; }
+        .message-box.success { @apply bg-green-900 text-green-200 border border-green-400; }
         video {
             border-radius: 0.375rem;
             width: 100%;
             height: auto;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border-color);
             transform: scaleX(-1);
         }
         .video-wrapper {
@@ -163,8 +179,8 @@
         }
         .face-box {
             position: absolute;
-            border: 2px solid #135bec;
-            box-shadow: 0 0 10px rgba(19, 91, 236, 0.5);
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
             animation: pulse-border 1.5s infinite;
         }
         @keyframes pulse-border {
@@ -191,7 +207,7 @@
             top: 20px;
             right: 20px;
             max-width: 320px;
-            background: white;
+            background: var(--surface-dark);
             border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             padding: 1rem 1.5rem;
@@ -199,14 +215,15 @@
             opacity: 0;
             transition: all 0.4s ease;
             z-index: 1000;
-            border-left: 5px solid #4ade80;
+            border-left: 5px solid var(--green-color);
+            color: var(--text-light);
         }
         .notification.show {
             transform: translateX(0);
             opacity: 1;
         }
-        .notification.success { border-left-color: #22c55e; }
-        .notification.error { border-left-color: #ef4444; }
+        .notification.success { border-left-color: var(--green-color); }
+        .notification.error { border-left-color: var(--red-color); }
         .notification.left-aligned {
             right: auto;
             left: 20px;
@@ -216,14 +233,14 @@
             transform: translateX(0);
         }
         .notification-title {
-            font-weight: 600; font-size: 0.95rem; margin: 0; color: #1f2937;
+            font-weight: 600; font-size: 0.95rem; margin: 0; color: var(--text-light);
         }
         .notification-time {
-            font-size: 0.85rem; color: #6b7280; margin: 0.25rem 0 0; }
+            font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
         .real-time-clock {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #4f46e5;
+            color: var(--primary-color);
             text-align: center;
             margin: 10px 0;
             animation: pulse 2s infinite;
@@ -234,7 +251,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900" style='font-family: Inter, "Noto Sans", sans-serif;'>
+<body class="bg-gray-50 text-gray-900" style='font-family: Poppins, sans-serif;'>
 
     <div id="successNotification" class="notification success">
         <p class="notification-title" id="successNotifTitle">Berjaya!</p>
@@ -246,23 +263,21 @@
         <p class="notification-time" id="failNotifTime">10:30:15</p>
     </div>
 
-    <div class="relative flex size-full min-h-screen flex-col bg-[#f8f9fc] group/design-root overflow-x-hidden">
-        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7ebf3] px-10 py-4 bg-white">
-            <div class="flex items-center gap-4 text-[#0d121b]">
-                <div class="size-6 text-[#135bec]">
+    <div class="relative flex size-full min-h-screen flex-col bg-gray-900 group/design-root overflow-x-hidden">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-gray-700 px-10 py-4 bg-gray-800">
+            <div class="flex items-center gap-4 text-gray-100">
+                <div class="size-6 text-blue-500">
                     <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                         <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
                     </svg>
                 </div>
-                <h2 class="text-[#0d121b] text-xl font-bold leading-tight tracking-[-0.015em]">Attendance Tracker</h2>
+                <h2 class="text-gray-100 text-xl font-bold leading-tight tracking-[-0.015em]">Sistem Kehadiran JIM</h2>
             </div>
             <div class="flex flex-1 justify-end items-center gap-4">
                 <nav class="flex items-center gap-6">
-                    <a class="text-gray-600 hover:text-[#135bec] text-sm font-medium leading-normal" href="#">Dashboard</a>
-                    <a class="text-gray-600 hover:text-[#135bec] text-sm font-medium leading-normal" href="#">Reports</a>
                 </nav>
                 <div class="flex items-center gap-4">
-                    <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-100 text-sm font-medium text-gray-700" id="signOutBtn">
+                    <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-400" id="signOutBtn">
                         <span class="truncate">Log Keluar</span>
                         <span class="material-symbols-outlined">logout</span>
                     </button>
@@ -272,102 +287,102 @@
 
         <main class="flex-1 px-10 py-8">
             <div class="max-w-7xl mx-auto">
-                <h1 class="text-3xl font-bold text-gray-800 mb-8" id="page-title"></h1>
+                <h1 class="text-3xl font-bold text-gray-100 mb-8" id="page-title"></h1>
                 <div id="statusMessage" class="message-box hidden"></div>
                 
                 <div id="loginPage" class="hidden">
-                    <div class="w-full max-w-md mx-auto p-8 card">
+                    <div class="w-full max-w-md mx-auto p-8 card bg-gray-800">
                         <div class="text-center mb-8">
-                            <div class="inline-flex items-center justify-center bg-[#135bec] text-white rounded-full w-16 h-16 mb-6">
+                            <div class="inline-flex items-center justify-center bg-blue-600 text-white rounded-full w-16 h-16 mb-6">
                                 <span class="material-symbols-outlined text-4xl">fingerprint</span>
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-900">Selamat Kembali</h1>
-                            <p class="text-gray-500 mt-2">Sila masukkan butiran anda untuk log masuk.</p>
+                            <h1 class="text-3xl font-bold text-gray-100">Selamat Kembali</h1>
+                            <p class="text-gray-400 mt-2">Sila masukkan butiran anda untuk log masuk.</p>
                         </div>
                         <div class="space-y-6">
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700 pb-1">E-mel</label>
-                                <input class="form-input w-full rounded-md border-gray-300 bg-white py-3 px-4 text-gray-900 placeholder-gray-400 focus:border-[#135bec] focus:ring-[#135bec]" id="loginEmailInput" placeholder="Email" type="email"/>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">E-mel</label>
+                                <input class="form-input w-full rounded-md border-gray-700 bg-gray-900 py-3 px-4 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500" id="loginEmailInput" placeholder="Email" type="email"/>
                             </div>
                             <div class="relative">
-                                <label class="block text-sm font-medium text-gray-700 pb-1">Kata Laluan</label>
-                                <input class="form-input w-full rounded-md border-gray-300 bg-white py-3 px-4 text-gray-900 placeholder-gray-400 focus:border-[#135bec] focus:ring-[#135bec]" id="loginPasswordInput" placeholder="Password" type="password"/>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">Kata Laluan</label>
+                                <input class="form-input w-full rounded-md border-gray-700 bg-gray-900 py-3 px-4 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500" id="loginPasswordInput" placeholder="Password" type="password"/>
                             </div>
                         </div>
                         <div class="mt-8">
-                            <button class="w-full flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-[#135bec] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#135bec]" id="loginBtn">Log Masuk</button>
+                            <button class="w-full flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="loginBtn">Log Masuk</button>
                         </div>
-                        <p class="mt-8 text-center text-sm text-gray-500">
+                        <p class="mt-8 text-center text-sm text-gray-400">
                             Tiada akaun?
-                            <a class="font-medium text-[#135bec] hover:text-blue-700 cursor-pointer" id="goToRegisterBtn">Daftar Akaun Baru</a>
+                            <a class="font-medium text-blue-500 hover:text-blue-400 cursor-pointer" id="goToRegisterBtn">Daftar Akaun Baru</a>
                         </p>
                     </div>
                 </div>
 
                 <div id="accountRegistrationPage" class="hidden">
-                    <div class="w-full max-w-md mx-auto p-8 card">
+                    <div class="w-full max-w-md mx-auto p-8 card bg-gray-800">
                         <div class="text-center mb-8">
-                            <h1 class="text-3xl font-bold text-gray-900">Daftar Akaun</h1>
-                            <p class="text-gray-500 mt-2">Sertai sistem kehadiran kami hari ini.</p>
+                            <h1 class="text-3xl font-bold text-gray-100">Daftar Akaun</h1>
+                            <p class="text-gray-400 mt-2">Sertai sistem kehadiran kami hari ini.</p>
                         </div>
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 pb-1">Nama Penuh</label>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">Nama Penuh</label>
                                 <input type="text" id="registerNameInput" class="input-field" placeholder="John Doe">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 pb-1">Jabatan</label>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">Jabatan</label>
                                 <input type="text" id="registerDepartmentInput" class="input-field" placeholder="e.g., Kejuruteraan">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 pb-1">E-mel</label>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">E-mel</label>
                                 <input type="email" id="registerEmailInput" class="input-field" placeholder="you@example.com">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 pb-1">Kata Laluan</label>
+                                <label class="block text-sm font-medium text-gray-400 pb-1">Kata Laluan</label>
                                 <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
                             </div>
                         </div>
                         <div class="mt-8">
                              <button id="registerAccountBtn" class="w-full btn-primary bg-green-600 hover:bg-green-700">Daftar</button>
                         </div>
-                        <p class="mt-8 text-center text-sm text-gray-500">
+                        <p class="mt-8 text-center text-sm text-gray-400">
                             Sudah mempunyai akaun?
-                            <a class="font-medium text-[#135bec] hover:text-blue-700 cursor-pointer" id="backToLoginBtn">Log masuk</a>
+                            <a class="font-medium text-blue-500 hover:text-blue-400 cursor-pointer" id="backToLoginBtn">Log masuk</a>
                         </p>
                     </div>
                 </div>
                 
                 <div id="faceRegistrationPage" class="hidden">
-                    <div class="w-full max-w-lg mx-auto p-8 card">
+                    <div class="w-full max-w-lg mx-auto p-8 card bg-gray-800">
                         <div class="text-center">
-                            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">Pendaftaran Wajah</h1>
-                            <p class="mt-4 text-lg text-gray-600">Sila ikut arahan untuk mendaftar wajah anda bagi kehadiran tanpa masalah.</p>
+                            <h1 class="text-3xl font-extrabold tracking-tight text-gray-100 sm:text-4xl">Pendaftaran Wajah</h1>
+                            <p class="mt-4 text-lg text-gray-400">Sila ikut arahan untuk mendaftar wajah anda bagi kehadiran tanpa masalah.</p>
                         </div>
                         <div class="mt-10">
-                            <div class="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-100">
+                            <div class="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-gray-700">
                                 <video id="videoElement" autoplay muted playsinline class="w-full h-full object-cover"></video>
                                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div class="h-3/4 w-3/4 rounded-full border-4 border-white/50 border-dashed"></div>
+                                    <div class="h-3/4 w-3/4 rounded-full border-4 border-gray-400/50 border-dashed"></div>
                                 </div>
                             </div>
-                            <div class="mt-6 space-y-4 text-center text-gray-600">
+                            <div class="mt-6 space-y-4 text-center text-gray-400">
                                 <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-[#135bec]">lightbulb</span>
+                                    <span class="material-symbols-outlined text-blue-500">lightbulb</span>
                                     <p>Posisikan wajah anda di dalam bulatan dan pastikan pencahayaan yang baik.</p>
                                 </div>
                                 <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-[#135bec]">face</span>
+                                    <span class="material-symbols-outlined text-blue-500">face</span>
                                     <p>Pastikan ekspresi neutral dan pandang terus ke kamera.</p>
                                 </div>
                                 <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-[#135bec]">photo_camera</span>
+                                    <span class="material-symbols-outlined text-blue-500">photo_camera</span>
                                     <p>Sistem akan menangkap imej anda secara automatik.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-8 flex justify-center">
-                            <button class="flex w-full max-w-xs items-center justify-center gap-2 rounded-md bg-[#135bec] px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" id="registerFaceSubmitBtn">
+                            <button class="flex w-full max-w-xs items-center justify-center gap-2 rounded-md bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" id="registerFaceSubmitBtn">
                                 <span class="material-symbols-outlined">camera_enhance</span>
                                 <span>Mula Pendaftaran</span>
                             </button>
@@ -378,8 +393,8 @@
 
                 <div id="dashboard" class="hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 card">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Clock In/Out</h2>
+                        <div class="lg:col-span-2 card bg-gray-800">
+                            <h2 class="text-xl font-bold text-gray-100 mb-4">Clock In/Out</h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                 <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-md">
                                     <div class="video-wrapper">
@@ -388,40 +403,40 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-4">
-                                    <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-md">
-                                        <span class="material-symbols-outlined text-green-600">location_on</span>
-                                        <p class="text-sm text-green-800">Status Lokasi: <span class="font-medium" id="locationStatus">Mengesan lokasi...</span></p>
+                                    <div class="flex items-center gap-3 p-3 bg-green-900 border border-green-700 rounded-md">
+                                        <span class="material-symbols-outlined text-green-400">location_on</span>
+                                        <p class="text-sm text-green-200">Status Lokasi: <span class="font-medium" id="locationStatus">Mengesan lokasi...</span></p>
                                     </div>
-                                    <div class="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                        <span class="material-symbols-outlined text-blue-600">face</span>
-                                        <p class="text-sm text-blue-800">Pengesanan Wajah: <span class="font-medium" id="livenessInstructions">Sila pastikan wajah anda kelihatan dengan jelas.</span></p>
+                                    <div class="flex items-center gap-3 p-3 bg-blue-900 border border-blue-700 rounded-md">
+                                        <span class="material-symbols-outlined text-blue-400">face</span>
+                                        <p class="text-sm text-blue-200">Pengesanan Wajah: <span class="font-medium" id="livenessInstructions">Sila pastikan wajah anda kelihatan dengan jelas.</span></p>
                                     </div>
                                     <div class="flex gap-4 pt-4">
-                                        <div class="flex flex-col items-center justify-center rounded-md bg-gray-100 p-4 w-full">
-                                            <p class="text-3xl font-bold text-gray-800" id="realTimeClock">00:00:00</p>
-                                            <p class="text-xs text-gray-500 uppercase tracking-wider">Masa Semasa</p>
+                                        <div class="flex flex-col items-center justify-center rounded-md bg-gray-700 p-4 w-full">
+                                            <p class="text-3xl font-bold text-gray-100" id="realTimeClock">00:00:00</p>
+                                            <p class="text-xs text-gray-400 uppercase tracking-wider">Masa Semasa</p>
                                         </div>
                                     </div>
                                     <button class="w-full btn-primary" id="faceScanBtn">
                                         <span class="material-symbols-outlined">login</span>
-                                        <span class="truncate" id="scanBtnText">Clock In/Clock Out</span>
+                                        <span class="truncate" id="scanBtnText">Clock In</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Jana Laporan</h2>
+                        <div class="card bg-gray-800">
+                            <h2 class="text-xl font-bold text-gray-100 mb-4">Jana Laporan</h2>
                             <div class="flex flex-col gap-4">
                                 <label class="flex flex-col">
-                                    <p class="text-sm font-medium text-gray-700 pb-1">Tarikh Mula</p>
-                                    <input class="input-field" type="date" id="startDateInput" value="2024-07-01"/>
+                                    <p class="text-sm font-medium text-gray-400 pb-1">Tarikh Mula</p>
+                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="startDateInput" value="2024-07-01"/>
                                 </label>
                                 <label class="flex flex-col">
-                                    <p class="text-sm font-medium text-gray-700 pb-1">Tarikh Tamat</p>
-                                    <input class="input-field" type="date" id="endDateInput" value="2024-07-20"/>
+                                    <p class="text-sm font-medium text-gray-400 pb-1">Tarikh Tamat</p>
+                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="endDateInput" value="2024-07-20"/>
                                 </label>
-                                <button class="btn-secondary" id="generatePdfBtn">
+                                <button class="btn-secondary bg-gray-700 hover:bg-gray-600 text-gray-100" id="generatePdfBtn">
                                     <span class="material-symbols-outlined text-base">assessment</span>
                                     <span class="truncate">Jana Laporan PDF</span>
                                 </button>
@@ -429,18 +444,18 @@
                         </div>
                     </div>
 
-                    <div class="mt-8 card">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Sejarah Kehadiran</h2>
+                    <div class="mt-8 card bg-gray-800">
+                        <h2 class="text-xl font-bold text-gray-100 mb-4">Sejarah Kehadiran</h2>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead>
-                                    <tr class="bg-gray-50 border-b border-gray-200">
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">Tarikh</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">Hari</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">Masuk</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">Keluar</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">Jam</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-600">OT</th>
+                                    <tr class="bg-gray-700 border-b border-gray-600">
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Tarikh</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Hari</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Masuk</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Keluar</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Jam</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">OT</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody"></tbody>
@@ -1061,12 +1076,12 @@ showStatusMessage('Gagal akses lokasi.', 'error');
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
 
                 row.innerHTML = `
-                    <td class="px-4 py-3 text-sm text-gray-700">${date}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">${weekday}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${date}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${weekday}</td>
                     <td class="px-4 py-3 text-sm ${clockInClasses.join(' ')}">${clockInDisplay}</td>
                     <td class="px-4 py-3 text-sm ${clockOutClasses.join(' ')}">${clockOutDisplay}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">${totalHours}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">${totalOT}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${totalHours}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${totalOT}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
