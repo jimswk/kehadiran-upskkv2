@@ -1038,7 +1038,8 @@ showStatusMessage('Gagal akses lokasi.', 'error');
 
                 const record = data.find(d => d.id === dateString) || {};
                 const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-                const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                // PERUBAHAN: Gunakan string kosong jika tiada rekod clockOut
+                const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                 const hours = record.totalHours ? record.totalHours : null;
                 const ot = record.totalOT ? record.totalOT : null;
 
