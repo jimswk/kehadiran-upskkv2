@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Perakam Waktu UPSKK</title>
+    <title>Sistem Perakam Waktu UPSKK - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -304,6 +304,14 @@
             </div>
             <div class="flex flex-1 justify-end items-center gap-4">
                 <nav class="flex items-center gap-6">
+                    <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-blue-400 hidden" id="adminNavBtn">
+                        <span class="truncate">Admin Panel</span>
+                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                    </button>
+                    <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-400 hidden" id="dashboardNavBtn">
+                        <span class="truncate">Dashboard</span>
+                        <span class="material-symbols-outlined">dashboard</span>
+                    </button>
                 </nav>
                 <div class="flex items-center gap-4">
                     <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-400" id="signOutBtn">
@@ -323,7 +331,7 @@
                     <div class="w-full max-w-md mx-auto p-8 card glass-border">
                         <div class="text-center mb-8">
                             <div class="inline-flex items-center justify-center bg-blue-600 text-white rounded-full w-16 h-16 mb-6">
-                                <span class="material-symbols-outlined text-4xl">fingerprint</span>
+                                <span class="material-symbols-outlined">fingerprint</span>
                             </div>
                             <h1 class="text-3xl font-bold text-gray-100">Selamat Kembali</h1>
                             <p class="text-gray-400 mt-2">Sila masukkan butiran anda untuk log masuk.</p>
@@ -492,15 +500,92 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="adminPanel" class="hidden">
+                    <div class="card glass-border mb-8">
+                        <h2 class="text-2xl font-bold text-gray-100 mb-4">Panel Pentadbir</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                            <label class="flex-1 flex flex-col">
+                                <p class="text-sm font-medium text-gray-400 pb-1">Tarikh Rekod</p>
+                                <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="adminDateInput" value=""/>
+                            </label>
+                            <label class="flex-1 flex flex-col">
+                                <p class="text-sm font-medium text-gray-400 pb-1">Cari Nama/Jabatan</p>
+                                <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="text" id="adminSearchInput" placeholder="Nama/Jabatan"/>
+                            </label>
+                            <button class="btn-primary w-full sm:w-auto mt-auto" id="adminFilterBtn">
+                                <span class="material-symbols-outlined text-base">filter_alt</span> Tapis
+                            </button>
+                            <button class="btn-secondary w-full sm:w-auto mt-auto bg-red-600 hover:bg-red-700" id="adminGeneratePdfBtn">
+                                <span class="material-symbols-outlined text-base">download</span> Jana Laporan Keseluruhan
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-gray-700 border-b border-gray-600">
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Nama/ID</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Tarikh</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Masuk</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Keluar</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Jam (h)</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">OT (h)</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Lokasi</th>
+                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminAttendanceTableBody">
+                                    <tr><td colspan="8" class="text-center py-4 text-gray-400">Sila tapis data.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
+    <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-lg card glass-border">
+            <h3 class="text-2xl font-bold mb-4 text-gray-100">Sunting Rekod Kehadiran</h3>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editUserId">
+                <input type="hidden" id="editAttendanceId">
+                <p class="text-lg font-semibold text-blue-400" id="editRecordInfo"></p>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 pb-1">Clock In (YYYY-MM-DD HH:MM)</label>
+                    <input type="datetime-local" id="editClockIn" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 pb-1">Clock Out (YYYY-MM-DD HH:MM)</label>
+                    <input type="datetime-local" id="editClockOut" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 pb-1">Lokasi Masuk (Lat, Lng)</label>
+                    <input type="text" id="editLocationIn" class="input-field" placeholder="Lat, Lng">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 pb-1">Lokasi Keluar (Lat, Lng)</label>
+                    <input type="text" id="editLocationOut" class="input-field" placeholder="Lat, Lng">
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" class="btn-secondary w-1/3 bg-gray-600 hover:bg-gray-500" id="closeModalBtn">Batal</button>
+                    <button type="submit" class="btn-primary w-1/3 bg-green-600 hover:bg-green-700">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
             authDomain: "kehadiran-upskk.firebaseapp.com",
@@ -527,18 +612,18 @@
         let videoStream = null;
         let isProcessing = false;
         let faceMatcher = null;
+        let isAdmin = false; // Status Admin
 
         // Elements
         const loginPageDiv = document.getElementById('loginPage');
         const accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
         const faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
         const dashboardDiv = document.getElementById('dashboard');
+        const adminPanelDiv = document.getElementById('adminPanel'); // Admin Panel Baru
         const statusMessageDiv = document.getElementById('statusMessage');
         const videoElement = document.getElementById('videoElement');
         const scanVideoElement = document.getElementById('scanVideoElement');
         const attendanceTableBody = document.getElementById('attendanceTableBody');
-        const userNameDisplay = document.getElementById('userName');
-        const userIdDisplay = document.getElementById('userIdDisplay');
         const faceScanBtn = document.getElementById('faceScanBtn');
         const scanBtnText = document.getElementById('scanBtnText');
         const registerFaceSubmitBtn = document.getElementById('registerFaceSubmitBtn');
@@ -550,6 +635,16 @@
         const faceOverlay = document.getElementById('faceOverlay');
         const pageTitle = document.getElementById('page-title');
         
+        // Admin Elements
+        const adminAttendanceTableBody = document.getElementById('adminAttendanceTableBody');
+        const adminDateInput = document.getElementById('adminDateInput');
+        const adminSearchInput = document.getElementById('adminSearchInput');
+        const adminNavBtn = document.getElementById('adminNavBtn');
+        const dashboardNavBtn = document.getElementById('dashboardNavBtn');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        
         // Notifikasi baharu
         const successNotification = document.getElementById('successNotification');
         const successNotifTitle = document.getElementById('successNotifTitle');
@@ -560,14 +655,18 @@
 
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Fungsi baru untuk euclideanDistance
+        // Fungsi yang lain (euclideanDistance, showNotification, showStatusMessage, hideStatusMessage, stopCamera, startCamera, loadFaceModels, createFaceMatcher, registerFaceAndGetDescriptor, handleAccountRegistration, handleEmailLogin, handleSignOut, handleFaceRegistration, handleGeolocationCheck, handleFaceCheck, handleClockAction, calculateDistance, formatDecimalToTime, generatePDF, updateAttendanceTable, getCurrentDateLocal, getStartOfMonthLocal, getEndOfMonthLocal, initializeUI)
+        // ** (Kekalkan semua fungsi sedia ada anda di sini, saya akan ubah fungsi yang berkaitan dengan navigasi dan admin sahaja) **
+        
+        // ... (Semua fungsi sedia ada dari baris 373 hingga 970 dikekalkan) ...
+
+        // Fungsi-fungsi sedia ada yang dikekalkan/diubahsuai:
         function euclideanDistance(point1, point2) {
             const dx = point2.x - point1.x;
             const dy = point2.y - point1.y;
             return Math.sqrt(dx * dx + dy * dy);
         }
         
-        // Show Notification Popup
         function showNotification(title, time, type = 'success') {
             const targetNotif = type === 'success' ? successNotification : failNotification;
             const targetTitle = type === 'success' ? successNotifTitle : failNotifTitle;
@@ -584,17 +683,29 @@
         }
 
         function showPage(pageId) {
-            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv].forEach(p => p.classList.add('hidden'));
+            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminPanelDiv].forEach(p => p.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
             
             if (pageId === 'dashboard') {
                 pageTitle.textContent = 'Dashboard';
+                dashboardNavBtn.classList.add('hidden');
+                adminNavBtn.classList.remove('hidden');
+            } else if (pageId === 'adminPanel') {
+                pageTitle.textContent = 'Panel Pentadbir';
+                adminNavBtn.classList.add('hidden');
+                dashboardNavBtn.classList.remove('hidden');
             } else if (pageId === 'loginPage') {
                 pageTitle.textContent = 'Log Masuk';
+                dashboardNavBtn.classList.add('hidden');
+                adminNavBtn.classList.add('hidden');
             } else if (pageId === 'accountRegistrationPage') {
                 pageTitle.textContent = 'Daftar Akaun';
+                dashboardNavBtn.classList.add('hidden');
+                adminNavBtn.classList.add('hidden');
             } else if (pageId === 'faceRegistrationPage') {
                 pageTitle.textContent = 'Pendaftaran Wajah';
+                dashboardNavBtn.classList.add('hidden');
+                adminNavBtn.classList.add('hidden');
             }
             
             stopCamera();
@@ -676,8 +787,9 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 userId = userCredential.user.uid;
+                // NOTA: isAdmin: false secara default
                 await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
-                    name, department, faceDescriptor: null
+                    name, department, faceDescriptor: null, isAdmin: false 
                 });
                 showStatusMessage('Berjaya daftar! Daftar wajah sekarang.', 'success');
                 showPage('faceRegistrationPage');
@@ -889,56 +1001,56 @@
         };
 
         window.handleClockAction = async function() {
-try {
-const position = await new Promise((resolve, reject) => {
-navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-});
-const { latitude, longitude } = position.coords;
-const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-if (distance > locationTolerance) {
-showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
-return;
-}
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                });
+                const { latitude, longitude } = position.coords;
+                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
+                if (distance > locationTolerance) {
+                    showStatusMessage(`Anda berada ${distance.toFixed(2)}m dari pejabat. Gagal clock in/out.`, 'error');
+                    return;
+                }
 
-const now = new Date();
-const todayDateId = getCurrentDateLocal();
-const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
-const docSnap = await getDoc(docRef);
+                const now = new Date();
+                const todayDateId = getCurrentDateLocal();
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docSnap = await getDoc(docRef);
 
-if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
-const clockIn = docSnap.data().clockIn.toDate();
+                if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
+                    const clockIn = docSnap.data().clockIn.toDate();
 
-const diffMs = now.getTime() - clockIn.getTime();
-const totalMinutes = Math.floor(diffMs / 60000);
-const totalHoursDecimal = totalMinutes / 60;
+                    const diffMs = now.getTime() - clockIn.getTime();
+                    const totalMinutes = Math.floor(diffMs / 60000);
+                    const totalHoursDecimal = totalMinutes / 60;
 
-const normalWorkHours = 8;
-let totalOTDecimal = 0;
-if (totalHoursDecimal > normalWorkHours) {
-totalOTDecimal = totalHoursDecimal - normalWorkHours;
-}
+                    const normalWorkHours = 8;
+                    let totalOTDecimal = 0;
+                    if (totalHoursDecimal > normalWorkHours) {
+                        totalOTDecimal = totalHoursDecimal - normalWorkHours;
+                    }
 
-await setDoc(docRef, {
-clockOut: now,
-totalHours: totalHoursDecimal,
-totalOT: totalOTDecimal,
-locationOut: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
-} else {
-await setDoc(docRef, {
-date: now,
-weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
-clockIn: now,
-locationIn: { lat: latitude, lng: longitude }
-}, { merge: true });
-showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
-}
-handleGeolocationCheck();
-} catch (error) {
-showStatusMessage('Gagal akses lokasi.', 'error');
-}
-};
+                    await setDoc(docRef, {
+                        clockOut: now,
+                        totalHours: totalHoursDecimal,
+                        totalOT: totalOTDecimal,
+                        locationOut: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
+                } else {
+                    await setDoc(docRef, {
+                        date: now,
+                        weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                        clockIn: now,
+                        locationIn: { lat: latitude, lng: longitude }
+                    }, { merge: true });
+                    showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
+                }
+                handleGeolocationCheck();
+            } catch (error) {
+                showStatusMessage('Gagal akses lokasi.', 'error');
+            }
+        };
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
@@ -1038,7 +1150,6 @@ showStatusMessage('Gagal akses lokasi.', 'error');
 
                 const record = data.find(d => d.id === dateString) || {};
                 const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-                // PERUBAHAN: Gunakan string kosong jika tiada rekod clockOut
                 const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                 const hours = record.totalHours ? record.totalHours : null;
                 const ot = record.totalOT ? record.totalOT : null;
@@ -1142,8 +1253,289 @@ showStatusMessage('Gagal akses lokasi.', 'error');
             
             startDateInput.value = startOfMonth;
             endDateInput.value = endOfMonth;
+            adminDateInput.value = getCurrentDateLocal(); // Tetapkan tarikh admin kepada hari ini
         }
         
+        // **FUNGSI ADMIN BARU**
+
+        async function getAllUsers() {
+            const usersRef = collection(db, 'artifacts', appId, 'users');
+            const userDocs = await getDocs(usersRef);
+            let users = {};
+            for (const docSnap of userDocs.docs) {
+                const profileSnap = await getDoc(doc(docSnap.ref, 'profile', 'data'));
+                if (profileSnap.exists()) {
+                    users[docSnap.id] = { uid: docSnap.id, ...profileSnap.data() };
+                }
+            }
+            return users;
+        }
+
+        async function loadAdminAttendance() {
+            const dateStr = adminDateInput.value;
+            const searchTerm = adminSearchInput.value.toLowerCase();
+            adminAttendanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-blue-400"><div class="loading"></div> Memuatkan data...</td></tr>';
+            
+            const allUsers = await getAllUsers();
+            let filteredUsers = Object.values(allUsers);
+
+            if (searchTerm) {
+                filteredUsers = filteredUsers.filter(u => 
+                    u.name.toLowerCase().includes(searchTerm) || 
+                    u.department.toLowerCase().includes(searchTerm) ||
+                    u.uid.includes(searchTerm)
+                );
+            }
+            
+            let allRecords = [];
+
+            for (const user of filteredUsers) {
+                const attendanceRef = doc(db, 'artifacts', appId, 'users', user.uid, 'attendance', dateStr);
+                const docSnap = await getDoc(attendanceRef);
+                
+                const record = {
+                    name: user.name,
+                    uid: user.uid,
+                    date: dateStr,
+                    data: docSnap.exists() ? docSnap.data() : {}
+                };
+                allRecords.push(record);
+            }
+
+            updateAdminAttendanceTable(allRecords);
+        }
+
+        function updateAdminAttendanceTable(records) {
+            adminAttendanceTableBody.innerHTML = '';
+            if (records.length === 0) {
+                adminAttendanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-400">Tiada rekod ditemui.</td></tr>';
+                return;
+            }
+
+            records.forEach(item => {
+                const { name, uid, date, data } = item;
+                const clockInTime = data.clockIn ? data.clockIn.toDate() : null;
+                const clockOutTime = data.clockOut ? data.clockOut.toDate() : null;
+
+                const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+                const totalHoursDisplay = data.totalHours ? formatDecimalToTime(data.totalHours) : '-';
+                const totalOTDisplay = data.totalOT ? formatDecimalToTime(data.totalOT) : '-';
+                
+                const locationIn = data.locationIn ? `${data.locationIn.lat.toFixed(4)}, ${data.locationIn.lng.toFixed(4)}` : '-';
+                const locationOut = data.locationOut ? `${data.locationOut.lat.toFixed(4)}, ${data.locationOut.lng.toFixed(4)}` : '-';
+                const locationDisplay = `${locationIn} / ${locationOut}`;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-medium text-gray-100">${name}<br><span class="text-xs text-gray-400">${uid.substring(0, 5)}...</span></td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${date}</td>
+                    <td class="px-4 py-3 text-sm text-green-400">${clockInDisplay}</td>
+                    <td class="px-4 py-3 text-sm text-red-400">${clockOutDisplay}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${totalHoursDisplay}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${totalOTDisplay}</td>
+                    <td class="px-4 py-3 text-xs text-gray-400">${locationDisplay}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <button class="text-blue-500 hover:text-blue-400 font-medium" 
+                            data-uid="${uid}" 
+                            data-date="${date}"
+                            data-clockin="${clockInTime ? clockInTime.toISOString().slice(0, 16) : ''}"
+                            data-clockout="${clockOutTime ? clockOutTime.toISOString().slice(0, 16) : ''}"
+                            data-locin="${data.locationIn ? `${data.locationIn.lat},${data.locationIn.lng}` : ''}"
+                            data-locout="${data.locationOut ? `${data.locationOut.lat},${data.locationOut.lng}` : ''}"
+                            onclick="openEditModal(this)">
+                            Sunting
+                        </button>
+                    </td>
+                `;
+                adminAttendanceTableBody.appendChild(row);
+            });
+        }
+
+        window.openEditModal = function(btn) {
+            const uid = btn.getAttribute('data-uid');
+            const date = btn.getAttribute('data-date');
+            const clockIn = btn.getAttribute('data-clockin');
+            const clockOut = btn.getAttribute('data-clockout');
+            const locIn = btn.getAttribute('data-locin');
+            const locOut = btn.getAttribute('data-locout');
+            const name = btn.closest('tr').querySelector('td:first-child').firstChild.textContent;
+
+            document.getElementById('editUserId').value = uid;
+            document.getElementById('editAttendanceId').value = date;
+            document.getElementById('editRecordInfo').textContent = `${name} - Tarikh: ${date}`;
+            
+            document.getElementById('editClockIn').value = clockIn;
+            document.getElementById('editClockOut').value = clockOut;
+            document.getElementById('editLocationIn').value = locIn.replace(',', ', ');
+            document.getElementById('editLocationOut').value = locOut.replace(',', ', ');
+
+            editModal.classList.remove('hidden');
+        };
+
+        window.handleEditFormSubmit = async function(event) {
+            event.preventDefault();
+            
+            const uid = document.getElementById('editUserId').value;
+            const dateId = document.getElementById('editAttendanceId').value;
+            const clockInStr = document.getElementById('editClockIn').value;
+            const clockOutStr = document.getElementById('editClockOut').value;
+            const locInStr = document.getElementById('editLocationIn').value.replace(/\s/g, '');
+            const locOutStr = document.getElementById('editLocationOut').value.replace(/\s/g, '');
+            
+            const docRef = doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateId);
+            const dataToUpdate = {};
+            
+            let clockIn = null;
+            let clockOut = null;
+
+            if (clockInStr) {
+                clockIn = Timestamp.fromDate(new Date(clockInStr));
+                dataToUpdate.clockIn = clockIn;
+            } else {
+                dataToUpdate.clockIn = null;
+            }
+
+            if (clockOutStr) {
+                clockOut = Timestamp.fromDate(new Date(clockOutStr));
+                dataToUpdate.clockOut = clockOut;
+            } else {
+                dataToUpdate.clockOut = null;
+            }
+
+            if (locInStr) {
+                const [lat, lng] = locInStr.split(',').map(Number);
+                if (lat && lng) dataToUpdate.locationIn = { lat, lng };
+            } else {
+                dataToUpdate.locationIn = null;
+            }
+
+            if (locOutStr) {
+                const [lat, lng] = locOutStr.split(',').map(Number);
+                if (lat && lng) dataToUpdate.locationOut = { lat, lng };
+            } else {
+                dataToUpdate.locationOut = null;
+            }
+
+            // Kira semula Total Hours dan OT
+            if (clockIn && clockOut) {
+                const clockInDate = clockIn.toDate();
+                const clockOutDate = clockOut.toDate();
+
+                const diffMs = clockOutDate.getTime() - clockInDate.getTime();
+                const totalMinutes = Math.floor(diffMs / 60000);
+                const totalHoursDecimal = totalMinutes / 60;
+                
+                dataToUpdate.totalHours = totalHoursDecimal > 0 ? totalHoursDecimal : 0;
+                
+                const normalWorkHours = 8;
+                dataToUpdate.totalOT = totalHoursDecimal > normalWorkHours ? totalHoursDecimal - normalWorkHours : 0;
+            } else {
+                dataToUpdate.totalHours = 0;
+                dataToUpdate.totalOT = 0;
+            }
+
+            try {
+                await setDoc(docRef, dataToUpdate, { merge: true });
+                showNotification(`Rekod ${dateId} untuk ${uid.substring(0,5)}... berjaya dikemas kini.`, new Date().toLocaleTimeString(), 'success');
+                editModal.classList.add('hidden');
+                loadAdminAttendance(); // Muat semula jadual admin
+            } catch (error) {
+                showNotification(`Gagal kemas kini: ${error.message}`, new Date().toLocaleTimeString(), 'error');
+            }
+        };
+
+        window.adminGeneratePdf = async function() {
+            // Ini akan menjana laporan untuk SEMUA pengguna, berdasarkan tarikh yang dipaparkan dalam admin panel
+            // Untuk skop ini, saya akan letakkan julat tarikh yang luas (cth. 30 hari yang lalu)
+            const today = new Date();
+            const endDateStr = today.toISOString().slice(0, 10);
+            const pastDate = new Date(today);
+            pastDate.setDate(today.getDate() - 30);
+            const startDateStr = pastDate.toISOString().slice(0, 10);
+
+            showNotification('Sedang menjana laporan PDF keseluruhan...', new Date().toLocaleTimeString(), 'info');
+            
+            const allUsers = await getAllUsers();
+            let tableData = [];
+            let grandTotalHours = 0;
+            let grandTotalOT = 0;
+
+            for (const user of Object.values(allUsers)) {
+                const q = query(
+                    collection(db, 'artifacts', appId, 'users', user.uid, 'attendance'),
+                    where('__name__', '>=', startDateStr),
+                    where('__name__', '<=', endDateStr)
+                );
+                const snap = await getDocs(q);
+                const userRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                let userTotalHours = 0;
+                let userTotalOT = 0;
+
+                userRecords.forEach(record => {
+                    const hours = record.totalHours || 0;
+                    const ot = record.totalOT || 0;
+                    userTotalHours += hours;
+                    userTotalOT += ot;
+                });
+
+                grandTotalHours += userTotalHours;
+                grandTotalOT += userTotalOT;
+
+                tableData.push([
+                    user.name,
+                    user.department,
+                    formatDecimalToTime(userTotalHours),
+                    formatDecimalToTime(userTotalOT)
+                ]);
+            }
+
+            const doc = new jsPDF({ format: 'a4', unit: 'mm' });
+            doc.setFont('times', 'normal');
+            
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 20;
+
+            doc.setFontSize(16);
+            doc.setFont('times', 'bold');
+            const title = 'Laporan Kehadiran Keseluruhan';
+            doc.text(title, pageWidth / 2, y, { align: 'center' });
+            y += 10;
+            
+            doc.setFontSize(10);
+            doc.setFont('times', 'normal');
+            doc.text(`Julat Tarikh: ${startDateStr} - ${endDateStr}`, 10, y);
+            y += 10;
+
+            // Header dan Data Jadual Utama
+            doc.autoTable({
+                startY: y,
+                head: [['Nama', 'Jabatan', 'Jumlah Jam (hh:mm)', 'Jumlah OT (hh:mm)']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [55, 65, 81] },
+                styles: { font: 'times', fontSize: 10, cellPadding: 2 }
+            });
+            
+            y = doc.autoTable.previous.finalY + 10;
+            
+            // Bahagian Statistik
+            doc.setFontSize(12);
+            doc.setFont('times', 'bold');
+            doc.text('Statistik Keseluruhan', 10, y);
+            y += 5;
+
+            doc.setFontSize(10);
+            doc.setFont('times', 'normal');
+            doc.text(`Jumlah Jam Bekerja Keseluruhan: ${formatDecimalToTime(grandTotalHours)}`, 10, y);
+            y += 5;
+            doc.text(`Jumlah Jam OT Keseluruhan: ${formatDecimalToTime(grandTotalOT)}`, 10, y);
+
+            doc.save(`Laporan_Kehadiran_Keseluruhan_${startDateStr}_to_${endDateStr}.pdf`);
+        };
+
+
         // Real-time Clock
         setInterval(() => {
             if (realTimeClock) {
@@ -1163,7 +1555,16 @@ showStatusMessage('Gagal akses lokasi.', 'error');
 
                     if (snap.exists()) {
                         userData = snap.data();
+                        isAdmin = userData.isAdmin || false; // Dapatkan status admin
                         
+                        // Konfigurasi nav bar
+                        if (isAdmin) {
+                            adminNavBtn.classList.remove('hidden');
+                        } else {
+                            adminNavBtn.classList.add('hidden');
+                        }
+
+                        // Logik Face Registration dan Dashboard sedia ada
                         if (userData.faceDescriptor) {
                             try {
                                 JSON.parse(userData.faceDescriptor);
@@ -1175,6 +1576,7 @@ showStatusMessage('Gagal akses lokasi.', 'error');
                             }
                         }
                         
+                        // Listener Kehadiran (untuk Dashboard)
                         const startOfMonthStr = getStartOfMonthLocal();
                         const endOfMonthStr = getEndOfMonthLocal();
                         const q = query(
@@ -1189,6 +1591,9 @@ showStatusMessage('Gagal akses lokasi.', 'error');
 
                         if (!isFaceRegistered) {
                             showPage('faceRegistrationPage');
+                        } else if (isAdmin) {
+                            showPage('adminPanel');
+                            loadAdminAttendance();
                         } else {
                             showPage('dashboard');
                             handleGeolocationCheck();
@@ -1203,6 +1608,7 @@ showStatusMessage('Gagal akses lokasi.', 'error');
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Event Listeners Sedia Ada
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
             document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
             document.getElementById('registerAccountBtn').addEventListener('click', window.handleAccountRegistration);
@@ -1212,6 +1618,25 @@ showStatusMessage('Gagal akses lokasi.', 'error');
             document.getElementById('faceScanBtn').addEventListener('click', window.handleFaceCheck);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+
+            // Event Listeners BARU untuk Admin Panel
+            document.getElementById('adminFilterBtn').addEventListener('click', loadAdminAttendance);
+            document.getElementById('adminGeneratePdfBtn').addEventListener('click', window.adminGeneratePdf);
+            
+            // Event Listeners untuk Navigasi Admin
+            adminNavBtn.addEventListener('click', () => {
+                showPage('adminPanel');
+                loadAdminAttendance();
+            });
+            dashboardNavBtn.addEventListener('click', () => {
+                showPage('dashboard');
+                handleGeolocationCheck();
+            });
+
+            // Event Listeners untuk Modal Suntingan
+            closeModalBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+            editForm.addEventListener('submit', window.handleEditFormSubmit);
+
         });
     </script>
 </body>
