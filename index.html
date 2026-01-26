@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Perakam Waktu UPSKK</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Sistem Kehadiran JIM - Responsif</title>
     
     <!-- Tambahkan favicon untuk menghindari error 404 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
@@ -35,6 +35,19 @@
             --gold-color: #d97706; /* Warna emas untuk aksen */
         }
 
+        /* Reset and base styles for cross-browser compatibility */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -43,6 +56,16 @@
             background-attachment: fixed;
             color: var(--text-light);
             min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Media query for very small devices */
+        @media (max-width: 320px) {
+            body {
+                font-size: 14px;
+            }
         }
 
         .header-gradient {
@@ -56,37 +79,80 @@
 
         .header {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
             justify-content: space-between;
-            white-space: nowrap;
+            padding: 1rem;
             border-bottom: 1px solid var(--border-color);
-            padding-left: 2.5rem;
-            padding-right: 2.5rem;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            position: relative;
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                flex-direction: row;
+                align-items: center;
+                padding: 1rem 2.5rem;
+            }
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        @media (min-width: 640px) {
+            .header-content {
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+            }
         }
 
         .main-content {
             flex: 1;
-            padding-left: 2.5rem;
-            padding-right: 2.5rem;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-            max-width: 80rem;
-            margin-left: auto;
-            margin-right: auto;
+            padding: 1rem;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 640px) {
+            .main-content {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                padding: 2rem 2.5rem;
+                max-width: 80rem;
+            }
         }
 
         .card {
             background-color: rgba(30, 41, 59, 0.9);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            padding: 1.75rem;
+            padding: 1rem;
             border-radius: 0.75rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             position: relative;
             transition: all 0.3s ease;
+        }
+
+        @media (min-width: 640px) {
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .card {
+                padding: 1.75rem;
+            }
         }
 
         .card:hover {
@@ -114,9 +180,9 @@
             justify-content: center;
             gap: 0.5rem;
             border-radius: 0.5rem;
-            height: 3.25rem;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
+            height: auto;
+            min-height: 3.25rem;
+            padding: 0.75rem 1.25rem;
             background: linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%);
             color: white;
             font-weight: 600;
@@ -124,6 +190,14 @@
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        @media (min-width: 640px) {
+            .btn-primary {
+                width: auto;
+                padding: 0.75rem 1.5rem;
+            }
         }
 
         .btn-primary:hover:not(:disabled) {
@@ -162,8 +236,7 @@
             width: 100%;
             border-radius: 0.5rem;
             height: 2.75rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding: 0.75rem 1rem;
             background: rgba(71, 85, 105, 0.7);
             color: var(--text-light);
             font-weight: 600;
@@ -189,9 +262,20 @@
             background: rgba(30, 41, 59, 0.7);
             height: 3rem;
             padding: 0.75rem 1rem;
-            font-size: 0.95rem;
+            font-size: 1rem;
             line-height: 1.5;
             transition: all 0.3s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Improve input field for mobile */
+        @media (max-width: 640px) {
+            .input-field {
+                font-size: 16px; /* Prevents zoom on iOS */
+                height: 3.25rem;
+            }
         }
 
         .input-field:focus {
@@ -208,11 +292,14 @@
             overflow-x: auto;
             border-radius: 0.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-overflow-scrolling: touch;
         }
 
         .table-container table {
             width: 100%;
+            min-width: 600px; /* Minimum width for tables on mobile */
             text-align: left;
+            border-collapse: collapse;
         }
 
         .table-container thead tr {
@@ -221,16 +308,19 @@
         }
 
         .table-container th {
-            padding-left: 1.25rem;
-            padding-right: 1.25rem;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding: 0.75rem 1rem;
             font-size: 0.875rem;
-            line-height: 1.25rem;
             font-weight: 600;
             color: var(--text-light);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .table-container th {
+                padding: 1rem 1.25rem;
+            }
         }
 
         .table-container tbody tr {
@@ -242,22 +332,27 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
-        .table-container tbody tr:last-child {
-            border-bottom-width: 0;
-        }
-
         .table-container td {
-            padding-left: 1.25rem;
-            padding-right: 1.25rem;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding: 0.75rem 1rem;
             font-size: 0.95rem;
             line-height: 1.5;
             color: var(--text-light);
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .table-container td {
+                padding: 1rem 1.25rem;
+            }
         }
 
         .message-box {
-            @apply p-4 rounded-lg mb-4 text-center font-medium shadow-lg;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .message-box.info { 
@@ -282,14 +377,34 @@
             border-radius: 0.5rem;
             width: 100%;
             height: auto;
+            max-height: 50vh;
             border: 2px solid rgba(255, 255, 255, 0.1);
             transform: scaleX(-1);
+            object-fit: cover;
+        }
+
+        @media (min-width: 768px) {
+            video {
+                max-height: 400px;
+            }
         }
 
         .video-wrapper {
             position: relative;
             border-radius: 0.5rem;
             overflow: hidden;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        }
+
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .face-box {
@@ -324,13 +439,14 @@
 
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            max-width: 350px;
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: 100%;
             background: rgba(30, 41, 59, 0.95);
             border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            padding: 1.25rem 1.5rem;
+            padding: 1rem;
             transform: translateX(120%);
             opacity: 0;
             transition: all 0.4s ease;
@@ -339,6 +455,14 @@
             color: var(--text-light);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+        }
+
+        @media (min-width: 640px) {
+            .notification {
+                left: auto;
+                right: 1rem;
+                max-width: 350px;
+            }
         }
 
         .notification.show {
@@ -351,8 +475,15 @@
 
         .notification.left-aligned {
             right: auto;
-            left: 20px;
+            left: 1rem;
             transform: translateX(-120%);
+        }
+
+        @media (min-width: 640px) {
+            .notification.left-aligned {
+                left: 1rem;
+                right: auto;
+            }
         }
 
         .notification.left-aligned.show {
@@ -373,12 +504,18 @@
         }
 
         .real-time-clock {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--secondary-color);
             text-align: center;
-            margin: 15px 0;
+            margin: 1rem 0;
             text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .real-time-clock {
+                font-size: 1.75rem;
+            }
         }
 
         .status-badge {
@@ -390,6 +527,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }
 
         .status-badge.success {
@@ -419,12 +557,14 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             opacity: 0;
             transition: opacity 0.3s ease;
+            padding: 1rem;
         }
 
         .modal-overlay.show {
@@ -435,14 +575,16 @@
         .modal {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
             border-radius: 1rem;
-            width: 90%;
+            width: 100%;
             max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             transform: scale(0.9);
             opacity: 0;
             transition: all 0.3s ease;
-            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         .modal.show {
@@ -451,9 +593,12 @@
         }
 
         .modal-header {
-            padding: 1.5rem 1.5rem 1rem;
+            padding: 1.25rem 1.25rem 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .modal-title {
@@ -467,22 +612,33 @@
         }
 
         .modal-body {
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
 
         .modal-message {
             color: var(--text-light);
             font-size: 1rem;
             line-height: 1.6;
-            margin: 0 0 1.5rem 0;
+            margin: 0 0 1.25rem 0;
         }
 
         .modal-footer {
-            padding: 1rem 1.5rem 1.5rem;
+            padding: 1rem 1.25rem 1.25rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: sticky;
+            bottom: 0;
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        @media (min-width: 640px) {
+            .modal-footer {
+                flex-direction: row;
+                justify-content: flex-end;
+                gap: 0.75rem;
+            }
         }
 
         .modal-icon {
@@ -506,16 +662,28 @@
         .clock-section {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
             border-radius: 1rem;
-            padding: 2rem;
+            padding: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
+        @media (min-width: 768px) {
+            .clock-section {
+                padding: 2rem;
+            }
+        }
+
         .clock-buttons {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 1rem;
             margin-top: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .clock-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .clock-status {
@@ -543,14 +711,26 @@
         .agency-header {
             border-left: 4px solid var(--gold-color);
             padding-left: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .agency-header {
+                margin-bottom: 0;
+            }
         }
 
         .agency-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-light);
             margin-bottom: 0.25rem;
+        }
+
+        @media (min-width: 768px) {
+            .agency-title {
+                font-size: 1.5rem;
+            }
         }
 
         .agency-subtitle {
@@ -567,7 +747,113 @@
             border-radius: 0.375rem;
             font-size: 0.75rem;
             font-weight: 600;
-            margin-left: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .official-badge {
+                margin-top: 0;
+                margin-left: 0.5rem;
+            }
+        }
+
+        /* Responsive grid improvements */
+        .grid-responsive {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-responsive {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid-responsive {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Touch-friendly button sizing */
+        @media (max-width: 768px) {
+            button, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+                min-height: 3.5rem;
+                padding: 1rem;
+            }
+            
+            .input-field {
+                min-height: 3.5rem;
+            }
+        }
+
+        /* Safari-specific fixes */
+        @media not all and (min-resolution:.001dpcm) { 
+            @supports (-webkit-appearance:none) {
+                .glass-border {
+                    background: rgba(55, 65, 81, 0.85);
+                    border: 2px solid transparent;
+                    border-image: linear-gradient(var(--angle), #0f172a, var(--primary-color), #0f172a) 1;
+                }
+            }
+        }
+
+        /* Firefox-specific fixes */
+        @-moz-document url-prefix() {
+            .glass-border {
+                background: rgba(55, 65, 81, 0.85);
+                border: 2px solid transparent;
+            }
+        }
+
+        /* Edge-specific fixes */
+        @supports (-ms-ime-align:auto) {
+            .glass-border {
+                background: rgba(55, 65, 81, 0.85);
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .header, .modal-overlay, .notification, 
+            .btn-primary, .btn-secondary, video, 
+            .clock-buttons, .face-box {
+                display: none !important;
+            }
+            
+            .card {
+                background: white;
+                color: black;
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+            
+            .table-container {
+                border: 1px solid #ccc;
+                overflow: visible;
+            }
+            
+            .table-container table {
+                color: black;
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -606,59 +892,58 @@
 
     <div class="relative flex size-full min-h-screen flex-col bg-gray-900 group/design-root overflow-x-hidden">
         <header class="header header-gradient">
-            <div class="flex items-center gap-4 text-gray-100">
-                <div class="size-8 text-white">
-                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
-                    </svg>
-                </div>
-                <div class="agency-header">
-                    <h2 class="agency-title">Sistem Kehadiran JIM</h2>
-                    <p class="agency-subtitle">Jabatan Imigresen Malaysia</p>
+            <div class="header-content">
+                <div class="flex items-center gap-2 text-gray-100">
+                    <div class="size-6 sm:size-8 text-white">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="agency-header">
+                        <h2 class="agency-title">Sistem Kehadiran JIM</h2>
+                        <p class="agency-subtitle">Jabatan Imigresen Malaysia</p>
+                    </div>
                 </div>
                 <span class="official-badge">RASMI</span>
             </div>
-            <div class="flex flex-1 justify-end items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-200 border border-gray-600 hover:border-gray-500" id="signOutBtn">
-                        <span class="truncate">Log Keluar</span>
-                        <span class="material-symbols-outlined">logout</span>
-                    </button>
-                </div>
+            <div class="flex justify-end items-center gap-4 mt-4 sm:mt-0">
+                <button class="flex items-center gap-2 rounded-md h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-200 border border-gray-600 hover:border-gray-500" id="signOutBtn">
+                    <span class="truncate">Log Keluar</span>
+                    <span class="material-symbols-outlined">logout</span>
+                </button>
             </div>
         </header>
 
         <main class="main-content">
             <div class="max-w-7xl mx-auto">
-                <h1 class="text-3xl font-bold text-gray-100 mb-2" id="page-title"></h1>
-                <p class="text-gray-400 mb-8">Sistem Kehadiran Berasaskan Pengenalan Wajah</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-100 mb-2" id="page-title"></h1>
+                <p class="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">Sistem Kehadiran Berasaskan Pengenalan Wajah</p>
                 
                 <div id="statusMessage" class="message-box hidden"></div>
                 
                 <div id="loginPage" class="hidden">
-                    <!-- Login form remains the same -->
-                    <div class="w-full max-w-md mx-auto p-8 card glass-border">
-                        <div class="text-center mb-8">
-                            <div class="inline-flex items-center justify-center bg-blue-600 text-white rounded-full w-16 h-16 mb-6">
-                                <span class="material-symbols-outlined text-4xl">fingerprint</span>
+                    <div class="w-full max-w-md mx-auto p-4 sm:p-6 md:p-8 card glass-border">
+                        <div class="text-center mb-6 sm:mb-8">
+                            <div class="inline-flex items-center justify-center bg-blue-600 text-white rounded-full w-12 h-12 sm:w-16 sm:h-16 mb-4 sm:mb-6">
+                                <span class="material-symbols-outlined text-2xl sm:text-4xl">fingerprint</span>
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-100">Selamat Kembali</h1>
-                            <p class="text-gray-400 mt-2">Sila masukkan butiran anda untuk log masuk.</p>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-100">Selamat Kembali</h1>
+                            <p class="text-gray-400 mt-2 text-sm sm:text-base">Sila masukkan butiran anda untuk log masuk.</p>
                         </div>
-                        <div class="space-y-6">
+                        <div class="space-y-4 sm:space-y-6">
                             <div class="relative">
                                 <label class="block text-sm font-medium text-gray-400 pb-1">E-mel</label>
-                                <input class="form-input w-full rounded-md border-gray-700 bg-gray-900 py-3 px-4 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500" id="loginEmailInput" placeholder="Email" type="email"/>
+                                <input class="input-field" id="loginEmailInput" placeholder="Email" type="email"/>
                             </div>
                             <div class="relative">
                                 <label class="block text-sm font-medium text-gray-400 pb-1">Kata Laluan</label>
-                                <input class="form-input w-full rounded-md border-gray-700 bg-gray-900 py-3 px-4 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500" id="loginPasswordInput" placeholder="Password" type="password"/>
+                                <input class="input-field" id="loginPasswordInput" placeholder="Password" type="password"/>
                             </div>
                         </div>
-                        <div class="mt-8">
-                            <button class="w-full flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="loginBtn">Log Masuk</button>
+                        <div class="mt-6 sm:mt-8">
+                            <button class="w-full btn-primary" id="loginBtn">Log Masuk</button>
                         </div>
-                        <p class="mt-8 text-center text-sm text-gray-400">
+                        <p class="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-400">
                             Tiada akaun?
                             <a class="font-medium text-blue-500 hover:text-blue-400 cursor-pointer" id="goToRegisterBtn">Daftar Akaun Baru</a>
                         </p>
@@ -666,13 +951,12 @@
                 </div>
 
                 <div id="accountRegistrationPage" class="hidden">
-                    <!-- Registration form remains the same -->
-                    <div class="w-full max-w-md mx-auto p-8 card glass-border">
-                        <div class="text-center mb-8">
-                            <h1 class="text-3xl font-bold text-gray-100">Daftar Akaun</h1>
-                            <p class="text-gray-400 mt-2">Sertai sistem kehadiran kami hari ini.</p>
+                    <div class="w-full max-w-md mx-auto p-4 sm:p-6 md:p-8 card glass-border">
+                        <div class="text-center mb-6 sm:mb-8">
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-100">Daftar Akaun</h1>
+                            <p class="text-gray-400 mt-2 text-sm sm:text-base">Sertai sistem kehadiran kami hari ini.</p>
                         </div>
-                        <div class="space-y-6">
+                        <div class="space-y-4 sm:space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-400 pb-1">Nama Penuh</label>
                                 <input type="text" id="registerNameInput" class="input-field" placeholder="John Doe">
@@ -690,10 +974,10 @@
                                 <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
                             </div>
                         </div>
-                        <div class="mt-8">
-                             <button id="registerAccountBtn" class="w-full btn-primary bg-green-600 hover:bg-green-700">Daftar</button>
+                        <div class="mt-6 sm:mt-8">
+                             <button id="registerAccountBtn" class="w-full btn-primary btn-success">Daftar</button>
                         </div>
-                        <p class="mt-8 text-center text-sm text-gray-400">
+                        <p class="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-400">
                             Sudah mempunyai akaun?
                             <a class="font-medium text-blue-500 hover:text-blue-400 cursor-pointer" id="backToLoginBtn">Log masuk</a>
                         </p>
@@ -701,57 +985,56 @@
                 </div>
                 
                 <div id="faceRegistrationPage" class="hidden">
-                    <!-- Face registration remains the same -->
-                    <div class="w-full max-w-lg mx-auto p-8 card glass-border">
+                    <div class="w-full max-w-lg mx-auto p-4 sm:p-6 md:p-8 card glass-border">
                         <div class="text-center">
-                            <h1 class="text-3xl font-extrabold tracking-tight text-gray-100 sm:text-4xl">Pendaftaran Wajah</h1>
-                            <p class="mt-4 text-lg text-gray-400">Sila ikut arahan untuk mendaftar wajah anda bagi kehadiran tanpa masalah.</p>
+                            <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-gray-100">Pendaftaran Wajah</h1>
+                            <p class="mt-2 sm:mt-4 text-sm sm:text-base md:text-lg text-gray-400">Sila ikut arahan untuk mendaftar wajah anda bagi kehadiran tanpa masalah.</p>
                         </div>
-                        <div class="mt-10">
-                            <div class="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-gray-700">
+                        <div class="mt-6 sm:mt-8 md:mt-10">
+                            <div class="video-wrapper">
                                 <video id="videoElement" autoplay muted playsinline class="w-full h-full object-cover"></video>
                                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     <div class="h-3/4 w-3/4 rounded-full border-4 border-gray-400/50 border-dashed"></div>
                                 </div>
                             </div>
-                            <div class="mt-6 space-y-4 text-center text-gray-400">
-                                <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-blue-500">lightbulb</span>
-                                    <p>Posisikan wajah anda di dalam bulatan dan pastikan pencahayaan yang baik.</p>
+                            <div class="mt-4 sm:mt-6 space-y-2 sm:space-y-4 text-center text-xs sm:text-sm text-gray-400">
+                                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-sm sm:text-base">lightbulb</span>
+                                    <p class="text-left">Posisikan wajah anda di dalam bulatan dan pastikan pencahayaan yang baik.</p>
                                 </div>
-                                <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-blue-500">face</span>
-                                    <p>Pastikan ekspresi neutral dan pandang terus ke kamera.</p>
+                                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-sm sm:text-base">face</span>
+                                    <p class="text-left">Pastikan ekspresi neutral dan pandang terus ke kamera.</p>
                                 </div>
-                                <div class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-blue-500">photo_camera</span>
-                                    <p>Sistem akan menangkap imej anda secara automatik.</p>
+                                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-sm sm:text-base">photo_camera</span>
+                                    <p class="text-left">Sistem akan menangkap imej anda secara automatik.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-8 flex justify-center">
-                            <button class="flex w-full max-w-xs items-center justify-center gap-2 rounded-md bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" id="registerFaceSubmitBtn">
-                                <span class="material-symbols-outlined">camera_enhance</span>
+                        <div class="mt-6 sm:mt-8 flex justify-center">
+                            <button class="flex w-full max-w-xs items-center justify-center gap-2 rounded-md bg-blue-600 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" id="registerFaceSubmitBtn">
+                                <span class="material-symbols-outlined text-sm sm:text-base">camera_enhance</span>
                                 <span>Mula Pendaftaran</span>
                             </button>
                         </div>
-                        <button class="btn btn-secondary w-full max-w-xs mx-auto mt-4" id="returnToLoginBtn">Kembali</button>
+                        <button class="btn-secondary w-full max-w-xs mx-auto mt-3 sm:mt-4" id="returnToLoginBtn">Kembali</button>
                     </div>
                 </div>
 
                 <div id="dashboard" class="hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                         <div class="lg:col-span-2 clock-section">
-                            <h2 class="text-xl font-bold text-gray-100 mb-6">Clock In/Out</h2>
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-100 mb-4 sm:mb-6">Clock In/Out</h2>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                                <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-md">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
+                                <div class="w-full">
                                     <div class="video-wrapper">
                                         <video id="scanVideoElement" autoplay muted playsinline class="w-full h-full object-cover"></video>
                                         <div id="faceOverlay" class="video-overlay"></div>
                                     </div>
                                 </div>
-                                <div class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-3 sm:gap-4">
                                     <!-- Clock Status -->
                                     <div class="clock-status">
                                         <div class="clock-status-title">Status Kehadiran Hari Ini</div>
@@ -759,37 +1042,37 @@
                                     </div>
 
                                     <!-- Location Status -->
-                                    <div class="flex items-center gap-3 p-4 bg-blue-900/30 border border-blue-700/30 rounded-lg">
-                                        <span class="material-symbols-outlined text-blue-400">location_on</span>
+                                    <div class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-900/30 border border-blue-700/30 rounded-lg">
+                                        <span class="material-symbols-outlined text-blue-400 text-sm sm:text-base">location_on</span>
                                         <div class="flex-1">
-                                            <p class="text-sm text-blue-200">Status Lokasi:</p>
-                                            <p class="font-medium" id="locationStatus">Mengesan lokasi...</p>
+                                            <p class="text-xs sm:text-sm text-blue-200">Status Lokasi:</p>
+                                            <p class="font-medium text-sm sm:text-base" id="locationStatus">Mengesan lokasi...</p>
                                         </div>
                                     </div>
 
                                     <!-- Face Detection Status -->
-                                    <div class="flex items-center gap-3 p-4 bg-blue-900/30 border border-blue-700/30 rounded-lg">
-                                        <span class="material-symbols-outlined text-blue-400">face</span>
+                                    <div class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-900/30 border border-blue-700/30 rounded-lg">
+                                        <span class="material-symbols-outlined text-blue-400 text-sm sm:text-base">face</span>
                                         <div class="flex-1">
-                                            <p class="text-sm text-blue-200">Pengesanan Wajah:</p>
-                                            <p class="font-medium" id="livenessInstructions">Sila pastikan wajah anda kelihatan dengan jelas.</p>
+                                            <p class="text-xs sm:text-sm text-blue-200">Pengesanan Wajah:</p>
+                                            <p class="font-medium text-sm sm:text-base" id="livenessInstructions">Sila pastikan wajah anda kelihatan dengan jelas.</p>
                                         </div>
                                     </div>
 
                                     <!-- Real Time Clock -->
-                                    <div class="flex flex-col items-center justify-center rounded-lg bg-gray-800/50 p-4 w-full border border-gray-700/50">
-                                        <p class="text-3xl font-bold text-gray-100" id="realTimeClock">00:00:00</p>
+                                    <div class="flex flex-col items-center justify-center rounded-lg bg-gray-800/50 p-3 sm:p-4 w-full border border-gray-700/50">
+                                        <p class="text-2xl sm:text-3xl font-bold text-gray-100" id="realTimeClock">00:00:00</p>
                                         <p class="text-xs text-gray-400 uppercase tracking-wider">Masa Semasa</p>
                                     </div>
 
                                     <!-- Separated Clock In/Out Buttons -->
                                     <div class="clock-buttons">
                                         <button class="btn-primary btn-success" id="clockInBtn">
-                                            <span class="material-symbols-outlined">login</span>
+                                            <span class="material-symbols-outlined text-sm sm:text-base">login</span>
                                             <span>Clock In</span>
                                         </button>
                                         <button class="btn-primary btn-danger" id="clockOutBtn">
-                                            <span class="material-symbols-outlined">logout</span>
+                                            <span class="material-symbols-outlined text-sm sm:text-base">logout</span>
                                             <span>Clock Out</span>
                                         </button>
                                     </div>
@@ -797,39 +1080,39 @@
                             </div>
                         </div>
 
-                        <!-- Report Generation Card (unchanged) -->
+                        <!-- Report Generation Card -->
                         <div class="card glass-border">
-                            <h2 class="text-xl font-bold text-gray-100 mb-4">Jana Laporan</h2>
-                            <div class="flex flex-col gap-4">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-100 mb-3 sm:mb-4">Jana Laporan</h2>
+                            <div class="flex flex-col gap-3 sm:gap-4">
                                 <label class="flex flex-col">
-                                    <p class="text-sm font-medium text-gray-400 pb-1">Tarikh Mula</p>
-                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="startDateInput" value="2024-07-01"/>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-400 pb-1">Tarikh Mula</p>
+                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="startDateInput"/>
                                 </label>
                                 <label class="flex flex-col">
-                                    <p class="text-sm font-medium text-gray-400 pb-1">Tarikh Tamat</p>
-                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="endDateInput" value="2024-07-20"/>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-400 pb-1">Tarikh Tamat</p>
+                                    <input class="input-field bg-gray-900 border-gray-700 text-gray-100" type="date" id="endDateInput"/>
                                 </label>
                                 <button class="btn-secondary bg-gray-700 hover:bg-gray-600 text-gray-100" id="generatePdfBtn">
-                                    <span class="material-symbols-outlined text-base">assessment</span>
+                                    <span class="material-symbols-outlined text-sm sm:text-base">assessment</span>
                                     <span class="truncate">Jana Laporan PDF</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Attendance History Table (unchanged) -->
-                    <div class="mt-8 card glass-border">
-                        <h2 class="text-xl font-bold text-gray-100 mb-4">Sejarah Kehadiran</h2>
-                        <div class="table-container">
+                    <!-- Attendance History Table -->
+                    <div class="mt-6 sm:mt-8 card glass-border">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-100 mb-3 sm:mb-4">Sejarah Kehadiran</h2>
+                        <div class="table-container hide-scrollbar">
                             <table class="w-full text-left">
                                 <thead>
                                     <tr class="bg-gray-700 border-b border-gray-600">
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Tarikh</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Hari</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Masuk</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Keluar</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">Jam</th>
-                                        <th class="px-4 py-3 text-sm font-medium text-gray-400">OT</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">Tarikh</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">Hari</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">Masuk</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">Keluar</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">Jam</th>
+                                        <th class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium text-gray-400">OT</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody"></tbody>
@@ -844,7 +1127,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
@@ -1024,10 +1307,33 @@
         async function startCamera(videoEl) {
             stopCamera();
             try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // Try to get the best camera for the device
+                const constraints = {
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoEl.srcObject = videoStream;
+                
+                // Handle video element loading for iOS
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play().catch(e => console.log('Video play error:', e));
+                };
             } catch (error) {
+                console.error('Camera access error:', error);
                 showStatusMessage('Gagal akses kamera. Benarkan akses.', 'error');
+                
+                // Fallback to simpler constraints
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    videoEl.srcObject = videoStream;
+                } catch (fallbackError) {
+                    showStatusMessage('Tidak dapat mengakses kamera. Sila semak kebenaran kamera.', 'error');
+                }
             }
         }
 
@@ -1130,20 +1436,24 @@
             }
         }
 
-        // TAMBAHKAN FUNGSI initializeUI YANG HILANG
         function initializeUI() {
-            const startOfMonth = getStartOfMonthLocal();
-            const endOfMonth = getEndOfMonthLocal();
+            // Set default dates
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
             
-            startDateInput.value = startOfMonth;
-            endDateInput.value = endOfMonth;
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+            
+            startDateInput.value = formatDate(firstDay);
+            endDateInput.value = formatDate(lastDay);
             
             // Event listeners untuk modal
             modalCancelBtn.addEventListener('click', hideModal);
             modalOkBtn.addEventListener('click', hideModal);
             modalConfirmBtn.addEventListener('click', () => {
                 hideModal();
-                // Confirm action callback can be added here
             });
 
             // Close modal when clicking outside
@@ -1152,18 +1462,14 @@
                     hideModal();
                 }
             });
-        }
-
-        // TAMBAHKAN FUNGSI YANG DIBUTUHKAN LAINNYA
-        function getStartOfMonthLocal() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-        }
-
-        function getEndOfMonthLocal() {
-            const now = new Date();
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            
+            // Improve touch experience on mobile
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // Prevent zoom on double-tap (iOS)
+            document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) { e.preventDefault(); }
+            }, { passive: false });
         }
 
         function getCurrentDateLocal() {
@@ -1174,7 +1480,6 @@
             return `${year}-${month}-${day}`;
         }
 
-        // Fungsi-fungsi yang masih perlu ditambahkan dari kode asli
         window.handleAccountRegistration = async function() {
             const name = document.getElementById('registerNameInput').value.trim();
             const department = document.getElementById('registerDepartmentInput').value.trim();
@@ -1184,16 +1489,28 @@
                 showStatusMessage('Semua medan diperlukan.', 'error');
                 return;
             }
+            if (password.length < 6) {
+                showStatusMessage('Kata laluan mesti sekurang-kurangnya 6 aksara.', 'error');
+                return;
+            }
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 userId = userCredential.user.uid;
                 await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
-                    name, department, faceDescriptor: null
+                    name, department, faceDescriptor: null, createdAt: new Date()
                 });
                 showStatusMessage('Berjaya daftar! Daftar wajah sekarang.', 'success');
                 showPage('faceRegistrationPage');
             } catch (error) {
-                showStatusMessage(`Ralat: ${error.message}`, 'error');
+                let errorMessage = `Ralat: ${error.message}`;
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'E-mel ini sudah didaftarkan.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Format e-mel tidak sah.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Kata laluan terlalu lemah.';
+                }
+                showStatusMessage(errorMessage, 'error');
             }
         };
 
@@ -1207,21 +1524,34 @@
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                const msg = error.code === 'auth/user-not-found' ? 'E-mel tidak wujud.' :
-                           error.code === 'auth/wrong-password' ? 'Kata laluan salah.' : error.message;
+                let msg = error.message;
+                if (error.code === 'auth/user-not-found') {
+                    msg = 'E-mel tidak wujud.';
+                } else if (error.code === 'auth/wrong-password') {
+                    msg = 'Kata laluan salah.';
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = 'Format e-mel tidak sah.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    msg = 'Terlalu banyak percubaan. Cuba lagi nanti.';
+                }
                 showStatusMessage(msg, 'error');
             }
         };
 
         window.handleSignOut = async function() {
-            await signOut(auth);
-            showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
-            showPage('loginPage');
+            try {
+                await signOut(auth);
+                showNotification('Berjaya log keluar', new Date().toLocaleTimeString(), 'success');
+                showPage('loginPage');
+            } catch (error) {
+                showStatusMessage('Gagal log keluar. Cuba lagi.', 'error');
+            }
         };
 
         window.handleFaceRegistration = async function() {
             if (isProcessing) return;
             isProcessing = true;
+            const registerFaceSubmitBtn = document.getElementById('registerFaceSubmitBtn');
             registerFaceSubmitBtn.disabled = true;
             registerFaceSubmitBtn.innerHTML = '<div class="loading"></div> Sedang daftar...';
 
@@ -1252,14 +1582,21 @@
                 return;
             }
 
-            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), { faceDescriptor: JSON.stringify(faceDescriptor) }, { merge: true });
-            isFaceRegistered = true;
-            createFaceMatcher(JSON.stringify(faceDescriptor));
-            showNotification('Wajah berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
-            setTimeout(() => showPage('loginPage'), 1500);
-            isProcessing = false;
-            registerFaceSubmitBtn.disabled = false;
-            registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), 
+                    { faceDescriptor: JSON.stringify(faceDescriptor), faceRegisteredAt: new Date() }, 
+                    { merge: true });
+                isFaceRegistered = true;
+                createFaceMatcher(JSON.stringify(faceDescriptor));
+                showNotification('Wajah berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
+                setTimeout(() => showPage('dashboard'), 1500);
+            } catch (error) {
+                showStatusMessage('Gagal menyimpan data wajah. Cuba lagi.', 'error');
+            } finally {
+                isProcessing = false;
+                registerFaceSubmitBtn.disabled = false;
+                registerFaceSubmitBtn.textContent = 'Mula Daftar Wajah';
+            }
         };
 
         async function handleGeolocationCheck() {
@@ -1278,7 +1615,7 @@
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
                 if (distance <= locationTolerance) {
                     locationStatusEl.textContent = `✅ Di dalam pejabat (${distance.toFixed(1)}m)`;
-                    updateClockButtons(); // Re-enable buttons based on attendance status
+                    updateClockButtons();
                 } else {
                     locationStatusEl.textContent = `❌ Luar kawasan (${distance.toFixed(1)}m)`;
                     clockInBtn.disabled = true;
@@ -1428,7 +1765,11 @@
 
             try {
                 const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
                 });
                 const { latitude, longitude } = position.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
@@ -1481,7 +1822,11 @@
 
             try {
                 const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
                 });
                 const { latitude, longitude } = position.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
@@ -1524,7 +1869,6 @@
             }
         };
 
-        // Fungsi-fungsi lain yang perlu ditambahkan
         function formatDecimalToTime(decimalHours) {
             if (decimalHours === null || isNaN(decimalHours) || decimalHours <= 0) {
                 return '';
@@ -1536,41 +1880,28 @@
 
         function updateAttendanceTable(data) {
             attendanceTableBody.innerHTML = '';
-            data.forEach(item => {
+            data.sort((a, b) => new Date(b.id) - new Date(a.id)).forEach(item => {
                 const row = document.createElement('tr');
                 const date = item.id;
-                const weekday = item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' });
+                const weekday = item.date?.toDate ? item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' }) : 
+                                new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
                 
                 const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
                 const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
-                const clockInClasses = [];
-                if (clockInTime) {
-                    const nominalClockInEnd = new Date(clockInTime.getFullYear(), clockInTime.getMonth(), clockInTime.getDate(), 8, 30);
-                    if (clockInTime > nominalClockInEnd) {
-                        clockInClasses.push('text-red-600');
-                    }
-                }
                 
                 const clockOutTime = item.clockOut ? item.clockOut.toDate() : null;
                 const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
-                const clockOutClasses = [];
-                if (clockOutTime) {
-                    const nominalClockOutStart = new Date(clockOutTime.getFullYear(), clockOutTime.getMonth(), clockOutTime.getDate(), 16, 30);
-                    if (clockOutTime < nominalClockOutStart) {
-                        clockOutClasses.push('text-red-600');
-                    }
-                }
                 
                 const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
 
                 row.innerHTML = `
-                    <td class="px-4 py-3 text-sm text-gray-400">${date}</td>
-                    <td class="px-4 py-3 text-sm text-gray-400">${weekday}</td>
-                    <td class="px-4 py-3 text-sm ${clockInClasses.join(' ')}">${clockInDisplay}</td>
-                    <td class="px-4 py-3 text-sm ${clockOutClasses.join(' ')}">${clockOutDisplay}</td>
-                    <td class="px-4 py-3 text-sm text-gray-400">${totalHours}</td>
-                    <td class="px-4 py-3 text-sm text-gray-400">${totalOT}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-400">${date}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-400">${weekday}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ${clockInTime && clockInTime.getHours() >= 8 && clockInTime.getMinutes() > 30 ? 'text-red-400' : 'text-gray-300'}">${clockInDisplay}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ${clockOutTime && clockOutTime.getHours() < 16 && clockOutTime.getMinutes() < 30 ? 'text-red-400' : 'text-gray-300'}">${clockOutDisplay}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-400">${totalHours}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-400">${totalOT}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
@@ -1593,157 +1924,178 @@
                 return;
             }
 
-            const q = query(
-                collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                where('__name__', '>=', startDateStr),
-                where('__name__', '<=', endDateStr)
-            );
-            const snap = await getDocs(q);
-            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            try {
+                const q = query(
+                    collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+                    where('__name__', '>=', startDateStr),
+                    where('__name__', '<=', endDateStr)
+                );
+                const snap = await getDocs(q);
+                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            const doc = new jsPDF({
-                format: 'a4',
-                unit: 'mm'
-            });
+                const doc = new jsPDF({
+                    format: 'a4',
+                    unit: 'mm'
+                });
 
-            doc.setFont('times', 'normal');
-            
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const tableWidth = 180;
-            const tableMarginX = (pageWidth - tableWidth) / 2;
-            const rowHeight = 6;
-            const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
-            const colWidths = [30, 30, 30, 30, 30, 30];
-
-            let y = 20;
-
-            doc.setFontSize(14);
-            doc.setFont('times', 'bold');
-            const title = 'Total Time Card';
-            const titleWidth = doc.getTextWidth(title);
-            doc.text(title, (pageWidth - titleWidth) / 2, y);
-
-            y += 10;
-            doc.setFontSize(10);
-            doc.setFont('times', 'normal');
-            doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
-            y += 5;
-            doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
-
-            y += 10;
-            doc.setFont('times', 'bold');
-            doc.setDrawColor(0);
-            doc.setLineWidth(0.2);
-            
-            let x = tableMarginX;
-            headers.forEach((header, i) => {
-                doc.rect(x, y, colWidths[i], rowHeight);
-                doc.text(header, x + 2, y + 4);
-                x += colWidths[i];
-            });
-            
-            y += rowHeight;
-            doc.setFont('times', 'normal');
-            let totalHoursDecimal = 0;
-            let totalOTDecimal = 0;
-            
-            const currentDate = new Date(start);
-            while (currentDate <= end) {
-                const dateString = currentDate.toISOString().slice(0, 10);
-                const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-
-                const record = data.find(d => d.id === dateString) || {};
-                const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-                const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-                const hours = record.totalHours ? record.totalHours : null;
-                const ot = record.totalOT ? record.totalOT : null;
-
-                if (hours !== null) totalHoursDecimal += hours;
-                if (ot !== null) totalOTDecimal += ot;
-
-                x = tableMarginX;
-                const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
-                const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
-                const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
+                doc.setFont('helvetica', 'normal');
                 
-                rowData.forEach((text, i) => {
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const tableWidth = 180;
+                const tableMarginX = (pageWidth - tableWidth) / 2;
+                const rowHeight = 6;
+                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
+                const colWidths = [30, 30, 30, 30, 30, 30];
+
+                let y = 20;
+
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                const title = 'Laporan Kehadiran';
+                const titleWidth = doc.getTextWidth(title);
+                doc.text(title, (pageWidth - titleWidth) / 2, y);
+
+                y += 10;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Tarikh Mula: ${startDateStr}   Tarikh Tamat: ${endDateStr}`, tableMarginX, y);
+                y += 5;
+                doc.text(`Nama: ${userData?.name || 'Pengguna'}, Jabatan: ${userData?.department || 'Tiada'}`, tableMarginX, y);
+
+                y += 10;
+                doc.setFont('helvetica', 'bold');
+                doc.setDrawColor(0);
+                doc.setLineWidth(0.2);
+                
+                let x = tableMarginX;
+                headers.forEach((header, i) => {
                     doc.rect(x, y, colWidths[i], rowHeight);
-                    doc.text(text, x + 2, y + 4);
+                    doc.text(header, x + 2, y + 4);
                     x += colWidths[i];
                 });
+                
                 y += rowHeight;
-                currentDate.setDate(currentDate.getDate() + 1);
+                doc.setFont('helvetica', 'normal');
+                let totalHoursDecimal = 0;
+                let totalOTDecimal = 0;
+                
+                const currentDate = new Date(start);
+                while (currentDate <= end) {
+                    const dateString = currentDate.toISOString().slice(0, 10);
+                    const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+                    const record = data.find(d => d.id === dateString) || {};
+                    const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+                    const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+                    const hours = record.totalHours ? record.totalHours : null;
+                    const ot = record.totalOT ? record.totalOT : null;
+
+                    if (hours !== null) totalHoursDecimal += hours;
+                    if (ot !== null) totalOTDecimal += ot;
+
+                    x = tableMarginX;
+                    const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
+                    const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
+                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
+                    
+                    rowData.forEach((text, i) => {
+                        doc.rect(x, y, colWidths[i], rowHeight);
+                        doc.text(text, x + 2, y + 4);
+                        x += colWidths[i];
+                    });
+                    y += rowHeight;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    
+                    // Check if we need a new page
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                }
+
+                // Baris Statistik dalam jadual
+                doc.setFont('helvetica', 'bold');
+                doc.rect(tableMarginX, y, tableWidth, rowHeight);
+                
+                doc.text('Statistik', tableMarginX + 2, y + 4);
+                
+                const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
+                const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
+
+                doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y + 4);
+                doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y + 4);
+                
+                doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
+                showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                showModal('Ralat PDF', 'Gagal menjana laporan PDF. Cuba lagi.', 'error');
             }
-
-            // Baris Statistik dalam jadual
-            doc.setFont('times', 'bold');
-            doc.rect(tableMarginX, y, tableWidth, rowHeight);
-            
-            doc.text('Statistic', tableMarginX + 2, y + 4);
-            
-            const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
-            const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-
-            doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y + 4);
-            doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y + 4);
-            
-            doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
         };
 
         window.onload = async function() {
-            await loadFaceModels();
-            initializeUI(); // Sekarang fungsi ini sudah didefinisikan
+            // Initialize with proper error handling
+            try {
+                await loadFaceModels();
+                initializeUI();
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
-                    const snap = await getDoc(userDocRef);
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                        const snap = await getDoc(userDocRef);
 
-                    if (snap.exists()) {
-                        userData = snap.data();
-                        
-                        if (userData.faceDescriptor) {
-                            try {
-                                JSON.parse(userData.faceDescriptor);
-                                isFaceRegistered = true;
-                                createFaceMatcher(userData.faceDescriptor);
-                            } catch (e) {
-                                console.error("faceDescriptor rosak");
-                                isFaceRegistered = false;
+                        if (snap.exists()) {
+                            userData = snap.data();
+                            
+                            if (userData.faceDescriptor) {
+                                try {
+                                    JSON.parse(userData.faceDescriptor);
+                                    isFaceRegistered = true;
+                                    createFaceMatcher(userData.faceDescriptor);
+                                } catch (e) {
+                                    console.error("faceDescriptor rosak");
+                                    isFaceRegistered = false;
+                                }
                             }
-                        }
-                        
-                        await checkTodayAttendance();
-                        
-                        const startOfMonthStr = getStartOfMonthLocal();
-                        const endOfMonthStr = getEndOfMonthLocal();
-                        const q = query(
-                            collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                            where('__name__', '>=', startOfMonthStr),
-                            where('__name__', '<=', endOfMonthStr)
-                        );
-                        onSnapshot(q, snap => {
-                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            updateAttendanceTable(data);
-                        });
+                            
+                            await checkTodayAttendance();
+                            
+                            // Set up real-time attendance listener
+                            const startOfMonthStr = startDateInput.value.split('-').slice(0, 2).join('-') + '-01';
+                            const endOfMonthStr = endDateInput.value;
+                            const q = query(
+                                collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+                                where('__name__', '>=', startOfMonthStr),
+                                where('__name__', '<=', endOfMonthStr)
+                            );
+                            onSnapshot(q, snap => {
+                                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                updateAttendanceTable(data);
+                            });
 
-                        if (!isFaceRegistered) {
-                            showPage('faceRegistrationPage');
+                            if (!isFaceRegistered) {
+                                showPage('faceRegistrationPage');
+                            } else {
+                                showPage('dashboard');
+                                handleGeolocationCheck();
+                            }
                         } else {
-                            showPage('dashboard');
-                            handleGeolocationCheck();
+                            showPage('faceRegistrationPage');
                         }
                     } else {
-                        showPage('faceRegistrationPage');
+                        showPage('loginPage');
                     }
-                } else {
-                    showPage('loginPage');
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showStatusMessage('Sistem sedang dimuatkan...', 'info');
+                showPage('loginPage');
+            }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Add event listeners
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
             document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
             document.getElementById('registerAccountBtn').addEventListener('click', window.handleAccountRegistration);
@@ -1754,6 +2106,30 @@
             document.getElementById('clockOutBtn').addEventListener('click', window.handleClockOut);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+            
+            // Add keyboard support for login form
+            document.getElementById('loginEmailInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('loginPasswordInput')?.focus();
+                }
+            });
+            
+            document.getElementById('loginPasswordInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    window.handleEmailLogin();
+                }
+            });
+            
+            // Add touch event improvements for mobile
+            document.querySelectorAll('button, .btn-primary, .btn-secondary').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                }, { passive: true });
+                
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                }, { passive: true });
+            });
         });
 
         // Real-time Clock
@@ -1768,9 +2144,29 @@
                 });
             }
         }, 1000);
+
+        // Handle page visibility changes (for mobile browsers)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Page became visible again
+                if (dashboardDiv && !dashboardDiv.classList.contains('hidden')) {
+                    // Refresh location check when returning to dashboard
+                    handleGeolocationCheck();
+                }
+            }
+        });
+
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+            // Force a small delay for orientation to settle
+            setTimeout(() => {
+                if (dashboardDiv && !dashboardDiv.classList.contains('hidden')) {
+                    handleGeolocationCheck();
+                }
+            }, 300);
+        });
     </script>
 </body>
 </html>
-
 
 
