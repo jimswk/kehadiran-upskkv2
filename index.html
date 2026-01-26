@@ -253,19 +253,6 @@
             pointer-events: none;
         }
 
-        .face-guide-text {
-            position: absolute;
-            bottom: -40px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            color: white;
-            font-size: 0.9rem;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px;
-            border-radius: 8px;
-        }
-
         /* FACE BOX */
         .face-box {
             position: absolute;
@@ -273,6 +260,50 @@
             box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
             border-radius: 10px;
             pointer-events: none;
+        }
+
+        /* ATTENDANCE STATUS STYLES */
+        .attendance-status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .attendance-status-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            text-align: center;
+        }
+
+        .attendance-status-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .attendance-status-value.success {
+            color: #6ee7b7;
+            background-color: rgba(5, 150, 105, 0.2);
+            border: 2px solid rgba(5, 150, 105, 0.3);
+        }
+
+        .attendance-status-value.warning {
+            color: #fbbf24;
+            background-color: rgba(217, 119, 6, 0.2);
+            border: 2px solid rgba(217, 119, 6, 0.3);
+        }
+
+        .attendance-status-value.error {
+            color: #fca5a5;
+            background-color: rgba(220, 38, 38, 0.2);
+            border: 2px solid rgba(220, 38, 38, 0.3);
         }
 
         /* STATUS BADGES */
@@ -519,6 +550,11 @@
             .btn-primary, .btn-secondary, .input-field {
                 min-height: 3.25rem;
             }
+            
+            .attendance-status-value {
+                font-size: 1.5rem;
+                min-width: 220px;
+            }
         }
 
         /* FIX FOR IOS */
@@ -712,16 +748,15 @@
                 <div id="dashboard" class="hidden">
                     <!-- Clock In/Out Section -->
                     <div class="card mb-6">
-                        <!-- Status kehadiran sebagai elemen utama di atas video -->
-                        <div class="flex-col items-center justify-center mb-4">
-                            <div class="text-2xl font-bold text-white" id="attendanceStatus">STATUS KEHADIRAN - Belum Clock In</div>
+                        <!-- Status kehadiran menggunakan container baru -->
+                        <div class="attendance-status-container">
+                            <div class="attendance-status-label">STATUS KEHADIRAN</div>
+                            <div class="attendance-status-value error" id="attendanceStatusValue">Belum Clock In</div>
                         </div>
                         
                         <div class="video-container">
                             <video id="scanVideoElement" autoplay muted playsinline></video>
-                            <div class="face-guide">
-                                <div class="face-guide-text">Arahkan wajah ke sini</div>
-                            </div>
+                            <div class="face-guide"></div>
                             <div id="faceOverlay"></div>
                         </div>
                         
@@ -857,7 +892,7 @@
         const attendanceTableBody = document.getElementById('attendanceTableBody');
         const clockInBtn = document.getElementById('clockInBtn');
         const clockOutBtn = document.getElementById('clockOutBtn');
-        const attendanceStatus = document.getElementById('attendanceStatus');
+        const attendanceStatusValue = document.getElementById('attendanceStatusValue');
         const locationStatusEl = document.getElementById('locationStatus');
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
@@ -1042,23 +1077,23 @@
                 isClockedIn = !!todayAttendance.clockIn;
                 isClockedOut = !!todayAttendance.clockOut;
                 
-                // Update attendance status
+                // Update attendance status dengan gaya baru
                 if (isClockedIn && !isClockedOut) {
-                    attendanceStatus.textContent = 'STATUS KEHADIRAN - Telah Clock In';
-                    attendanceStatus.className = 'text-2xl font-bold text-white mb-4 status-badge warning';
+                    attendanceStatusValue.textContent = 'Telah Clock In';
+                    attendanceStatusValue.className = 'attendance-status-value warning';
                 } else if (isClockedIn && isClockedOut) {
-                    attendanceStatus.textContent = 'STATUS KEHADIRAN - Telah Clock Out';
-                    attendanceStatus.className = 'text-2xl font-bold text-white mb-4 status-badge success';
+                    attendanceStatusValue.textContent = 'Telah Clock Out';
+                    attendanceStatusValue.className = 'attendance-status-value success';
                 } else {
-                    attendanceStatus.textContent = 'STATUS KEHADIRAN - Belum Clock In';
-                    attendanceStatus.className = 'text-2xl font-bold text-white mb-4 status-badge error';
+                    attendanceStatusValue.textContent = 'Belum Clock In';
+                    attendanceStatusValue.className = 'attendance-status-value error';
                 }
             } else {
                 todayAttendance = null;
                 isClockedIn = false;
                 isClockedOut = false;
-                attendanceStatus.textContent = 'STATUS KEHADIRAN - Belum Clock In';
-                attendanceStatus.className = 'text-2xl font-bold text-white mb-4 status-badge error';
+                attendanceStatusValue.textContent = 'Belum Clock In';
+                attendanceStatusValue.className = 'attendance-status-value error';
             }
             
             updateClockButtons();
