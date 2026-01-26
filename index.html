@@ -43,6 +43,7 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             overscroll-behavior-y: none;
+            position: relative;
         }
 
         * {
@@ -76,21 +77,18 @@
             overflow-y: auto;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
             -webkit-overflow-scrolling: touch;
+            position: relative;
         }
 
-        /* Container utama yang bisa discroll */
+        /* Container utama yang boleh discroll - PERBAIKAN UTAMA */
         .scroll-container {
-            height: 100%;
+            height: 100vh;
             width: 100%;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             position: relative;
+            overscroll-behavior-y: contain;
         }
 
         /* Media query for very small devices */
@@ -440,13 +438,21 @@
             }
         }
 
+        /* PERBAIKAN: Video wrapper untuk portrait dan landscape */
         .video-wrapper {
             position: relative;
             border-radius: 0.5rem;
             overflow: hidden;
             width: 100%;
             height: 0;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            padding-bottom: 75%; /* Lebih fleksibel untuk portrait */
+        }
+
+        /* Landscape adjustment */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .video-wrapper {
+                padding-bottom: 56.25%; /* 16:9 untuk landscape */
+            }
         }
 
         .video-wrapper video {
@@ -917,25 +923,15 @@
 
         /* Android Chrome specific fixes */
         @media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
-            body {
-                position: absolute;
-                height: 100%;
-                width: 100%;
-                overflow-y: scroll !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            
             .scroll-container {
-                height: auto;
-                min-height: 100%;
+                height: 100vh;
+                min-height: -webkit-fill-available;
             }
         }
 
         /* Prevent elastic scrolling on body */
         body.no-bounce {
             overflow: hidden;
-            position: fixed;
-            width: 100%;
         }
 
         /* Ensure all interactive elements are properly sized */
@@ -949,16 +945,68 @@
             height: -webkit-fill-available;
         }
 
-        /* Add this for better scroll handling */
+        /* Add this for better scroll handling - PERBAIKAN UTAMA */
         .scrollable-content {
             -webkit-overflow-scrolling: touch;
             overflow-y: auto;
             height: 100%;
             width: 100%;
+            position: relative;
+        }
+
+        /* Orientation warning untuk pengguna portrait */
+        .orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .orientation-warning.show {
+            display: flex;
+        }
+
+        /* Face detection instruction untuk portrait */
+        .face-instruction-portrait {
+            display: none;
+            background: rgba(30, 58, 138, 0.9);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            border: 2px solid var(--secondary-color);
+        }
+
+        @media (orientation: portrait) and (max-width: 768px) {
+            .face-instruction-portrait {
+                display: block;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 with-chrome-bar" style='font-family: Poppins, sans-serif;'>
+    <!-- Orientation Warning -->
+    <div id="orientationWarning" class="orientation-warning">
+        <div class="card glass-border max-w-md">
+            <div class="text-center">
+                <span class="material-symbols-outlined text-4xl text-yellow-500 mb-4">screen_rotation</span>
+                <h3 class="text-xl font-bold text-white mb-2">Pusingkan Peranti Anda</h3>
+                <p class="text-gray-300 mb-4">Untuk pengesanan wajah yang lebih baik, sila pusingkan telefon anda ke mod landscape (mendatar).</p>
+                <button onclick="hideOrientationWarning()" class="btn-primary">Saya Faham</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scroll container utama -->
     <div class="scroll-container chrome-android-scroll-fix scrollable-content">
         <!-- Notifications -->
@@ -1020,6 +1068,14 @@
                 <div class="max-w-7xl mx-auto">
                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-100 mb-2" id="page-title"></h1>
                     <p class="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">Sistem Kehadiran Berasaskan Pengenalan Wajah</p>
+                    
+                    <!-- Face instruction untuk portrait -->
+                    <div class="face-instruction-portrait">
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">info</span>
+                            <p>Untuk pengesanan wajah yang lebih baik, sila pegang telefon secara mendatar (landscape).</p>
+                        </div>
+                    </div>
                     
                     <div id="statusMessage" class="message-box hidden"></div>
                     
@@ -1106,7 +1162,7 @@
                                     </div>
                                     <div class="flex items-center justify-center gap-1 sm:gap-2">
                                         <span class="material-symbols-outlined text-blue-500 text-sm sm:text-base">face</span>
-                                        <p class="text-left">Pastikan ekspresi neutral dan pandang terus ke kamera.</p>
+                                        <p class="text-left">Untuk hasil terbaik, pegang telefon secara mendatar (landscape).</p>
                                     </div>
                                     <div class="flex items-center justify-center gap-1 sm:gap-2">
                                         <span class="material-symbols-outlined text-blue-500 text-sm sm:text-base">photo_camera</span>
@@ -1261,6 +1317,7 @@
         let todayAttendance = null;
         let isClockedIn = false;
         let isClockedOut = false;
+        let isLandscapeMode = false;
 
         // Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -1281,6 +1338,7 @@
         const livenessInstructions = document.getElementById('livenessInstructions');
         const faceOverlay = document.getElementById('faceOverlay');
         const pageTitle = document.getElementById('page-title');
+        const orientationWarning = document.getElementById('orientationWarning');
         
         // Modal Elements
         const modalOverlay = document.getElementById('modalOverlay');
@@ -1302,33 +1360,44 @@
 
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Fix untuk scroll di Chrome Android
+        // Fungsi untuk check orientation
+        function checkOrientation() {
+            isLandscapeMode = window.matchMedia("(orientation: landscape)").matches;
+            return isLandscapeMode;
+        }
+
+        function showOrientationWarning() {
+            if (!checkOrientation() && (faceRegistrationPageDiv.classList.contains('hidden') === false || 
+                dashboardDiv.classList.contains('hidden') === false)) {
+                orientationWarning.classList.add('show');
+            }
+        }
+
+        function hideOrientationWarning() {
+            orientationWarning.classList.remove('show');
+        }
+
+        // PERBAIKAN: Fix untuk scroll di Chrome Android
         function fixChromeAndroidScroll() {
             const isAndroid = /Android/.test(navigator.userAgent);
             const isChrome = /Chrome/.test(navigator.userAgent);
             
             if (isAndroid && isChrome) {
-                // Force scrollable container
+                // Apply fixes for Android Chrome
                 const scrollContainer = document.querySelector('.scroll-container');
                 const body = document.body;
                 
-                // Reset height properties
-                body.style.height = '100%';
+                // Reset and optimize scroll behavior
                 body.style.overflow = 'auto';
                 body.style.webkitOverflowScrolling = 'touch';
+                body.style.height = '100%';
                 
                 if (scrollContainer) {
                     scrollContainer.style.height = '100vh';
                     scrollContainer.style.overflowY = 'auto';
                     scrollContainer.style.webkitOverflowScrolling = 'touch';
+                    scrollContainer.style.overscrollBehaviorY = 'contain';
                 }
-                
-                // Prevent body scroll when modal is open
-                document.addEventListener('touchmove', function(e) {
-                    if (modalOverlay.classList.contains('show')) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
                 
                 console.log('Chrome Android scroll fix applied');
             }
@@ -1415,20 +1484,34 @@
                 pageTitle.textContent = 'Dashboard';
                 updateClockButtons();
                 // Scroll to top when showing dashboard
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Check orientation
+                setTimeout(checkOrientationAndWarn, 100);
             } else if (pageId === 'loginPage') {
                 pageTitle.textContent = 'Log Masuk';
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                hideOrientationWarning();
             } else if (pageId === 'accountRegistrationPage') {
                 pageTitle.textContent = 'Daftar Akaun';
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                hideOrientationWarning();
             } else if (pageId === 'faceRegistrationPage') {
                 pageTitle.textContent = 'Pendaftaran Wajah';
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Check orientation for face registration
+                setTimeout(checkOrientationAndWarn, 100);
             }
             
             stopCamera();
             hideStatusMessage();
+        }
+
+        function checkOrientationAndWarn() {
+            if (!checkOrientation()) {
+                showOrientationWarning();
+            } else {
+                hideOrientationWarning();
+            }
         }
 
         function showStatusMessage(message, type = 'info') {
@@ -1448,15 +1531,17 @@
             }
         }
 
+        // PERBAIKAN: startCamera dengan constraint yang lebih fleksibel
         async function startCamera(videoEl) {
             stopCamera();
             try {
-                // Try to get the best camera for the device
+                // Constraints yang lebih fleksibel untuk portrait dan landscape
                 const constraints = {
                     video: {
                         facingMode: 'user',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 640, max: 1280 },
+                        height: { ideal: 480, max: 720 },
+                        frameRate: { ideal: 30 }
                     }
                 };
                 
@@ -1466,18 +1551,36 @@
                 // Handle video element loading for iOS
                 videoEl.onloadedmetadata = () => {
                     videoEl.play().catch(e => console.log('Video play error:', e));
+                    
+                    // Adjust video for orientation
+                    setTimeout(() => {
+                        adjustVideoForOrientation(videoEl);
+                    }, 100);
                 };
             } catch (error) {
                 console.error('Camera access error:', error);
                 showStatusMessage('Gagal akses kamera. Benarkan akses.', 'error');
                 
-                // Fallback to simpler constraints
+                // Fallback to simplest constraints
                 try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    videoStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user' } 
+                    });
                     videoEl.srcObject = videoStream;
                 } catch (fallbackError) {
                     showStatusMessage('Tidak dapat mengakses kamera. Sila semak kebenaran kamera.', 'error');
                 }
+            }
+        }
+
+        function adjustVideoForOrientation(videoEl) {
+            // Adjust video based on orientation
+            if (checkOrientation()) {
+                // Landscape mode
+                videoEl.style.objectFit = 'cover';
+            } else {
+                // Portrait mode
+                videoEl.style.objectFit = 'contain';
             }
         }
 
@@ -1512,7 +1615,13 @@
         }
 
         async function registerFaceAndGetDescriptor() {
-            const detections = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+            // Adjust detection options based on orientation
+            const options = new faceapi.TinyFaceDetectorOptions({
+                inputSize: checkOrientation() ? 512 : 320, // Smaller for portrait
+                scoreThreshold: 0.5
+            });
+            
+            const detections = await faceapi.detectSingleFace(videoElement, options)
                 .withFaceLandmarks().withFaceDescriptor();
             return detections ? Array.from(detections.descriptor) : null;
         }
@@ -1623,6 +1732,13 @@
                     document.body.style.display = '';
                 }, 100);
                 
+                // Fix scroll issues
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY === 0) {
+                        window.scrollTo(0, 1);
+                    }
+                });
+                
                 // Prevent address bar from hiding content
                 window.addEventListener('resize', function() {
                     setTimeout(function() {
@@ -1639,6 +1755,32 @@
                     }, 300);
                 });
             });
+            
+            // Orientation change listener
+            window.addEventListener('orientationchange', handleOrientationChange);
+            window.addEventListener('resize', handleOrientationChange);
+        }
+
+        function handleOrientationChange() {
+            setTimeout(() => {
+                checkOrientationAndWarn();
+                
+                // Restart camera if needed
+                if (videoStream && (faceRegistrationPageDiv.classList.contains('hidden') === false || 
+                    dashboardDiv.classList.contains('hidden') === false)) {
+                    const currentVideo = faceRegistrationPageDiv.classList.contains('hidden') ? 
+                                        scanVideoElement : videoElement;
+                    stopCamera();
+                    setTimeout(() => {
+                        startCamera(currentVideo);
+                    }, 300);
+                }
+                
+                // Fix scroll after orientation change
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                }, 200);
+            }, 300);
         }
 
         function getCurrentDateLocal() {
@@ -1736,14 +1878,23 @@
             showStatusMessage('Mengesan wajah...', 'info');
             let faceDescriptor = null;
             const startTime = Date.now();
-            while (Date.now() - startTime < 5000) {
+            let attempts = 0;
+            
+            while (Date.now() - startTime < 10000 && attempts < 10) { // 10 second timeout, 10 attempts
                 faceDescriptor = await registerFaceAndGetDescriptor();
                 if (faceDescriptor) break;
+                attempts++;
                 await new Promise(r => setTimeout(r, 500));
             }
 
             if (!faceDescriptor) {
-                showStatusMessage('Wajah tidak dikesan. Cuba lagi.', 'error');
+                if (!checkOrientation()) {
+                    showModal('Pengesanan Wajah Gagal', 
+                        'Wajah tidak dikesan. Untuk hasil terbaik, sila pusingkan telefon ke mod landscape (mendatar) dan pastikan pencahayaan yang baik.', 
+                        'warning');
+                } else {
+                    showStatusMessage('Wajah tidak dikesan. Cuba lagi dengan pencahayaan yang lebih baik.', 'error');
+                }
                 showNotification('Wajah tidak dikesan. Cuba lagi.', new Date().toLocaleTimeString(), 'error');
                 isProcessing = false;
                 registerFaceSubmitBtn.disabled = false;
@@ -1812,6 +1963,15 @@
             if (isProcessing) return false;
             isProcessing = true;
             
+            // Check orientation first
+            if (!checkOrientation()) {
+                showModal('Pusingkan Peranti', 
+                    'Untuk pengesahan wajah yang lebih baik, sila pusingkan telefon anda ke mod landscape (mendatar).', 
+                    'warning');
+                isProcessing = false;
+                return false;
+            }
+
             const modelsLoaded = await loadFaceModels();
             if (!modelsLoaded) {
                 isProcessing = false;
@@ -1827,7 +1987,12 @@
                 const displaySize = { width: videoEl.videoWidth, height: videoEl.videoHeight };
                 if (displaySize.width === 0 || displaySize.height === 0) return;
 
-                const detections = await faceapi.detectAllFaces(videoEl, new faceapi.TinyFaceDetectorOptions())
+                const options = new faceapi.TinyFaceDetectorOptions({
+                    inputSize: checkOrientation() ? 512 : 320,
+                    scoreThreshold: 0.5
+                });
+                
+                const detections = await faceapi.detectAllFaces(videoEl, options)
                     .withFaceExpressions();
                 
                 faceOverlay.innerHTML = '';
@@ -1861,11 +2026,16 @@
             const checkLiveness = new Promise((resolve, reject) => {
                 let isLivenessActionDone = false;
                 let detectionInterval = setInterval(async () => {
-                    const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
+                    const options = new faceapi.TinyFaceDetectorOptions({
+                        inputSize: checkOrientation() ? 512 : 320,
+                        scoreThreshold: 0.5
+                    });
+                    
+                    const detections = await faceapi.detectSingleFace(scanVideoElement, options)
                         .withFaceExpressions();
                     
                     if (detections) {
-                        if (detections.expressions.happy > 0.9) {
+                        if (detections.expressions.happy > 0.7) { // Lower threshold for portrait
                             isLivenessActionDone = true;
                         }
                     }
@@ -1876,9 +2046,9 @@
                     if (isLivenessActionDone) {
                         resolve(true);
                     } else {
-                        reject(new Error(`Pengesahan ekspresi wajah gagal.`));
+                        reject(new Error(`Pengesahan ekspresi wajah gagal. Sila senyum.`));
                     }
-                }, 5000);
+                }, 7000); // Longer timeout for portrait
             });
 
             try {
@@ -1887,12 +2057,19 @@
                 livenessInstructions.classList.add('hidden');
 
                 await new Promise(r => setTimeout(r, 1000));
-                const detections = await faceapi.detectSingleFace(scanVideoElement, new faceapi.TinyFaceDetectorOptions())
+                
+                const options = new faceapi.TinyFaceDetectorOptions({
+                    inputSize: checkOrientation() ? 512 : 320,
+                    scoreThreshold: 0.5
+                });
+                
+                const detections = await faceapi.detectSingleFace(scanVideoElement, options)
                     .withFaceLandmarks().withFaceDescriptor();
 
                 if (detections) {
                     const match = faceMatcher.findBestMatch(detections.descriptor);
-                    if (match.label === userId && match.distance < 0.6) {
+                    const threshold = checkOrientation() ? 0.6 : 0.7; // Higher threshold for portrait
+                    if (match.label === userId && match.distance < threshold) {
                         showNotification('Wajah Berjaya Dikesan', new Date().toLocaleTimeString(), 'success');
                         return true;
                     } else {
@@ -2316,6 +2493,11 @@
                         }, 300);
                     }
                 });
+                
+                // Fix untuk scroll stuck
+                document.addEventListener('touchmove', function(e) {
+                    // Allow scrolling
+                }, { passive: true });
             }
             
             // Fix untuk semua browser mobile
@@ -2330,6 +2512,9 @@
                     }, 300);
                 });
             });
+            
+            // Initial orientation check
+            setTimeout(checkOrientationAndWarn, 500);
         });
 
         // Real-time Clock
@@ -2353,27 +2538,24 @@
                     // Refresh location check when returning to dashboard
                     handleGeolocationCheck();
                 }
+                // Check orientation
+                setTimeout(checkOrientationAndWarn, 100);
             }
         });
 
         // Handle orientation changes
-        window.addEventListener('orientationchange', () => {
-            // Force a small delay for orientation to settle
-            setTimeout(() => {
-                if (dashboardDiv && !dashboardDiv.classList.contains('hidden')) {
-                    handleGeolocationCheck();
-                }
-                // Fix scroll after orientation change
-                setTimeout(() => {
-                    window.scrollTo(0, 0);
-                }, 200);
-            }, 300);
-        });
+        window.addEventListener('orientationchange', handleOrientationChange);
         
         // Fix scroll on load
         window.addEventListener('load', function() {
             setTimeout(() => {
                 window.scrollTo(0, 0);
+                // Initial scroll fix for Android
+                if (/Android/.test(navigator.userAgent)) {
+                    setTimeout(() => {
+                        window.scrollTo(0, 1);
+                    }, 100);
+                }
             }, 100);
         });
     </script>
