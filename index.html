@@ -600,9 +600,6 @@
         <!-- Main Content -->
         <main class="main-content">
             <div>
-                <h1 class="text-2xl font-bold text-white mb-2" id="page-title"></h1>
-                <p class="text-gray-400 mb-6 text-sm">Sistem Kehadiran Berasaskan Pengenalan Wajah</p>
-                
                 <!-- Status Message -->
                 <div id="statusMessage" class="message-box hidden"></div>
                 
@@ -715,9 +712,10 @@
                 <div id="dashboard" class="hidden">
                     <!-- Clock In/Out Section -->
                     <div class="card mb-6">
-                        <h2 class="text-xl font-bold text-white mb-4">Clock In/Out</h2>
+                        <!-- Tajuk dashboard yang berubah berdasarkan status -->
+                        <h2 class="text-2xl font-bold text-white mb-4" id="dashboardTitle">STATUS KEHADIRAN - Belum Clock In</h2>
                         
-                        <div class="video-container mb-4">
+                        <div class="video-container">
                             <video id="scanVideoElement" autoplay muted playsinline></video>
                             <div class="face-guide">
                                 <div class="face-guide-text">Arahkan wajah ke sini</div>
@@ -725,13 +723,19 @@
                             <div id="faceOverlay"></div>
                         </div>
                         
-                        <div class="flex-col gap-4">
-                            <!-- Status -->
-                            <div class="bg-gray-800/50 rounded-xl p-4">
-                                <p class="text-sm text-gray-400 mb-1">STATUS KEHADIRAN HARI INI</p>
-                                <div class="text-lg font-bold" id="todayStatus">Belum Clock In</div>
-                            </div>
-                            
+                        <!-- Butang Clock In/Out tepat di bawah video-container -->
+                        <div class="flex-col gap-3 mt-4">
+                            <button class="btn-primary btn-success" id="clockInBtn">
+                                <span class="material-symbols-outlined">login</span>
+                                <span>Clock In</span>
+                            </button>
+                            <button class="btn-primary btn-danger" id="clockOutBtn">
+                                <span class="material-symbols-outlined">logout</span>
+                                <span>Clock Out</span>
+                            </button>
+                        </div>
+                        
+                        <div class="flex-col gap-4 mt-4">
                             <!-- Location Status -->
                             <div class="flex items-center gap-3 p-3 bg-blue-900/30 border border-blue-700/30 rounded-xl">
                                 <span class="material-symbols-outlined text-blue-400">location_on</span>
@@ -754,18 +758,6 @@
                             <div class="flex-col items-center justify-center rounded-xl bg-gray-800/50 p-4 border border-gray-700/50">
                                 <p class="real-time-clock" id="realTimeClock">00:00:00</p>
                                 <p class="text-xs text-gray-400 uppercase">Masa Semasa</p>
-                            </div>
-                            
-                            <!-- Clock In/Out Buttons -->
-                            <div class="flex-col gap-3 mt-4">
-                                <button class="btn-primary btn-success" id="clockInBtn">
-                                    <span class="material-symbols-outlined">login</span>
-                                    <span>Clock In</span>
-                                </button>
-                                <button class="btn-primary btn-danger" id="clockOutBtn">
-                                    <span class="material-symbols-outlined">logout</span>
-                                    <span>Clock Out</span>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -863,14 +855,13 @@
         const attendanceTableBody = document.getElementById('attendanceTableBody');
         const clockInBtn = document.getElementById('clockInBtn');
         const clockOutBtn = document.getElementById('clockOutBtn');
-        const todayStatus = document.getElementById('todayStatus');
+        const dashboardTitle = document.getElementById('dashboardTitle');
         const locationStatusEl = document.getElementById('locationStatus');
         const startDateInput = document.getElementById('startDateInput');
         const endDateInput = document.getElementById('endDateInput');
         const realTimeClock = document.getElementById('realTimeClock');
         const livenessInstructions = document.getElementById('livenessInstructions');
         const faceOverlay = document.getElementById('faceOverlay');
-        const pageTitle = document.getElementById('page-title');
         const modalOverlay = document.getElementById('modalOverlay');
         const modalIcon = document.getElementById('modalIcon');
         const modalTitle = document.getElementById('modalTitle');
@@ -950,23 +941,6 @@
             });
             
             document.getElementById(pageId).classList.remove('hidden');
-            
-            // Set page title
-            switch(pageId) {
-                case 'loginPage':
-                    pageTitle.textContent = 'Log Masuk';
-                    break;
-                case 'accountRegistrationPage':
-                    pageTitle.textContent = 'Daftar Akaun';
-                    break;
-                case 'faceRegistrationPage':
-                    pageTitle.textContent = 'Pendaftaran Wajah';
-                    break;
-                case 'dashboard':
-                    pageTitle.textContent = 'Dashboard';
-                    updateClockButtons();
-                    break;
-            }
             
             stopCamera();
             hideStatusMessage();
@@ -1066,22 +1040,23 @@
                 isClockedIn = !!todayAttendance.clockIn;
                 isClockedOut = !!todayAttendance.clockOut;
                 
+                // Update dashboard title based on status
                 if (isClockedIn && !isClockedOut) {
-                    todayStatus.textContent = 'Telah Clock In';
-                    todayStatus.className = 'text-lg font-bold status-badge warning';
+                    dashboardTitle.textContent = 'STATUS KEHADIRAN - Telah Clock In';
+                    dashboardTitle.className = 'text-2xl font-bold text-white mb-4 status-badge warning';
                 } else if (isClockedIn && isClockedOut) {
-                    todayStatus.textContent = 'Telah Clock Out';
-                    todayStatus.className = 'text-lg font-bold status-badge success';
+                    dashboardTitle.textContent = 'STATUS KEHADIRAN - Telah Clock Out';
+                    dashboardTitle.className = 'text-2xl font-bold text-white mb-4 status-badge success';
                 } else {
-                    todayStatus.textContent = 'Belum Clock In';
-                    todayStatus.className = 'text-lg font-bold status-badge error';
+                    dashboardTitle.textContent = 'STATUS KEHADIRAN - Belum Clock In';
+                    dashboardTitle.className = 'text-2xl font-bold text-white mb-4 status-badge error';
                 }
             } else {
                 todayAttendance = null;
                 isClockedIn = false;
                 isClockedOut = false;
-                todayStatus.textContent = 'Belum Clock In';
-                todayStatus.className = 'text-lg font-bold status-badge error';
+                dashboardTitle.textContent = 'STATUS KEHADIRAN - Belum Clock In';
+                dashboardTitle.className = 'text-2xl font-bold text-white mb-4 status-badge error';
             }
             
             updateClockButtons();
