@@ -246,8 +246,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 200px;
-            height: 250px;
+            width: 180px;
+            height: 220px;
             border: 3px dashed var(--secondary-color);
             border-radius: 20px;
             pointer-events: none;
@@ -260,6 +260,7 @@
             box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
             border-radius: 10px;
             pointer-events: none;
+            z-index: 10;
         }
 
         /* ATTENDANCE STATUS STYLES */
@@ -543,8 +544,8 @@
             }
             
             .face-guide {
-                width: 180px;
-                height: 220px;
+                width: 150px;
+                height: 180px;
             }
             
             .btn-primary, .btn-secondary, .input-field {
@@ -880,6 +881,7 @@
         let todayAttendance = null;
         let isClockedIn = false;
         let isClockedOut = false;
+        let isPortraitMode = true;
 
         // DOM Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -994,20 +996,38 @@
         async function startCamera(videoEl) {
             stopCamera();
             try {
-                // Optimized for mobile portrait mode
-                videoStream = await navigator.mediaDevices.getUserMedia({
+                // Force portrait mode for mobile
+                const constraints = {
                     video: {
                         facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
+                        width: { ideal: 480 },
+                        height: { ideal: 640 },
                         frameRate: { ideal: 24 }
                     }
-                });
+                };
+                
+                // Check screen orientation
+                if (window.screen && window.screen.orientation) {
+                    const orientation = window.screen.orientation.type;
+                    isPortraitMode = orientation.includes('portrait');
+                    
+                    if (isPortraitMode) {
+                        // Swap dimensions for portrait
+                        constraints.video.width = { ideal: 480 };
+                        constraints.video.height = { ideal: 640 };
+                    }
+                }
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoEl.srcObject = videoStream;
                 
-                videoEl.onloadedmetadata = () => {
-                    videoEl.play().catch(console.error);
-                };
+                // Wait for video metadata to load
+                await new Promise((resolve) => {
+                    videoEl.onloadedmetadata = () => {
+                        videoEl.play().catch(console.error);
+                        resolve();
+                    };
+                });
                 
                 return true;
             } catch (error) {
@@ -1054,6 +1074,59 @@
                 .withFaceDescriptor();
             
             return detections ? Array.from(detections.descriptor) : null;
+        }
+
+        // ========== FACE DETECTION HELPER FUNCTIONS ==========
+        function getVideoDimensions(videoEl) {
+            const videoWidth = videoEl.videoWidth;
+            const videoHeight = videoEl.videoHeight;
+            const containerWidth = videoEl.clientWidth;
+            const containerHeight = videoEl.clientHeight;
+            
+            // Calculate aspect ratios
+            const videoAspectRatio = videoWidth / videoHeight;
+            const containerAspectRatio = containerWidth / containerHeight;
+            
+            let displayWidth, displayHeight;
+            
+            if (containerAspectRatio > videoAspectRatio) {
+                // Container is wider than video
+                displayHeight = containerHeight;
+                displayWidth = videoAspectRatio * displayHeight;
+            } else {
+                // Container is taller than video
+                displayWidth = containerWidth;
+                displayHeight = displayWidth / videoAspectRatio;
+            }
+            
+            // Calculate offsets for centering
+            const offsetX = (containerWidth - displayWidth) / 2;
+            const offsetY = (containerHeight - displayHeight) / 2;
+            
+            return {
+                videoWidth,
+                videoHeight,
+                displayWidth,
+                displayHeight,
+                offsetX,
+                offsetY,
+                scaleX: displayWidth / videoWidth,
+                scaleY: displayHeight / videoHeight
+            };
+        }
+
+        function adjustFaceBoxForPortrait(box, dims) {
+            // Face-api returns coordinates based on video dimensions
+            // We need to adjust for portrait display
+            
+            const adjustedBox = {
+                x: box.x * dims.scaleX + dims.offsetX,
+                y: box.y * dims.scaleY + dims.offsetY,
+                width: box.width * dims.scaleX,
+                height: box.height * dims.scaleY
+            };
+            
+            return adjustedBox;
         }
 
         // ========== ATTENDANCE FUNCTIONS ==========
@@ -1185,9 +1258,11 @@
             
             livenessInstructions.textContent = 'Sila senyum untuk pengesahan...';
             
-            // Face detection interval
+            // Face detection interval - FIXED FOR PORTRAIT
             let faceDetectionInterval = setInterval(async () => {
                 const videoEl = scanVideoElement;
+                const dims = getVideoDimensions(videoEl);
+                
                 const detections = await faceapi.detectAllFaces(videoEl, 
                     new faceapi.TinyFaceDetectorOptions())
                     .withFaceExpressions();
@@ -1196,15 +1271,14 @@
                 
                 if (detections.length > 0) {
                     const box = detections[0].detection.box;
-                    const scaleX = videoEl.clientWidth / videoEl.videoWidth;
-                    const scaleY = videoEl.clientHeight / videoEl.videoHeight;
+                    const adjustedBox = adjustFaceBoxForPortrait(box, dims);
                     
                     const faceBox = document.createElement('div');
                     faceBox.className = 'face-box';
-                    faceBox.style.left = `${box.x * scaleX}px`;
-                    faceBox.style.top = `${box.y * scaleY}px`;
-                    faceBox.style.width = `${box.width * scaleX}px`;
-                    faceBox.style.height = `${box.height * scaleY}px`;
+                    faceBox.style.left = `${adjustedBox.x}px`;
+                    faceBox.style.top = `${adjustedBox.y}px`;
+                    faceBox.style.width = `${adjustedBox.width}px`;
+                    faceBox.style.height = `${adjustedBox.height}px`;
                     faceOverlay.appendChild(faceBox);
                 }
             }, 100);
@@ -1799,6 +1873,24 @@
             
             // Fix scroll on load
             setTimeout(() => window.scrollTo(0, 0), 100);
+            
+            // Handle screen orientation changes
+            if (window.screen && window.screen.orientation) {
+                window.screen.orientation.addEventListener('change', () => {
+                    setTimeout(() => {
+                        if (document.getElementById('dashboard') && !document.getElementById('dashboard').classList.contains('hidden')) {
+                            // Refresh video display if on dashboard
+                            if (scanVideoElement.srcObject) {
+                                const stream = scanVideoElement.srcObject;
+                                stopCamera();
+                                setTimeout(() => {
+                                    startCamera(scanVideoElement);
+                                }, 100);
+                            }
+                        }
+                    }, 300);
+                });
+            }
         });
     </script>
 </body>
