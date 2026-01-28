@@ -1134,7 +1134,7 @@
                                         <th>Keluar</th>
                                         <th>Jam</th>
                                         <th>OT</th>
-                                        <!-- KOLUM STATUS DIHAPUS -->
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody"></tbody>
@@ -1249,63 +1249,143 @@
         window.jsPDF = window.jspdf.jsPDF;
 
         // ========== MIGRATION FUNCTIONS ==========
-// ========== MIGRATION FUNCTIONS ==========
-async function runMigration() {
-    migrationOverlay.classList.remove('hidden');
-    migrationStatusText.textContent = 'Menyediakan pengemaskinian...';
-    migrationProgress.style.width = '0%';
-    migrationProgressText.textContent = '0%';
-    migrationError.classList.add('hidden');
-    migrationRetryBtn.classList.add('hidden');
-    migrationContinueBtn.textContent = 'Teruskan Tanpa Pengemaskinian';
+        async function runMigration() {
+            migrationOverlay.classList.remove('hidden');
+            migrationStatusText.textContent = 'Menyediakan pengemaskinian...';
+            migrationProgress.style.width = '0%';
+            migrationProgressText.textContent = '0%';
+            migrationError.classList.add('hidden');
+            migrationRetryBtn.classList.add('hidden');
+            migrationContinueBtn.textContent = 'Teruskan Tanpa Pengemaskinian';
 
-    try {
-        updateMigrationProgress(10, 'Menyediakan pengemaskinian...');
-        
-        // Langsung complete migration tanpa akses database
-        updateMigrationProgress(100, 'Pengemaskinian selesai!');
-        
-        // Tandakan migration sebagai completed
-        localStorage.setItem('migrationCompleted', 'true');
-        migrationCompleted = true;
-        
-        // Tunggu 2 saat sebelum tutup
-        setTimeout(() => {
-            migrationOverlay.classList.add('hidden');
-            showNotification('Pengemaskinian data berjaya!', new Date().toLocaleTimeString(), 'success');
-        }, 2000);
-        
-        return {
-            success: true,
-            usersProcessed: 0,
-            recordsUpdated: 0
-        };
-        
-    } catch (error) {
-        console.error('Migration failed:', error);
-        migrationError.textContent = `Ralat: ${error.message}`;
-        migrationError.classList.remove('hidden');
-        migrationRetryBtn.classList.remove('hidden');
-        migrationStatusText.textContent = 'Pengemaskinian gagal';
-        return {
-            success: false,
-            error: error.message
-        };
-    }
-}
+            try {
+                updateMigrationProgress(10, 'Mengambil data pengguna...');
+                
+                // Dapatkan semua user
+                const usersRef = collection(db, 'artifacts', appId, 'users');
+                const usersSnapshot = await getDocs(usersRef);
+                const users = usersSnapshot.docs;
+                const totalUsers = users.length;
+                
+                updateMigrationProgress(20, `Mengemaskini ${totalUsers} pengguna...`);
+                
+                let processedUsers = 0;
+                let totalRecordsUpdated = 0;
+                
+                for (const userDoc of users) {
+                    const userId = userDoc.id;
+                    
+                    updateMigrationProgress(
+                        20 + (processedUsers / totalUsers * 60),
+                        `Mengemaskini pengguna ${processedUsers + 1}/${totalUsers}...`
+                    );
+                    
+                    // Dapatkan semua rekod attendance user ini
+                    const attendanceRef = collection(db, 'artifacts', appId, 'users', userId, 'attendance');
+                    const attendanceSnapshot = await getDocs(attendanceRef);
+                    
+                    let userRecordsUpdated = 0;
+                    
+                    for (const attendanceDoc of attendanceSnapshot.docs) {
+                        const data = attendanceDoc.data();
+                        const updates = {};
+                        
+                        // Tambah status field jika tidak ada
+                        if (!data.hasOwnProperty('status')) {
+                            if (data.clockIn && data.clockOut) {
+                                updates.status = 'completed';
+                            } else if (data.clockIn && !data.clockOut) {
+                                updates.status = 'pending';
+                            }
+                        }
+                        
+                        // Update dokumen jika ada perubahan
+                        if (Object.keys(updates).length > 0) {
+                            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', attendanceDoc.id);
+                            await updateDoc(docRef, updates);
+                            userRecordsUpdated++;
+                            totalRecordsUpdated++;
+                        }
+                    }
+                    
+                    if (userRecordsUpdated > 0) {
+                        console.log(`Updated ${userRecordsUpdated} records for user: ${userId}`);
+                    }
+                    
+                    processedUsers++;
+                    
+                    updateMigrationProgress(
+                        20 + (processedUsers / totalUsers * 60),
+                        `Dikemaskini: ${processedUsers}/${totalUsers} pengguna`
+                    );
+                }
+                
+                updateMigrationProgress(90, 'Menyimpan status pengemaskinian...');
+                
+                // Tandakan migration sebagai completed
+                localStorage.setItem('migrationCompleted', 'true');
+                migrationCompleted = true;
+                
+                updateMigrationProgress(100, 'Pengemaskinian selesai!');
+                
+                // Tunggu 2 saat sebelum tutup
+                setTimeout(() => {
+                    migrationOverlay.classList.add('hidden');
+                    showNotification('Pengemaskinian data berjaya!', new Date().toLocaleTimeString(), 'success');
+                }, 2000);
+                
+                return {
+                    success: true,
+                    usersProcessed: processedUsers,
+                    recordsUpdated: totalRecordsUpdated
+                };
+                
+            } catch (error) {
+                console.error('Migration failed:', error);
+                migrationError.textContent = `Ralat: ${error.message}`;
+                migrationError.classList.remove('hidden');
+                migrationRetryBtn.classList.remove('hidden');
+                migrationStatusText.textContent = 'Pengemaskinian gagal';
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
 
-function updateMigrationProgress(percent, message) {
-    migrationProgress.style.width = `${percent}%`;
-    migrationProgressText.textContent = `${Math.round(percent)}%`;
-    migrationStatusText.textContent = message;
-}
+        function updateMigrationProgress(percent, message) {
+            migrationProgress.style.width = `${percent}%`;
+            migrationProgressText.textContent = `${Math.round(percent)}%`;
+            migrationStatusText.textContent = message;
+        }
 
-function checkAndRunMigration() {
-    // Langsung skip migration untuk sekarang
-    localStorage.setItem('migrationCompleted', 'true');
-    migrationCompleted = true;
-    migrationOverlay.classList.add('hidden');
-}
+        function checkAndRunMigration() {
+            // Check jika migration perlu dijalankan
+            if (!migrationCompleted) {
+                showModal(
+                    'Pengemaskinian Sistem',
+                    'Sistem perlu mengemaskini struktur data untuk fitur baru. Ini akan mengambil masa beberapa saat.',
+                    'info'
+                );
+                
+                modalConfirmBtn.classList.remove('hidden');
+                modalCancelBtn.textContent = 'Langkau';
+                modalOkBtn.classList.add('hidden');
+                
+                modalConfirmBtn.onclick = async () => {
+                    hideModal();
+                    await runMigration();
+                };
+                
+                modalCancelBtn.onclick = () => {
+                    hideModal();
+                    migrationOverlay.classList.add('hidden');
+                    localStorage.setItem('migrationCompleted', 'true');
+                    migrationCompleted = true;
+                };
+            }
+        }
+
         // ========== UTILITY FUNCTIONS ==========
         function showModal(title, message, type = 'info') {
             modalTitle.textContent = title;
@@ -2312,6 +2392,20 @@ function checkAndRunMigration() {
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
+        function getStatusLabel(record) {
+            if (record.specialCase) {
+                return record.specialCase.label || 'Kes Khas';
+            } else if (record.status === 'completed_late') {
+                return 'Selesai Lewat';
+            } else if (record.clockIn && !record.clockOut) {
+                return 'Belum Clock Out';
+            } else if (record.clockIn && record.clockOut) {
+                return 'Selesai';
+            } else {
+                return '-';
+            }
+        }
+
         function updateAttendanceTable(data) {
             attendanceTableBody.innerHTML = '';
             data.sort((a, b) => new Date(b.id) - new Date(a.id)).forEach(item => {
@@ -2328,8 +2422,26 @@ function checkAndRunMigration() {
                 
                 const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
+                const status = getStatusLabel(item);
                 
-                // KOLUM STATUS DIHAPUS
+                // Add status class
+                let statusClass = '';
+                if (item.specialCase) {
+                    if (item.specialCase.type === 'tugasan_luar') {
+                        statusClass = 'text-blue-400';
+                    } else if (item.specialCase.type === 'cuti_rehat') {
+                        statusClass = 'text-green-400';
+                    } else if (item.specialCase.type === 'cuti_sakit') {
+                        statusClass = 'text-red-400';
+                    }
+                } else if (item.status === 'completed_late') {
+                    statusClass = 'text-amber-400';
+                } else if (item.clockIn && !item.clockOut) {
+                    statusClass = 'text-red-400';
+                } else if (item.clockIn && item.clockOut) {
+                    statusClass = 'text-green-400';
+                }
+
                 row.innerHTML = `
                     <td>${date}</td>
                     <td>${weekday}</td>
@@ -2337,6 +2449,7 @@ function checkAndRunMigration() {
                     <td>${clockOutDisplay}</td>
                     <td>${totalHours}</td>
                     <td>${totalOT}</td>
+                    <td class="${statusClass} font-medium">${status}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
@@ -2376,24 +2489,24 @@ function checkAndRunMigration() {
                 doc.setFont('times', 'normal');
                 
                 const pageWidth = doc.internal.pageSize.getWidth();
-                const tableWidth = 150; // Lebar jadual dikurangkan (tidak ada kolom status)
+                const tableWidth = 180;
                 const tableMarginX = (pageWidth - tableWidth) / 2;
                 const rowHeight = 6;
-                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
-                const colWidths = [25, 25, 25, 25, 25, 25]; // 6 kolom sahaja
+                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT", "Status"];
+                const colWidths = [25, 25, 25, 25, 25, 25, 30];
 
                 let y = 20;
 
                 doc.setFontSize(14);
                 doc.setFont('times', 'bold');
-                const title = 'Laporan Kehadiran';
+                const title = 'Total Time Card';
                 const titleWidth = doc.getTextWidth(title);
                 doc.text(title, (pageWidth - titleWidth) / 2, y);
 
                 y += 10;
                 doc.setFontSize(10);
                 doc.setFont('times', 'normal');
-                doc.text(`Start Date: ${startDateStr} End Date: ${endDateStr}`, tableMarginX, y);
+                doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
                 y += 5;
                 doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
 
@@ -2424,6 +2537,7 @@ function checkAndRunMigration() {
                     const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                     const hours = record.totalHours ? record.totalHours : null;
                     const ot = record.totalOT ? record.totalOT : null;
+                    const status = getStatusLabel(record);
 
                     if (hours !== null) totalHoursDecimal += hours;
                     if (ot !== null) totalOTDecimal += ot;
@@ -2431,7 +2545,7 @@ function checkAndRunMigration() {
                     x = tableMarginX;
                     const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
                     const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
-                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
+                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText, status];
                     
                     rowData.forEach((text, i) => {
                         doc.rect(x, y, colWidths[i], rowHeight);
@@ -2439,26 +2553,20 @@ function checkAndRunMigration() {
                         x += colWidths[i];
                     });
                     y += rowHeight;
-                    
-                    // Check if need new page
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
 
-                // Baris Statistik
-                y += 5;
+                // Baris Statistik dalam jadual
                 doc.setFont('times', 'bold');
-                doc.text('Jumlah:', tableMarginX, y);
+                doc.rect(tableMarginX, y, tableWidth, rowHeight);
+                
+                doc.text('Statistic', tableMarginX + 2, y + 4);
                 
                 const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
                 const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-                
-                doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y);
-                doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y);
+
+                doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y + 4);
+                doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y + 4);
                 
                 doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
                 showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
