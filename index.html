@@ -1134,7 +1134,7 @@
                                         <th>Keluar</th>
                                         <th>Jam</th>
                                         <th>OT</th>
-                                        <th>Status</th>
+                                        <!-- KOLUM STATUS DIHAPUS -->
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody"></tbody>
@@ -2392,20 +2392,6 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
-        function getStatusLabel(record) {
-            if (record.specialCase) {
-                return record.specialCase.label || 'Kes Khas';
-            } else if (record.status === 'completed_late') {
-                return 'Selesai Lewat';
-            } else if (record.clockIn && !record.clockOut) {
-                return 'Belum Clock Out';
-            } else if (record.clockIn && record.clockOut) {
-                return 'Selesai';
-            } else {
-                return '-';
-            }
-        }
-
         function updateAttendanceTable(data) {
             attendanceTableBody.innerHTML = '';
             data.sort((a, b) => new Date(b.id) - new Date(a.id)).forEach(item => {
@@ -2422,26 +2408,8 @@
                 
                 const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
-                const status = getStatusLabel(item);
                 
-                // Add status class
-                let statusClass = '';
-                if (item.specialCase) {
-                    if (item.specialCase.type === 'tugasan_luar') {
-                        statusClass = 'text-blue-400';
-                    } else if (item.specialCase.type === 'cuti_rehat') {
-                        statusClass = 'text-green-400';
-                    } else if (item.specialCase.type === 'cuti_sakit') {
-                        statusClass = 'text-red-400';
-                    }
-                } else if (item.status === 'completed_late') {
-                    statusClass = 'text-amber-400';
-                } else if (item.clockIn && !item.clockOut) {
-                    statusClass = 'text-red-400';
-                } else if (item.clockIn && item.clockOut) {
-                    statusClass = 'text-green-400';
-                }
-
+                // KOLUM STATUS DIHAPUS
                 row.innerHTML = `
                     <td>${date}</td>
                     <td>${weekday}</td>
@@ -2449,7 +2417,6 @@
                     <td>${clockOutDisplay}</td>
                     <td>${totalHours}</td>
                     <td>${totalOT}</td>
-                    <td class="${statusClass} font-medium">${status}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
@@ -2489,24 +2456,24 @@
                 doc.setFont('times', 'normal');
                 
                 const pageWidth = doc.internal.pageSize.getWidth();
-                const tableWidth = 180;
+                const tableWidth = 150; // Lebar jadual dikurangkan (tidak ada kolom status)
                 const tableMarginX = (pageWidth - tableWidth) / 2;
                 const rowHeight = 6;
-                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT", "Status"];
-                const colWidths = [25, 25, 25, 25, 25, 25, 30];
+                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
+                const colWidths = [25, 25, 25, 25, 25, 25]; // 6 kolom sahaja
 
                 let y = 20;
 
                 doc.setFontSize(14);
                 doc.setFont('times', 'bold');
-                const title = 'Total Time Card';
+                const title = 'Laporan Kehadiran';
                 const titleWidth = doc.getTextWidth(title);
                 doc.text(title, (pageWidth - titleWidth) / 2, y);
 
                 y += 10;
                 doc.setFontSize(10);
                 doc.setFont('times', 'normal');
-                doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
+                doc.text(`Start Date: ${startDateStr} End Date: ${endDateStr}`, tableMarginX, y);
                 y += 5;
                 doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
 
@@ -2537,7 +2504,6 @@
                     const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                     const hours = record.totalHours ? record.totalHours : null;
                     const ot = record.totalOT ? record.totalOT : null;
-                    const status = getStatusLabel(record);
 
                     if (hours !== null) totalHoursDecimal += hours;
                     if (ot !== null) totalOTDecimal += ot;
@@ -2545,7 +2511,7 @@
                     x = tableMarginX;
                     const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
                     const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
-                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText, status];
+                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
                     
                     rowData.forEach((text, i) => {
                         doc.rect(x, y, colWidths[i], rowHeight);
@@ -2553,20 +2519,26 @@
                         x += colWidths[i];
                     });
                     y += rowHeight;
+                    
+                    // Check if need new page
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
 
-                // Baris Statistik dalam jadual
+                // Baris Statistik
+                y += 5;
                 doc.setFont('times', 'bold');
-                doc.rect(tableMarginX, y, tableWidth, rowHeight);
-                
-                doc.text('Statistic', tableMarginX + 2, y + 4);
+                doc.text('Jumlah:', tableMarginX, y);
                 
                 const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
                 const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-
-                doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y + 4);
-                doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y + 4);
+                
+                doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y);
+                doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y);
                 
                 doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
                 showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
