@@ -185,14 +185,6 @@
             background: linear-gradient(135deg, var(--red-color) 0%, #ef4444 100%);
         }
 
-        .btn-warning {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-        }
-
-        .btn-info {
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-        }
-
         .btn-secondary {
             display: flex;
             align-items: center;
@@ -372,10 +364,6 @@
             border-left-color: var(--red-color);
         }
 
-        .notification.warning {
-            border-left-color: var(--gold-color);
-        }
-
         /* MODAL */
         .modal-overlay {
             position: fixed;
@@ -420,104 +408,6 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
-        }
-
-        /* PENDING CLOCK OUT CARD */
-        .pending-clockout-card {
-            background: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(217, 119, 6, 0.2) 100%);
-            border: 2px solid rgba(217, 119, 6, 0.3);
-            padding: 1.25rem;
-            border-radius: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .pending-clockout-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .pending-clockout-icon {
-            background-color: rgba(217, 119, 6, 0.2);
-            border: 2px solid rgba(217, 119, 6, 0.3);
-            border-radius: 0.75rem;
-            width: 3rem;
-            height: 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pending-clockout-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .pending-clockout-detail {
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-        }
-
-        .pending-clockout-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 0.25rem;
-        }
-
-        .pending-clockout-value {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-
-        /* SPECIAL CASE BUTTONS */
-        .special-case-buttons {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .special-case-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            border-radius: 0.75rem;
-            min-height: 3rem;
-            padding: 0.75rem 1rem;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            touch-action: manipulation;
-            transition: all 0.2s ease;
-        }
-
-        .special-case-btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        .special-case-btn.tugasan {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.4) 100%);
-            color: #60a5fa;
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        .special-case-btn.cuti-rehat {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.4) 100%);
-            color: #6ee7b7;
-            border-color: rgba(34, 197, 94, 0.3);
-        }
-
-        .special-case-btn.cuti-sakit {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.4) 100%);
-            color: #fca5a5;
-            border-color: rgba(239, 68, 68, 0.3);
         }
 
         /* ATTENDANCE TABLE */
@@ -666,24 +556,6 @@
                 font-size: 1.5rem;
                 min-width: 220px;
             }
-            
-            .pending-clockout-details {
-                grid-template-columns: 1fr;
-            }
-            
-            .special-case-buttons {
-                grid-template-columns: 1fr;
-            }
-            
-            .table-container table {
-                min-width: 500px;
-            }
-        }
-
-        @media (min-width: 641px) {
-            .special-case-buttons {
-                grid-template-columns: repeat(3, 1fr);
-            }
         }
 
         /* FIX FOR IOS */
@@ -700,72 +572,9 @@
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
         }
-
-        /* MIGRATION NOTIFICATION */
-        .migration-notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(30, 41, 59, 0.98);
-            border-radius: 1rem;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-            border: 2px solid var(--primary-color);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            text-align: center;
-        }
-
-        .migration-status {
-            margin: 1.5rem 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 1rem 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%);
-            transition: width 0.3s ease;
-        }
     </style>
 </head>
 <body>
-    <!-- Migration Notification -->
-    <div id="migrationOverlay" class="hidden">
-        <div class="migration-notification">
-            <div class="flex items-center justify-center gap-3 mb-4">
-                <span class="material-symbols-outlined text-3xl text-blue-500">database</span>
-                <h2 class="text-2xl font-bold text-white">Pengemaskinian Database</h2>
-            </div>
-            
-            <p class="text-gray-300 mb-4">Sistem sedang mengemaskini struktur data untuk fitur baru...</p>
-            
-            <div class="migration-status">
-                <p id="migrationStatusText" class="text-sm text-gray-400 mb-2">Menyediakan pengemaskinian...</p>
-                <div class="progress-bar">
-                    <div id="migrationProgress" class="progress-fill" style="width: 0%"></div>
-                </div>
-                <p id="migrationProgressText" class="text-xs text-gray-500 mt-1">0%</p>
-            </div>
-            
-            <div id="migrationError" class="message-box error hidden"></div>
-            
-            <div class="mt-6">
-                <button id="migrationRetryBtn" class="btn-secondary hidden mb-2">Cuba Semula</button>
-                <button id="migrationContinueBtn" class="btn-primary">Teruskan Tanpa Pengemaskinian</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Scroll container utama -->
     <div class="scroll-container hide-scrollbar">
         <!-- Notifications -->
@@ -777,11 +586,6 @@
         <div id="failNotification" class="notification error">
             <p class="font-bold text-base" id="failNotifTitle">Gagal!</p>
             <p class="text-sm text-gray-400 mt-1" id="failNotifTime">10:30:15</p>
-        </div>
-
-        <div id="warningNotification" class="notification warning">
-            <p class="font-bold text-base" id="warningNotifTitle">Perhatian!</p>
-            <p class="text-sm text-gray-400 mt-1" id="warningNotifTime">10:30:15</p>
         </div>
 
         <!-- Modal Popup -->
@@ -800,56 +604,6 @@
                     <button id="modalCancelBtn" class="btn-secondary">Batal</button>
                     <button id="modalConfirmBtn" class="btn-primary hidden">Ya</button>
                     <button id="modalOkBtn" class="btn-primary">OK</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Special Case Modal -->
-        <div id="specialCaseModal" class="modal-overlay">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3 class="font-bold text-xl text-white flex items-center gap-2">
-                        <span class="material-symbols-outlined">assignment</span>
-                        <span id="specialCaseTitle">Selesaikan Rekod Tertunggak</span>
-                    </h3>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-400 mb-2">Rekod Tertunggak:</p>
-                        <div class="bg-gray-800/50 p-3 rounded-lg">
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm text-gray-400">Tarikh:</span>
-                                <span class="text-sm font-medium" id="specialCaseDate">-</span>
-                            </div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm text-gray-400">Clock In:</span>
-                                <span class="text-sm font-medium" id="specialCaseClockIn">-</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-400">Status:</span>
-                                <span class="text-sm font-medium text-amber-500">Belum Clock Out</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-400 mb-2">Pilih Sebab Tidak Clock Out:</label>
-                        <select class="input-field" id="specialCaseReason">
-                            <option value="">Sila pilih sebab</option>
-                            <option value="tugasan_luar">Tugasan Luar Pejabat</option>
-                            <option value="cuti_rehat">Cuti Rehat</option>
-                            <option value="cuti_sakit">Cuti Sakit</option>
-                        </select>
-                    </div>
-                    
-                    <div id="remarksSection" class="hidden">
-                        <label class="block text-sm font-medium text-gray-400 mb-2">Catatan (Pilihan):</label>
-                        <textarea class="input-field" id="specialCaseRemarks" rows="3" placeholder="Masukkan catatan jika perlu..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="specialCaseCancelBtn" class="btn-secondary">Batal</button>
-                    <button id="specialCaseConfirmBtn" class="btn-primary">Sahkan</button>
                 </div>
             </div>
         </div>
@@ -993,62 +747,6 @@
 
                 <!-- Dashboard -->
                 <div id="dashboard" class="hidden">
-                    <!-- Pending Clock Out Section -->
-                    <div id="pendingClockOutCard" class="pending-clockout-card hidden">
-                        <div class="pending-clockout-header">
-                            <div class="pending-clockout-icon">
-                                <span class="material-symbols-outlined text-amber-500">warning</span>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-white">Clock Out Tertunggak</h2>
-                                <p class="text-sm text-amber-300">Anda lupa clock out pada hari sebelumnya</p>
-                            </div>
-                        </div>
-                        
-                        <div class="pending-clockout-details">
-                            <div class="pending-clockout-detail">
-                                <div class="pending-clockout-label">Tarikh</div>
-                                <div class="pending-clockout-value" id="pendingDate">-</div>
-                            </div>
-                            <div class="pending-clockout-detail">
-                                <div class="pending-clockout-label">Hari</div>
-                                <div class="pending-clockout-value" id="pendingWeekday">-</div>
-                            </div>
-                            <div class="pending-clockout-detail">
-                                <div class="pending-clockout-label">Clock In</div>
-                                <div class="pending-clockout-value" id="pendingClockIn">-</div>
-                            </div>
-                            <div class="pending-clockout-detail">
-                                <div class="pending-clockout-label">Status</div>
-                                <div class="pending-clockout-value text-amber-500">Belum Clock Out</div>
-                            </div>
-                        </div>
-                        
-                        <p class="text-sm text-amber-300 mb-4">Sila selesaikan clock out ini sebelum clock in untuk hari ini.</p>
-                        
-                        <button class="btn-primary btn-warning mb-3" id="completePendingClockOutBtn">
-                            <span class="material-symbols-outlined">logout</span>
-                            <span>Selesaikan Clock Out</span>
-                        </button>
-                        
-                        <p class="text-sm text-gray-400 text-center mb-3">ATAU pilih sebab khusus:</p>
-                        
-                        <div class="special-case-buttons">
-                            <button class="special-case-btn tugasan" data-reason="tugasan_luar" id="tugasanBtn">
-                                <span class="material-symbols-outlined">business_center</span>
-                                <span>Tugasan Luar</span>
-                            </button>
-                            <button class="special-case-btn cuti-rehat" data-reason="cuti_rehat" id="cutiRehatBtn">
-                                <span class="material-symbols-outlined">beach_access</span>
-                                <span>Cuti Rehat</span>
-                            </button>
-                            <button class="special-case-btn cuti-sakit" data-reason="cuti_sakit" id="cutiSakitBtn">
-                                <span class="material-symbols-outlined">medical_services</span>
-                                <span>Cuti Sakit</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Clock In/Out Section -->
                     <div class="card mb-6">
                         <!-- Status kehadiran menggunakan container baru -->
@@ -1134,7 +832,6 @@
                                         <th>Keluar</th>
                                         <th>Jam</th>
                                         <th>OT</th>
-                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody"></tbody>
@@ -1149,7 +846,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -1185,8 +882,6 @@
         let isClockedIn = false;
         let isClockedOut = false;
         let isPortraitMode = true;
-        let pendingClockOutRecord = null;
-        let migrationCompleted = localStorage.getItem('migrationCompleted') === 'true';
 
         // DOM Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -1219,172 +914,8 @@
         const failNotification = document.getElementById('failNotification');
         const failNotifTitle = document.getElementById('failNotifTitle');
         const failNotifTime = document.getElementById('failNotifTime');
-        const warningNotification = document.getElementById('warningNotification');
-        const warningNotifTitle = document.getElementById('warningNotifTitle');
-        const warningNotifTime = document.getElementById('warningNotifTime');
-        const pendingClockOutCard = document.getElementById('pendingClockOutCard');
-        const pendingDate = document.getElementById('pendingDate');
-        const pendingWeekday = document.getElementById('pendingWeekday');
-        const pendingClockIn = document.getElementById('pendingClockIn');
-        const completePendingClockOutBtn = document.getElementById('completePendingClockOutBtn');
-        const specialCaseModal = document.getElementById('specialCaseModal');
-        const specialCaseDate = document.getElementById('specialCaseDate');
-        const specialCaseClockIn = document.getElementById('specialCaseClockIn');
-        const specialCaseReason = document.getElementById('specialCaseReason');
-        const specialCaseRemarks = document.getElementById('specialCaseRemarks');
-        const remarksSection = document.getElementById('remarksSection');
-        const specialCaseCancelBtn = document.getElementById('specialCaseCancelBtn');
-        const specialCaseConfirmBtn = document.getElementById('specialCaseConfirmBtn');
-        const tugasanBtn = document.getElementById('tugasanBtn');
-        const cutiRehatBtn = document.getElementById('cutiRehatBtn');
-        const cutiSakitBtn = document.getElementById('cutiSakitBtn');
-        const migrationOverlay = document.getElementById('migrationOverlay');
-        const migrationStatusText = document.getElementById('migrationStatusText');
-        const migrationProgress = document.getElementById('migrationProgress');
-        const migrationProgressText = document.getElementById('migrationProgressText');
-        const migrationError = document.getElementById('migrationError');
-        const migrationRetryBtn = document.getElementById('migrationRetryBtn');
-        const migrationContinueBtn = document.getElementById('migrationContinueBtn');
 
         window.jsPDF = window.jspdf.jsPDF;
-
-        // ========== MIGRATION FUNCTIONS ==========
-        async function runMigration() {
-            migrationOverlay.classList.remove('hidden');
-            migrationStatusText.textContent = 'Menyediakan pengemaskinian...';
-            migrationProgress.style.width = '0%';
-            migrationProgressText.textContent = '0%';
-            migrationError.classList.add('hidden');
-            migrationRetryBtn.classList.add('hidden');
-            migrationContinueBtn.textContent = 'Teruskan Tanpa Pengemaskinian';
-
-            try {
-                updateMigrationProgress(10, 'Mengambil data pengguna...');
-                
-                // Dapatkan semua user
-                const usersRef = collection(db, 'artifacts', appId, 'users');
-                const usersSnapshot = await getDocs(usersRef);
-                const users = usersSnapshot.docs;
-                const totalUsers = users.length;
-                
-                updateMigrationProgress(20, `Mengemaskini ${totalUsers} pengguna...`);
-                
-                let processedUsers = 0;
-                let totalRecordsUpdated = 0;
-                
-                for (const userDoc of users) {
-                    const userId = userDoc.id;
-                    
-                    updateMigrationProgress(
-                        20 + (processedUsers / totalUsers * 60),
-                        `Mengemaskini pengguna ${processedUsers + 1}/${totalUsers}...`
-                    );
-                    
-                    // Dapatkan semua rekod attendance user ini
-                    const attendanceRef = collection(db, 'artifacts', appId, 'users', userId, 'attendance');
-                    const attendanceSnapshot = await getDocs(attendanceRef);
-                    
-                    let userRecordsUpdated = 0;
-                    
-                    for (const attendanceDoc of attendanceSnapshot.docs) {
-                        const data = attendanceDoc.data();
-                        const updates = {};
-                        
-                        // Tambah status field jika tidak ada
-                        if (!data.hasOwnProperty('status')) {
-                            if (data.clockIn && data.clockOut) {
-                                updates.status = 'completed';
-                            } else if (data.clockIn && !data.clockOut) {
-                                updates.status = 'pending';
-                            }
-                        }
-                        
-                        // Update dokumen jika ada perubahan
-                        if (Object.keys(updates).length > 0) {
-                            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', attendanceDoc.id);
-                            await updateDoc(docRef, updates);
-                            userRecordsUpdated++;
-                            totalRecordsUpdated++;
-                        }
-                    }
-                    
-                    if (userRecordsUpdated > 0) {
-                        console.log(`Updated ${userRecordsUpdated} records for user: ${userId}`);
-                    }
-                    
-                    processedUsers++;
-                    
-                    updateMigrationProgress(
-                        20 + (processedUsers / totalUsers * 60),
-                        `Dikemaskini: ${processedUsers}/${totalUsers} pengguna`
-                    );
-                }
-                
-                updateMigrationProgress(90, 'Menyimpan status pengemaskinian...');
-                
-                // Tandakan migration sebagai completed
-                localStorage.setItem('migrationCompleted', 'true');
-                migrationCompleted = true;
-                
-                updateMigrationProgress(100, 'Pengemaskinian selesai!');
-                
-                // Tunggu 2 saat sebelum tutup
-                setTimeout(() => {
-                    migrationOverlay.classList.add('hidden');
-                    showNotification('Pengemaskinian data berjaya!', new Date().toLocaleTimeString(), 'success');
-                }, 2000);
-                
-                return {
-                    success: true,
-                    usersProcessed: processedUsers,
-                    recordsUpdated: totalRecordsUpdated
-                };
-                
-            } catch (error) {
-                console.error('Migration failed:', error);
-                migrationError.textContent = `Ralat: ${error.message}`;
-                migrationError.classList.remove('hidden');
-                migrationRetryBtn.classList.remove('hidden');
-                migrationStatusText.textContent = 'Pengemaskinian gagal';
-                return {
-                    success: false,
-                    error: error.message
-                };
-            }
-        }
-
-        function updateMigrationProgress(percent, message) {
-            migrationProgress.style.width = `${percent}%`;
-            migrationProgressText.textContent = `${Math.round(percent)}%`;
-            migrationStatusText.textContent = message;
-        }
-
-        function checkAndRunMigration() {
-            // Check jika migration perlu dijalankan
-            if (!migrationCompleted) {
-                showModal(
-                    'Pengemaskinian Sistem',
-                    'Sistem perlu mengemaskini struktur data untuk fitur baru. Ini akan mengambil masa beberapa saat.',
-                    'info'
-                );
-                
-                modalConfirmBtn.classList.remove('hidden');
-                modalCancelBtn.textContent = 'Langkau';
-                modalOkBtn.classList.add('hidden');
-                
-                modalConfirmBtn.onclick = async () => {
-                    hideModal();
-                    await runMigration();
-                };
-                
-                modalCancelBtn.onclick = () => {
-                    hideModal();
-                    migrationOverlay.classList.add('hidden');
-                    localStorage.setItem('migrationCompleted', 'true');
-                    migrationCompleted = true;
-                };
-            }
-        }
 
         // ========== UTILITY FUNCTIONS ==========
         function showModal(title, message, type = 'info') {
@@ -1413,34 +944,23 @@
 
         function hideModal() {
             modalOverlay.classList.remove('show');
-            modalConfirmBtn.classList.add('hidden');
-            modalOkBtn.classList.remove('hidden');
-            modalCancelBtn.textContent = 'Batal';
         }
 
         function showNotification(title, time, type = 'success') {
-            let notification, titleEl, timeEl;
-            
-            if (type === 'success') {
-                notification = successNotification;
-                titleEl = successNotifTitle;
-                timeEl = successNotifTime;
-            } else if (type === 'error') {
-                notification = failNotification;
-                titleEl = failNotifTitle;
-                timeEl = failNotifTime;
-            } else {
-                notification = warningNotification;
-                titleEl = warningNotifTitle;
-                timeEl = warningNotifTime;
-            }
+            const notification = type === 'success' ? successNotification : failNotification;
+            const titleEl = type === 'success' ? successNotifTitle : failNotifTitle;
+            const timeEl = type === 'success' ? successNotifTime : failNotifTime;
             
             titleEl.textContent = title;
             timeEl.textContent = time;
             
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
+            if (type === 'error') {
+                notification.classList.add('error');
+            } else {
+                notification.classList.remove('error');
+            }
             
+            notification.classList.add('show');
             setTimeout(() => notification.classList.remove('show'), 4000);
         }
 
@@ -1463,286 +983,6 @@
             
             stopCamera();
             hideStatusMessage();
-        }
-
-        // ========== CHECK FOR PENDING CLOCK OUT ==========
-        async function checkForPendingClockOut() {
-            if (!userId) return false;
-            
-            try {
-                // Get all attendance records
-                const q = query(collection(db, 'artifacts', appId, 'users', userId, 'attendance'));
-                const snapshot = await getDocs(q);
-                
-                // Find records with clockIn but no clockOut (excluding today's record)
-                const today = getCurrentDateLocal();
-                const pendingRecords = [];
-                
-                snapshot.docs.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const recordDate = docSnap.id;
-                    
-                    // Skip today's record (handled separately)
-                    if (recordDate === today) return;
-                    
-                    // Check if record has clockIn but no clockOut and not a special case
-                    if (data.clockIn && !data.clockOut && (!data.specialCase || data.specialCase.type === undefined)) {
-                        pendingRecords.push({
-                            date: recordDate,
-                            ...data
-                        });
-                    }
-                });
-                
-                // Sort by date (oldest first)
-                pendingRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
-                
-                if (pendingRecords.length > 0) {
-                    // Get the oldest pending record
-                    pendingClockOutRecord = pendingRecords[0];
-                    
-                    // Update UI to show pending clock out
-                    pendingDate.textContent = pendingClockOutRecord.date;
-                    pendingWeekday.textContent = pendingClockOutRecord.weekday || 
-                        new Date(pendingClockOutRecord.date).toLocaleDateString('ms-MY', { weekday: 'long' });
-                    
-                    if (pendingClockOutRecord.clockIn) {
-                        const clockInTime = pendingClockOutRecord.clockIn.toDate();
-                        pendingClockIn.textContent = clockInTime.toLocaleTimeString('ms-MY', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                        });
-                    } else {
-                        pendingClockIn.textContent = '-';
-                    }
-                    
-                    // Show the pending clock out card
-                    pendingClockOutCard.classList.remove('hidden');
-                    
-                    // Disable clock in button
-                    clockInBtn.disabled = true;
-                    clockInBtn.innerHTML = '<span class="material-symbols-outlined">lock</span><span>Selesaikan Clock Out Tertunggak Dahulu</span>';
-                    
-                    return true;
-                } else {
-                    pendingClockOutRecord = null;
-                    pendingClockOutCard.classList.add('hidden');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error checking pending clock out:', error);
-                return false;
-            }
-        }
-
-        // ========== SPECIAL CASE HANDLING ==========
-        function showSpecialCaseModal() {
-            if (!pendingClockOutRecord) return;
-            
-            specialCaseDate.textContent = pendingClockOutRecord.date;
-            
-            if (pendingClockOutRecord.clockIn) {
-                const clockInTime = pendingClockOutRecord.clockIn.toDate();
-                specialCaseClockIn.textContent = clockInTime.toLocaleTimeString('ms-MY', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-            } else {
-                specialCaseClockIn.textContent = '-';
-            }
-            
-            // Reset form
-            specialCaseReason.value = '';
-            specialCaseRemarks.value = '';
-            remarksSection.classList.add('hidden');
-            
-            specialCaseModal.classList.add('show');
-        }
-
-        function hideSpecialCaseModal() {
-            specialCaseModal.classList.remove('show');
-        }
-
-        async function handleSpecialCase() {
-            const reason = specialCaseReason.value;
-            const remarks = specialCaseRemarks.value.trim();
-            
-            if (!reason) {
-                showModal('Ralat', 'Sila pilih sebab tidak clock out.', 'error');
-                return;
-            }
-            
-            if (!pendingClockOutRecord) return;
-            
-            try {
-                const now = new Date();
-                const recordDate = pendingClockOutRecord.date;
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', recordDate);
-                
-                // Get clock in time
-                let clockInTime;
-                if (pendingClockOutRecord.clockIn) {
-                    clockInTime = pendingClockOutRecord.clockIn.toDate();
-                } else {
-                    // Default to start of work day if no clock in time
-                    clockInTime = new Date(recordDate + 'T08:00:00');
-                }
-                
-                // Calculate work hours based on reason
-                let totalHours = 8; // Default 8 hours for normal work day
-                let totalOT = 0;
-                let specialCaseType = '';
-                let specialCaseLabel = '';
-                
-                switch(reason) {
-                    case 'tugasan_luar':
-                        specialCaseType = 'tugasan_luar';
-                        specialCaseLabel = 'Tugasan Luar Pejabat';
-                        // For external assignments, assume full work day
-                        totalHours = 8;
-                        totalOT = 0;
-                        break;
-                    case 'cuti_rehat':
-                        specialCaseType = 'cuti_rehat';
-                        specialCaseLabel = 'Cuti Rehat';
-                        // For leave, no working hours
-                        totalHours = 0;
-                        totalOT = 0;
-                        break;
-                    case 'cuti_sakit':
-                        specialCaseType = 'cuti_sakit';
-                        specialCaseLabel = 'Cuti Sakit';
-                        // For sick leave, no working hours
-                        totalHours = 0;
-                        totalOT = 0;
-                        break;
-                }
-                
-                // Set clock out to same date as clock in (end of work day)
-                const clockOutTime = new Date(recordDate + 'T17:00:00');
-                
-                // Update the record
-                await setDoc(docRef, {
-                    clockOut: clockOutTime,
-                    totalHours: totalHours,
-                    totalOT: totalOT,
-                    specialCase: {
-                        type: specialCaseType,
-                        label: specialCaseLabel,
-                        remarks: remarks || '',
-                        processedAt: now,
-                        processedBy: userId
-                    },
-                    status: 'completed_with_special_case'
-                }, { merge: true });
-                
-                // Hide modal and update UI
-                hideSpecialCaseModal();
-                
-                // Show success notification
-                showNotification(
-                    `Rekod ${recordDate} diselesaikan sebagai ${specialCaseLabel}`,
-                    now.toLocaleTimeString(),
-                    'success'
-                );
-                
-                // Check if there are more pending records
-                setTimeout(async () => {
-                    const hasMorePending = await checkForPendingClockOut();
-                    if (!hasMorePending) {
-                        // Enable clock in for today
-                        await checkTodayAttendance();
-                    }
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error handling special case:', error);
-                showModal('Ralat', 'Gagal menyimpan rekod kes khas.', 'error');
-            }
-        }
-
-        // ========== COMPLETE PENDING CLOCK OUT ==========
-        async function completePendingClockOut() {
-            if (!pendingClockOutRecord) return;
-            
-            const faceVerified = await performFaceVerification();
-            if (!faceVerified) {
-                showModal('Pengesahan Wajah Gagal', 'Pengesahan wajah tidak berjaya.', 'error');
-                return;
-            }
-
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                        enableHighAccuracy: true,
-                        timeout: 10000
-                    });
-                });
-                
-                const { latitude, longitude } = position.coords;
-                const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
-                
-                if (distance > locationTolerance) {
-                    showModal('Luar Kawasan', `Anda berada ${distance.toFixed(0)}m dari pejabat.`, 'error');
-                    return;
-                }
-
-                const now = new Date();
-                const recordDate = pendingClockOutRecord.date;
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', recordDate);
-                
-                // Get clock in time from the record
-                let clockInTime;
-                if (pendingClockOutRecord.clockIn) {
-                    clockInTime = pendingClockOutRecord.clockIn.toDate();
-                } else {
-                    // Default to start of work day if no clock in time
-                    clockInTime = new Date(recordDate + 'T08:00:00');
-                }
-                
-                // Calculate work hours
-                const diffMs = now.getTime() - clockInTime.getTime();
-                const totalMinutes = Math.floor(diffMs / 60000);
-                const totalHoursDecimal = totalMinutes / 60;
-
-                const normalWorkHours = 8;
-                let totalOTDecimal = 0;
-                if (totalHoursDecimal > normalWorkHours) {
-                    totalOTDecimal = totalHoursDecimal - normalWorkHours;
-                }
-
-                // Set clock out to current time
-                await setDoc(docRef, {
-                    clockOut: now,
-                    totalHours: totalHoursDecimal,
-                    totalOT: totalOTDecimal,
-                    locationOut: { lat: latitude, lng: longitude },
-                    status: 'completed_late'
-                }, { merge: true });
-
-                showNotification(
-                    'Clock Out Tertunggak Berjaya Diselesaikan!',
-                    now.toLocaleTimeString(),
-                    'success'
-                );
-                
-                // Check if there are more pending records
-                setTimeout(async () => {
-                    const hasMorePending = await checkForPendingClockOut();
-                    if (!hasMorePending) {
-                        // Enable clock in for today
-                        await checkTodayAttendance();
-                    }
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error completing pending clock out:', error);
-                if (error.code === 1) {
-                    showModal('Ralat Lokasi', 'Gagal mendapatkan lokasi.', 'error');
-                } else {
-                    showModal('Ralat', 'Gagal menyelesaikan clock out tertunggak.', 'error');
-                }
-            }
         }
 
         // ========== CAMERA FUNCTIONS ==========
@@ -1938,15 +1178,6 @@
                 clockOutBtn.disabled = true;
                 clockInBtn.innerHTML = '<span class="material-symbols-outlined">lock</span><span>Clock In</span>';
                 clockOutBtn.innerHTML = '<span class="material-symbols-outlined">lock</span><span>Clock Out</span>';
-                return;
-            }
-
-            // Check if there's pending clock out
-            if (pendingClockOutRecord) {
-                clockInBtn.disabled = true;
-                clockOutBtn.disabled = true;
-                clockInBtn.innerHTML = '<span class="material-symbols-outlined">lock</span><span>Selesaikan Clock Out Tertunggak Dahulu</span>';
-                clockOutBtn.innerHTML = '<span class="material-symbols-outlined">logout</span><span>Clock Out</span>';
                 return;
             }
 
@@ -2255,13 +1486,6 @@
         };
 
         window.handleClockIn = async function() {
-            // Check for pending clock out first
-            const hasPending = await checkForPendingClockOut();
-            if (hasPending) {
-                showModal('Clock Out Tertunggak', 'Sila selesaikan clock out tertunggak terlebih dahulu.', 'warning');
-                return;
-            }
-
             if (!isFaceRegistered) {
                 showModal('Pendaftaran Wajah', 'Sila daftar wajah anda terlebih dahulu.', 'warning');
                 return;
@@ -2392,20 +1616,6 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
-        function getStatusLabel(record) {
-            if (record.specialCase) {
-                return record.specialCase.label || 'Kes Khas';
-            } else if (record.status === 'completed_late') {
-                return 'Selesai Lewat';
-            } else if (record.clockIn && !record.clockOut) {
-                return 'Belum Clock Out';
-            } else if (record.clockIn && record.clockOut) {
-                return 'Selesai';
-            } else {
-                return '-';
-            }
-        }
-
         function updateAttendanceTable(data) {
             attendanceTableBody.innerHTML = '';
             data.sort((a, b) => new Date(b.id) - new Date(a.id)).forEach(item => {
@@ -2422,25 +1632,6 @@
                 
                 const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
                 const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
-                const status = getStatusLabel(item);
-                
-                // Add status class
-                let statusClass = '';
-                if (item.specialCase) {
-                    if (item.specialCase.type === 'tugasan_luar') {
-                        statusClass = 'text-blue-400';
-                    } else if (item.specialCase.type === 'cuti_rehat') {
-                        statusClass = 'text-green-400';
-                    } else if (item.specialCase.type === 'cuti_sakit') {
-                        statusClass = 'text-red-400';
-                    }
-                } else if (item.status === 'completed_late') {
-                    statusClass = 'text-amber-400';
-                } else if (item.clockIn && !item.clockOut) {
-                    statusClass = 'text-red-400';
-                } else if (item.clockIn && item.clockOut) {
-                    statusClass = 'text-green-400';
-                }
 
                 row.innerHTML = `
                     <td>${date}</td>
@@ -2449,7 +1640,6 @@
                     <td>${clockOutDisplay}</td>
                     <td>${totalHours}</td>
                     <td>${totalOT}</td>
-                    <td class="${statusClass} font-medium">${status}</td>
                 `;
                 attendanceTableBody.appendChild(row);
             });
@@ -2492,8 +1682,8 @@
                 const tableWidth = 180;
                 const tableMarginX = (pageWidth - tableWidth) / 2;
                 const rowHeight = 6;
-                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT", "Status"];
-                const colWidths = [25, 25, 25, 25, 25, 25, 30];
+                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
+                const colWidths = [30, 30, 30, 30, 30, 30];
 
                 let y = 20;
 
@@ -2537,7 +1727,6 @@
                     const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
                     const hours = record.totalHours ? record.totalHours : null;
                     const ot = record.totalOT ? record.totalOT : null;
-                    const status = getStatusLabel(record);
 
                     if (hours !== null) totalHoursDecimal += hours;
                     if (ot !== null) totalOTDecimal += ot;
@@ -2545,7 +1734,7 @@
                     x = tableMarginX;
                     const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
                     const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
-                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText, status];
+                    const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
                     
                     rowData.forEach((text, i) => {
                         doc.rect(x, y, colWidths[i], rowHeight);
@@ -2596,41 +1785,6 @@
                     if (e.target === modalOverlay) hideModal();
                 });
                 
-                // Special case modal events
-                specialCaseCancelBtn.addEventListener('click', hideSpecialCaseModal);
-                specialCaseConfirmBtn.addEventListener('click', handleSpecialCase);
-                specialCaseModal.addEventListener('click', (e) => {
-                    if (e.target === specialCaseModal) hideSpecialCaseModal();
-                });
-                
-                // Show remarks section when reason is selected
-                specialCaseReason.addEventListener('change', () => {
-                    if (specialCaseReason.value) {
-                        remarksSection.classList.remove('hidden');
-                    } else {
-                        remarksSection.classList.add('hidden');
-                    }
-                });
-                
-                // Special case buttons
-                tugasanBtn.addEventListener('click', showSpecialCaseModal);
-                cutiRehatBtn.addEventListener('click', showSpecialCaseModal);
-                cutiSakitBtn.addEventListener('click', showSpecialCaseModal);
-                
-                // Complete pending clock out button
-                completePendingClockOutBtn.addEventListener('click', completePendingClockOut);
-                
-                // Migration buttons
-                migrationRetryBtn.addEventListener('click', runMigration);
-                migrationContinueBtn.addEventListener('click', () => {
-                    migrationOverlay.classList.add('hidden');
-                    localStorage.setItem('migrationCompleted', 'true');
-                    migrationCompleted = true;
-                });
-                
-                // Check if migration needed
-                checkAndRunMigration();
-                
                 // Auth state listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -2651,8 +1805,6 @@
                                 }
                             }
                             
-                            // Check for pending clock out first
-                            await checkForPendingClockOut();
                             await checkTodayAttendance();
                             
                             // Set up real-time attendance listener
@@ -2743,3 +1895,4 @@
     </script>
 </body>
 </html>
+
