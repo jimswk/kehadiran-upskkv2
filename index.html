@@ -1663,16 +1663,31 @@ window.generatePDF = async function() {
     }
 
     try {
+        // Dapatkan data dari Firebase
         const q = query(
             collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
             where('__name__', '>=', startDateStr),
             where('__name__', '<=', endDateStr)
         );
         const snap = await getDocs(q);
-        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // Buat peta untuk akses pantas data berdasarkan tarikh
+        const dataMap = {};
+        snap.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            const dateId = docSnap.id; // Format: YYYY-MM-DD
+            dataMap[dateId] = {
+                clockIn: data.clockIn,
+                clockOut: data.clockOut,
+                totalHours: data.totalHours,
+                totalOT: data.totalOT,
+                date: data.date
+            };
+        });
 
-        // Debug: log data yang diperoleh dari Firebase
-        console.log('Data dari Firebase:', data);
+        // Debug: log data yang diperoleh
+        console.log('Data dari Firebase:', dataMap);
+        console.log('Julat tarikh:', startDateStr, 'hingga', endDateStr);
         
         const doc = new jsPDF({
             format: 'a4',
@@ -1720,54 +1735,85 @@ window.generatePDF = async function() {
         let totalHoursDecimal = 0;
         let totalOTDecimal = 0;
         
-        // HANYA papar data yang ada dalam array 'data' (rekod kehadiran sebenar)
-        data.sort((a, b) => new Date(a.id) - new Date(b.id)).forEach(record => {
-            const dateString = record.id;
-            const date = record.date?.toDate ? record.date.toDate() : new Date(dateString);
-            const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+        // Loop melalui setiap hari dalam julat
+        const currentDate = new Date(start);
+        while (currentDate <= end) {
+            const dateString = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+            const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
             
-            const clockIn = record.clockIn ? record.clockIn.toDate().toLocaleTimeString('en-GB', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                hour12: false 
-            }) : '';
+            // Semak jika ada data untuk tarikh ini
+            const record = dataMap[dateString] || null;
             
-            const clockOut = record.clockOut ? record.clockOut.toDate().toLocaleTimeString('en-GB', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                hour12: false 
-            }) : '';
+            let clockInText = '';
+            let clockOutText = '';
+            let hoursText = '';
+            let otText = '';
             
-            const hours = record.totalHours ? record.totalHours : null;
-            const ot = record.totalOT ? record.totalOT : null;
-
-            if (hours !== null) totalHoursDecimal += hours;
-            if (ot !== null) totalOTDecimal += ot;
-
+            if (record) {
+                // Format masa untuk Clock In
+                if (record.clockIn) {
+                    const clockInTime = record.clockIn.toDate();
+                    clockInText = clockInTime.toLocaleTimeString('en-GB', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
+                    });
+                }
+                
+                // Format masa untuk Clock Out
+                if (record.clockOut) {
+                    const clockOutTime = record.clockOut.toDate();
+                    clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
+                    });
+                }
+                
+                // Format jumlah jam dan OT
+                if (record.totalHours !== undefined && record.totalHours !== null) {
+                    hoursText = formatDecimalToTime(record.totalHours);
+                    totalHoursDecimal += record.totalHours;
+                }
+                
+                if (record.totalOT !== undefined && record.totalOT !== null) {
+                    otText = formatDecimalToTime(record.totalOT);
+                    totalOTDecimal += record.totalOT;
+                }
+            }
+            
+            // Tambah baris ke PDF
             x = tableMarginX;
-            const hoursText = (hours !== null) ? formatDecimalToTime(hours) : '';
-            const otText = (ot !== null) ? formatDecimalToTime(ot) : '';
-            const rowData = [dateString, weekday, clockIn, clockOut, hoursText, otText];
+            const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
             
             rowData.forEach((text, i) => {
                 doc.rect(x, y, colWidths[i], rowHeight);
                 doc.text(text, x + 2, y + 4);
                 x += colWidths[i];
             });
+            
             y += rowHeight;
-        });
+            currentDate.setDate(currentDate.getDate() + 1); // Hari berikutnya
+        }
 
         // Baris Statistik dalam jadual
         doc.setFont('times', 'bold');
         doc.rect(tableMarginX, y, tableWidth, rowHeight);
         
+        // Kolom pertama: "Statistic"
         doc.text('Statistic', tableMarginX + 2, y + 4);
         
+        // Kolom "Total Hours" (kolom ke-5): jumlah jam
         const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
+        doc.text(totalHoursFormatted, 
+            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
+            y + 4);
+        
+        // Kolom "Total OT" (kolom ke-6): jumlah OT
         const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-
-        doc.text(totalHoursFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, y + 4);
-        doc.text(totalOTFormatted, tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, y + 4);
+        doc.text(totalOTFormatted, 
+            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
+            y + 4);
         
         doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
         showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
