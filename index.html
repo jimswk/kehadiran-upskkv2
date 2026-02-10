@@ -694,12 +694,6 @@
                                 <label class="block text-sm font-medium text-gray-400 mb-2">Kata Laluan</label>
                                 <input type="password" id="registerPasswordInput" class="input-field" placeholder="••••••••">
                             </div>
-                            <!-- Tambah field radius untuk admin -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Radius Clock In/Out (meter)</label>
-                                <input type="number" id="registerRadiusInput" class="input-field" placeholder="1500" value="1500" min="100" max="5000">
-                                <p class="text-xs text-gray-400 mt-1">Default: 1500m (1.5km). Admin boleh ubah kemudian.</p>
-                            </div>
                         </div>
                         <div class="mt-6">
                             <button id="registerAccountBtn" class="btn-primary btn-success">Daftar</button>
@@ -753,14 +747,6 @@
 
                 <!-- Dashboard -->
                 <div id="dashboard" class="hidden">
-                    <!-- Admin Button (only for admin email) -->
-                    <div id="adminPanelButton" class="hidden mb-4">
-                        <button class="btn-secondary" id="openAdminPanelBtn">
-                            <span class="material-symbols-outlined">admin_panel_settings</span>
-                            <span>Panel Admin</span>
-                        </button>
-                    </div>
-                    
                     <!-- Clock In/Out Section -->
                     <div class="card mb-6">
                         <!-- Status kehadiran menggunakan container baru -->
@@ -811,15 +797,6 @@
                                 <p class="real-time-clock" id="realTimeClock">00:00:00</p>
                                 <p class="text-xs text-gray-400 uppercase">Masa Semasa</p>
                             </div>
-                            
-                            <!-- Radius Info -->
-                            <div class="flex items-center gap-3 p-3 bg-green-900/20 border border-green-700/30 rounded-xl">
-                                <span class="material-symbols-outlined text-green-400">radar</span>
-                                <div>
-                                    <p class="text-xs text-green-200">Radius Anda:</p>
-                                    <p class="font-medium" id="userRadiusInfo">Mengambil maklumat...</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -862,80 +839,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Admin Page -->
-                <div id="adminPage" class="hidden">
-                    <div class="card max-w-lg mx-auto">
-                        <div class="text-center mb-6">
-                            <h1 class="text-2xl font-bold text-white">Panel Admin</h1>
-                            <p class="text-gray-400 mt-2">Kelola tetapan radius pengguna</p>
-                        </div>
-                        
-                        <!-- Office Coordinates -->
-                        <div class="mb-6">
-                            <h2 class="text-lg font-semibold text-white mb-4">Koordinat Pejabat</h2>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">Latitude</label>
-                                    <input type="number" step="any" id="officeLatInput" class="input-field" placeholder="1.5329149992751578">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">Longitude</label>
-                                    <input type="number" step="any" id="officeLngInput" class="input-field" placeholder="110.35895714753464">
-                                </div>
-                            </div>
-                            <button class="btn-secondary mt-3" id="saveOfficeCoordsBtn">
-                                <span class="material-symbols-outlined">save</span>
-                                Simpan Koordinat
-                            </button>
-                        </div>
-                        
-                        <!-- User List -->
-                        <div class="mb-6">
-                            <h2 class="text-lg font-semibold text-white mb-4">Senarai Pengguna</h2>
-                            <div class="max-h-60 overflow-y-auto mb-4">
-                                <div id="userList" class="space-y-2">
-                                    <!-- Users will be loaded here -->
-                                    <div class="text-center py-4">
-                                        <div class="loading mx-auto"></div>
-                                        <p class="text-gray-400 mt-2">Memuatkan senarai pengguna...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- User Radius Settings -->
-                        <div class="mb-6">
-                            <h2 class="text-lg font-semibold text-white mb-4">Tetapan Radius Pengguna</h2>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Pengguna Terpilih</label>
-                                <input type="text" id="selectedUserName" class="input-field" disabled>
-                                <input type="hidden" id="selectedUserId">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Radius (meter)</label>
-                                <input type="number" id="userRadiusInput" class="input-field" placeholder="1500" min="100" max="5000">
-                                <p class="text-xs text-gray-400 mt-1">100m hingga 5000m (5km)</p>
-                            </div>
-                            <div class="flex gap-3">
-                                <button class="btn-primary flex-1" id="saveUserRadiusBtn">
-                                    <span class="material-symbols-outlined">save</span>
-                                    Simpan Radius
-                                </button>
-                                <button class="btn-secondary flex-1" id="resetUserRadiusBtn">
-                                    <span class="material-symbols-outlined">restart_alt</span>
-                                    Reset ke 1500m
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Back to Dashboard -->
-                        <button class="btn-secondary w-full" id="backToDashboardBtn">
-                            <span class="material-symbols-outlined">arrow_back</span>
-                            Kembali ke Dashboard
-                        </button>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -943,7 +846,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -961,15 +864,13 @@
         const auth = getAuth(app);
         const appId = 'default-app-id';
         
-        // Admin email (ganti dengan email admin anda)
-        const ADMIN_EMAIL = 'admin@jim.gov.my';
-        
-        // Default office coordinates
-        let officeCoordinates = {
+        // Office coordinates
+        const officeCoordinates = {
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        
+        const locationTolerance = 1500; // 1.5km
+
         // Global variables
         let userId = null;
         let isFaceRegistered = false;
@@ -981,16 +882,12 @@
         let isClockedIn = false;
         let isClockedOut = false;
         let isPortraitMode = true;
-        let userRadius = 1500; // Default radius
-        let currentUserEmail = '';
-        let isAdmin = false;
 
         // DOM Elements
         const loginPageDiv = document.getElementById('loginPage');
         const accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
         const faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
         const dashboardDiv = document.getElementById('dashboard');
-        const adminPageDiv = document.getElementById('adminPage');
         const statusMessageDiv = document.getElementById('statusMessage');
         const videoElement = document.getElementById('videoElement');
         const scanVideoElement = document.getElementById('scanVideoElement');
@@ -1017,20 +914,6 @@
         const failNotification = document.getElementById('failNotification');
         const failNotifTitle = document.getElementById('failNotifTitle');
         const failNotifTime = document.getElementById('failNotifTime');
-        const userRadiusInfo = document.getElementById('userRadiusInfo');
-        const adminPanelButton = document.getElementById('adminPanelButton');
-        const openAdminPanelBtn = document.getElementById('openAdminPanelBtn');
-        const backToDashboardBtn = document.getElementById('backToDashboardBtn');
-        const userList = document.getElementById('userList');
-        const selectedUserName = document.getElementById('selectedUserName');
-        const selectedUserId = document.getElementById('selectedUserId');
-        const userRadiusInput = document.getElementById('userRadiusInput');
-        const saveUserRadiusBtn = document.getElementById('saveUserRadiusBtn');
-        const resetUserRadiusBtn = document.getElementById('resetUserRadiusBtn');
-        const officeLatInput = document.getElementById('officeLatInput');
-        const officeLngInput = document.getElementById('officeLngInput');
-        const saveOfficeCoordsBtn = document.getElementById('saveOfficeCoordsBtn');
-        const registerRadiusInput = document.getElementById('registerRadiusInput');
 
         window.jsPDF = window.jspdf.jsPDF;
 
@@ -1092,7 +975,7 @@
         }
 
         function showPage(pageId) {
-            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminPageDiv].forEach(p => {
+            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv].forEach(p => {
                 p.classList.add('hidden');
             });
             
@@ -1345,11 +1228,11 @@
                 const { latitude, longitude } = position.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
                 
-                if (distance <= userRadius) {
-                    locationStatusEl.textContent = `✅ Di kawasan (${distance.toFixed(0)}m / radius: ${userRadius}m)`;
+                if (distance <= locationTolerance) {
+                    locationStatusEl.textContent = `✅ Di pejabat (${distance.toFixed(0)}m)`;
                     updateClockButtons();
                 } else {
-                    locationStatusEl.textContent = `❌ Luar kawasan (${distance.toFixed(0)}m / radius: ${userRadius}m)`;
+                    locationStatusEl.textContent = `❌ Luar kawasan (${distance.toFixed(0)}m)`;
                 }
             } catch (error) {
                 locationStatusEl.textContent = '❌ Gagal akses lokasi';
@@ -1461,149 +1344,12 @@
             }
         }
 
-        // ========== ADMIN FUNCTIONS ==========
-        async function loadAllUsers() {
-            try {
-                // Get all user profiles
-                const usersRef = collection(db, 'artifacts', appId, 'users');
-                const usersSnapshot = await getDocs(usersRef);
-                
-                userList.innerHTML = '';
-                
-                usersSnapshot.forEach((userDoc) => {
-                    const uid = userDoc.id;
-                    const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-                    
-                    getDoc(profileRef).then((profileSnap) => {
-                        if (profileSnap.exists()) {
-                            const profileData = profileSnap.data();
-                            const radius = profileData.locationRadius || 1500;
-                            
-                            const userDiv = document.createElement('div');
-                            userDiv.className = 'flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 cursor-pointer';
-                            userDiv.dataset.userId = uid;
-                            userDiv.dataset.userName = profileData.name;
-                            userDiv.dataset.userRadius = radius;
-                            
-                            userDiv.innerHTML = `
-                                <div>
-                                    <p class="font-medium text-white">${profileData.name}</p>
-                                    <p class="text-xs text-gray-400">${profileData.department || 'Tiada jabatan'}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-semibold text-green-400">${radius}m</p>
-                                    <p class="text-xs text-gray-400">Radius</p>
-                                </div>
-                            `;
-                            
-                            userDiv.addEventListener('click', () => {
-                                // Remove active class from all
-                                document.querySelectorAll('#userList > div').forEach(el => {
-                                    el.classList.remove('ring-2', 'ring-blue-500');
-                                });
-                                
-                                // Add active class to selected
-                                userDiv.classList.add('ring-2', 'ring-blue-500');
-                                
-                                // Set selected user info
-                                selectedUserName.value = profileData.name;
-                                selectedUserId.value = uid;
-                                userRadiusInput.value = radius;
-                            });
-                            
-                            userList.appendChild(userDiv);
-                        }
-                    });
-                });
-                
-                if (usersSnapshot.size === 0) {
-                    userList.innerHTML = '<p class="text-center text-gray-400 py-4">Tiada pengguna ditemui</p>';
-                }
-            } catch (error) {
-                console.error('Error loading users:', error);
-                userList.innerHTML = '<p class="text-center text-red-400 py-4">Gagal memuatkan pengguna</p>';
-            }
-        }
-
-        async function updateUserRadius(userId, newRadius) {
-            try {
-                const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
-                await updateDoc(profileRef, {
-                    locationRadius: parseInt(newRadius)
-                });
-                
-                // If updating current user, update local variable
-                if (userId === auth.currentUser?.uid) {
-                    userRadius = parseInt(newRadius);
-                    userRadiusInfo.textContent = `${userRadius}m`;
-                }
-                
-                showNotification(`Radius pengguna berjaya dikemaskini ke ${newRadius}m`, new Date().toLocaleTimeString(), 'success');
-                
-                // Reload user list
-                loadAllUsers();
-                
-                return true;
-            } catch (error) {
-                console.error('Error updating radius:', error);
-                showNotification('Gagal mengemaskini radius', new Date().toLocaleTimeString(), 'error');
-                return false;
-            }
-        }
-
-        async function loadOfficeCoordinates() {
-            try {
-                const officeRef = doc(db, 'artifacts', appId, 'system', 'settings');
-                const officeSnap = await getDoc(officeRef);
-                
-                if (officeSnap.exists()) {
-                    const data = officeSnap.data();
-                    officeCoordinates = {
-                        latitude: data.latitude || 1.5329149992751578,
-                        longitude: data.longitude || 110.35895714753464
-                    };
-                    
-                    officeLatInput.value = officeCoordinates.latitude;
-                    officeLngInput.value = officeCoordinates.longitude;
-                }
-            } catch (error) {
-                console.error('Error loading office coordinates:', error);
-            }
-        }
-
-        async function saveOfficeCoordinates() {
-            const lat = parseFloat(officeLatInput.value);
-            const lng = parseFloat(officeLngInput.value);
-            
-            if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                showModal('Ralat Input', 'Koordinat tidak sah', 'error');
-                return;
-            }
-            
-            try {
-                const officeRef = doc(db, 'artifacts', appId, 'system', 'settings');
-                await setDoc(officeRef, {
-                    latitude: lat,
-                    longitude: lng,
-                    updatedAt: new Date(),
-                    updatedBy: auth.currentUser.email
-                });
-                
-                officeCoordinates = { latitude: lat, longitude: lng };
-                showNotification('Koordinat pejabat disimpan', new Date().toLocaleTimeString(), 'success');
-            } catch (error) {
-                console.error('Error saving coordinates:', error);
-                showNotification('Gagal menyimpan koordinat', new Date().toLocaleTimeString(), 'error');
-            }
-        }
-
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
             const name = document.getElementById('registerNameInput').value.trim();
             const department = document.getElementById('registerDepartmentInput').value.trim();
             const email = document.getElementById('registerEmailInput').value.trim();
             const password = document.getElementById('registerPasswordInput').value.trim();
-            const radius = parseInt(document.getElementById('registerRadiusInput').value) || 1500;
             
             if (!name || !department || !email || !password) {
                 showStatusMessage('Sila isi semua maklumat', 'error');
@@ -1615,11 +1361,6 @@
                 return;
             }
             
-            if (radius < 100 || radius > 5000) {
-                showStatusMessage('Radius mestilah antara 100m hingga 5000m', 'error');
-                return;
-            }
-            
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 userId = userCredential.user.uid;
@@ -1628,9 +1369,7 @@
                     name, 
                     department, 
                     faceDescriptor: null, 
-                    locationRadius: radius,
-                    createdAt: new Date(),
-                    email: email
+                    createdAt: new Date()
                 });
                 
                 showStatusMessage('Berjaya daftar! Sila daftar wajah.', 'success');
@@ -1774,8 +1513,8 @@
                 const { latitude, longitude } = position.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
                 
-                if (distance > userRadius) {
-                    showModal('Luar Kawasan', `Anda berada ${distance.toFixed(0)}m dari pejabat. Radius anda: ${userRadius}m.`, 'error');
+                if (distance > locationTolerance) {
+                    showModal('Luar Kawasan', `Anda berada ${distance.toFixed(0)}m dari pejabat.`, 'error');
                     return;
                 }
 
@@ -1787,8 +1526,7 @@
                     date: now,
                     weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
                     clockIn: now,
-                    locationIn: { lat: latitude, lng: longitude },
-                    radiusUsed: userRadius
+                    locationIn: { lat: latitude, lng: longitude }
                 }, { merge: true });
 
                 showNotification('Clock In Berjaya!', now.toLocaleTimeString(), 'success');
@@ -1832,8 +1570,8 @@
                 const { latitude, longitude } = position.coords;
                 const distance = calculateDistance(latitude, longitude, officeCoordinates.latitude, officeCoordinates.longitude);
                 
-                if (distance > userRadius) {
-                    showModal('Luar Kawasan', `Anda berada ${distance.toFixed(0)}m dari pejabat. Radius anda: ${userRadius}m.`, 'error');
+                if (distance > locationTolerance) {
+                    showModal('Luar Kawasan', `Anda berada ${distance.toFixed(0)}m dari pejabat.`, 'error');
                     return;
                 }
 
@@ -1858,8 +1596,7 @@
                         clockOut: now,
                         totalHours: totalHoursDecimal,
                         totalOT: totalOTDecimal,
-                        locationOut: { lat: latitude, lng: longitude },
-                        radiusUsed: userRadius
+                        locationOut: { lat: latitude, lng: longitude }
                     }, { merge: true });
 
                     showNotification('Clock Out Berjaya!', now.toLocaleTimeString(), 'success');
@@ -1908,219 +1645,183 @@
             });
         }
 
-        window.generatePDF = async function() {
-            const startDateStr = startDateInput.value;
-            const endDateStr = endDateInput.value;
+window.generatePDF = async function() {
+    const startDateStr = startDateInput.value;
+    const endDateStr = endDateInput.value;
 
-            if (!startDateStr || !endDateStr) {
-                showModal('Ralat Input', 'Sila masukkan tarikh mula dan tamat.', 'error');
-                return;
-            }
+    if (!startDateStr || !endDateStr) {
+        showModal('Ralat Input', 'Sila masukkan tarikh mula dan tamat.', 'error');
+        return;
+    }
 
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
 
-            if (start > end) {
-                showModal('Ralat Tarikh', 'Tarikh mula tidak boleh lepas tarikh tamat.', 'error');
-                return;
-            }
+    if (start > end) {
+        showModal('Ralat Tarikh', 'Tarikh mula tidak boleh lepas tarikh tamat.', 'error');
+        return;
+    }
 
-            try {
-                // Dapatkan data dari Firebase
-                const q = query(
-                    collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                    where('__name__', '>=', startDateStr),
-                    where('__name__', '<=', endDateStr)
-                );
-                const snap = await getDocs(q);
-                
-                // Buat peta untuk akses pantas data berdasarkan tarikh
-                const dataMap = {};
-                snap.docs.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const dateId = docSnap.id; // Format: YYYY-MM-DD
-                    dataMap[dateId] = {
-                        clockIn: data.clockIn,
-                        clockOut: data.clockOut,
-                        totalHours: data.totalHours,
-                        totalOT: data.totalOT,
-                        date: data.date
-                    };
-                });
+    try {
+        // Dapatkan data dari Firebase
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+            where('__name__', '>=', startDateStr),
+            where('__name__', '<=', endDateStr)
+        );
+        const snap = await getDocs(q);
+        
+        // Buat peta untuk akses pantas data berdasarkan tarikh
+        const dataMap = {};
+        snap.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            const dateId = docSnap.id; // Format: YYYY-MM-DD
+            dataMap[dateId] = {
+                clockIn: data.clockIn,
+                clockOut: data.clockOut,
+                totalHours: data.totalHours,
+                totalOT: data.totalOT,
+                date: data.date
+            };
+        });
 
-                const doc = new jsPDF({
-                    format: 'a4',
-                    unit: 'mm'
-                });
+        // Debug: log data yang diperoleh
+        console.log('Data dari Firebase:', dataMap);
+        console.log('Julat tarikh:', startDateStr, 'hingga', endDateStr);
+        
+        const doc = new jsPDF({
+            format: 'a4',
+            unit: 'mm'
+        });
 
-                doc.setFont('times', 'normal');
-                
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const tableWidth = 180;
-                const tableMarginX = (pageWidth - tableWidth) / 2;
-                const rowHeight = 6;
-                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
-                const colWidths = [30, 30, 30, 30, 30, 30];
+        doc.setFont('times', 'normal');
+        
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const tableWidth = 180;
+        const tableMarginX = (pageWidth - tableWidth) / 2;
+        const rowHeight = 6;
+        const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
+        const colWidths = [30, 30, 30, 30, 30, 30];
 
-                let y = 20;
+        let y = 20;
 
-                doc.setFontSize(14);
-                doc.setFont('times', 'bold');
-                const title = 'Total Time Card';
-                const titleWidth = doc.getTextWidth(title);
-                doc.text(title, (pageWidth - titleWidth) / 2, y);
+        doc.setFontSize(14);
+        doc.setFont('times', 'bold');
+        const title = 'Total Time Card';
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, y);
 
-                y += 10;
-                doc.setFontSize(10);
-                doc.setFont('times', 'normal');
-                doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
-                y += 5;
-                doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
-                y += 5;
-                doc.text(`Radius yang digunakan: ${userRadius}m`, tableMarginX, y);
+        y += 10;
+        doc.setFontSize(10);
+        doc.setFont('times', 'normal');
+        doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
+        y += 5;
+        doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
 
-                y += 10;
-                doc.setFont('times', 'bold');
-                doc.setDrawColor(0);
-                doc.setLineWidth(0.2);
-                
-                let x = tableMarginX;
-                headers.forEach((header, i) => {
-                    doc.rect(x, y, colWidths[i], rowHeight);
-                    doc.text(header, x + 2, y + 4);
-                    x += colWidths[i];
-                });
-                
-                y += rowHeight;
-                doc.setFont('times', 'normal');
-                let totalHoursDecimal = 0;
-                let totalOTDecimal = 0;
-                
-                // Loop melalui setiap hari dalam julat
-                const currentDate = new Date(start);
-                while (currentDate <= end) {
-                    const dateString = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-                    const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                    
-                    // Semak jika ada data untuk tarikh ini
-                    const record = dataMap[dateString] || null;
-                    
-                    let clockInText = '';
-                    let clockOutText = '';
-                    let hoursText = '';
-                    let otText = '';
-                    
-                    if (record) {
-                        // Format masa untuk Clock In
-                        if (record.clockIn) {
-                            const clockInTime = record.clockIn.toDate();
-                            clockInText = clockInTime.toLocaleTimeString('en-GB', { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                hour12: false 
-                            });
-                        }
-                        
-                        // Format masa untuk Clock Out
-                        if (record.clockOut) {
-                            const clockOutTime = record.clockOut.toDate();
-                            clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                hour12: false 
-                            });
-                        }
-                        
-                        // Format jumlah jam dan OT
-                        if (record.totalHours !== undefined && record.totalHours !== null) {
-                            hoursText = formatDecimalToTime(record.totalHours);
-                            totalHoursDecimal += record.totalHours;
-                        }
-                        
-                        if (record.totalOT !== undefined && record.totalOT !== null) {
-                            otText = formatDecimalToTime(record.totalOT);
-                            totalOTDecimal += record.totalOT;
-                        }
-                    }
-                    
-                    // Tambah baris ke PDF
-                    x = tableMarginX;
-                    const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
-                    
-                    rowData.forEach((text, i) => {
-                        doc.rect(x, y, colWidths[i], rowHeight);
-                        doc.text(text, x + 2, y + 4);
-                        x += colWidths[i];
+        y += 10;
+        doc.setFont('times', 'bold');
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.2);
+        
+        let x = tableMarginX;
+        headers.forEach((header, i) => {
+            doc.rect(x, y, colWidths[i], rowHeight);
+            doc.text(header, x + 2, y + 4);
+            x += colWidths[i];
+        });
+        
+        y += rowHeight;
+        doc.setFont('times', 'normal');
+        let totalHoursDecimal = 0;
+        let totalOTDecimal = 0;
+        
+        // Loop melalui setiap hari dalam julat
+        const currentDate = new Date(start);
+        while (currentDate <= end) {
+            const dateString = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+            const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+            
+            // Semak jika ada data untuk tarikh ini
+            const record = dataMap[dateString] || null;
+            
+            let clockInText = '';
+            let clockOutText = '';
+            let hoursText = '';
+            let otText = '';
+            
+            if (record) {
+                // Format masa untuk Clock In
+                if (record.clockIn) {
+                    const clockInTime = record.clockIn.toDate();
+                    clockInText = clockInTime.toLocaleTimeString('en-GB', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
                     });
-                    
-                    y += rowHeight;
-                    currentDate.setDate(currentDate.getDate() + 1); // Hari berikutnya
                 }
-
-                // Baris Statistik dalam jadual
-                doc.setFont('times', 'bold');
-                doc.rect(tableMarginX, y, tableWidth, rowHeight);
                 
-                // Kolom pertama: "Statistic"
-                doc.text('Statistic', tableMarginX + 2, y + 4);
+                // Format masa untuk Clock Out
+                if (record.clockOut) {
+                    const clockOutTime = record.clockOut.toDate();
+                    clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
+                    });
+                }
                 
-                // Kolom "Total Hours" (kolom ke-5): jumlah jam
-                const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
-                doc.text(totalHoursFormatted, 
-                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
-                    y + 4);
+                // Format jumlah jam dan OT
+                if (record.totalHours !== undefined && record.totalHours !== null) {
+                    hoursText = formatDecimalToTime(record.totalHours);
+                    totalHoursDecimal += record.totalHours;
+                }
                 
-                // Kolom "Total OT" (kolom ke-6): jumlah OT
-                const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-                doc.text(totalOTFormatted, 
-                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
-                    y + 4);
-                
-                doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
-                showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
-            } catch (error) {
-                console.error('PDF error:', error);
-                showModal('Ralat PDF', 'Gagal menjana laporan.', 'error');
+                if (record.totalOT !== undefined && record.totalOT !== null) {
+                    otText = formatDecimalToTime(record.totalOT);
+                    totalOTDecimal += record.totalOT;
+                }
             }
-        };
+            
+            // Tambah baris ke PDF
+            x = tableMarginX;
+            const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
+            
+            rowData.forEach((text, i) => {
+                doc.rect(x, y, colWidths[i], rowHeight);
+                doc.text(text, x + 2, y + 4);
+                x += colWidths[i];
+            });
+            
+            y += rowHeight;
+            currentDate.setDate(currentDate.getDate() + 1); // Hari berikutnya
+        }
 
-        // ========== ADMIN EVENT HANDLERS ==========
-        window.openAdminPanel = function() {
-            showPage('adminPage');
-            loadAllUsers();
-            loadOfficeCoordinates();
-        };
-
-        window.saveUserRadius = function() {
-            const userId = selectedUserId.value;
-            const newRadius = parseInt(userRadiusInput.value);
-            
-            if (!userId) {
-                showModal('Ralat', 'Sila pilih pengguna terlebih dahulu', 'error');
-                return;
-            }
-            
-            if (newRadius < 100 || newRadius > 5000 || isNaN(newRadius)) {
-                showModal('Ralat Input', 'Radius mestilah antara 100m hingga 5000m', 'error');
-                return;
-            }
-            
-            updateUserRadius(userId, newRadius);
-        };
-
-        window.resetUserRadius = function() {
-            const userId = selectedUserId.value;
-            
-            if (!userId) {
-                showModal('Ralat', 'Sila pilih pengguna terlebih dahulu', 'error');
-                return;
-            }
-            
-            if (confirm('Reset radius pengguna ini ke 1500m?')) {
-                updateUserRadius(userId, 1500);
-                userRadiusInput.value = 1500;
-            }
-        };
+        // Baris Statistik dalam jadual
+        doc.setFont('times', 'bold');
+        doc.rect(tableMarginX, y, tableWidth, rowHeight);
+        
+        // Kolom pertama: "Statistic"
+        doc.text('Statistic', tableMarginX + 2, y + 4);
+        
+        // Kolom "Total Hours" (kolom ke-5): jumlah jam
+        const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
+        doc.text(totalHoursFormatted, 
+            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
+            y + 4);
+        
+        // Kolom "Total OT" (kolom ke-6): jumlah OT
+        const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
+        doc.text(totalOTFormatted, 
+            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
+            y + 4);
+        
+        doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
+        showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
+    } catch (error) {
+        console.error('PDF error:', error);
+        showModal('Ralat PDF', 'Gagal menjana laporan.', 'error');
+    }
+};
 
         // ========== INITIALIZATION ==========
         window.onload = async function() {
@@ -2135,9 +1836,6 @@
                 startDateInput.value = firstDay.toISOString().split('T')[0];
                 endDateInput.value = lastDay.toISOString().split('T')[0];
                 
-                // Load office coordinates
-                await loadOfficeCoordinates();
-                
                 // Modal events
                 modalCancelBtn.addEventListener('click', hideModal);
                 modalOkBtn.addEventListener('click', hideModal);
@@ -2145,37 +1843,15 @@
                     if (e.target === modalOverlay) hideModal();
                 });
                 
-                // Admin events
-                openAdminPanelBtn.addEventListener('click', window.openAdminPanel);
-                backToDashboardBtn.addEventListener('click', () => showPage('dashboard'));
-                saveUserRadiusBtn.addEventListener('click', window.saveUserRadius);
-                resetUserRadiusBtn.addEventListener('click', window.resetUserRadius);
-                saveOfficeCoordsBtn.addEventListener('click', saveOfficeCoordinates);
-                
                 // Auth state listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        currentUserEmail = user.email;
-                        
-                        // Check if admin
-                        isAdmin = currentUserEmail === ADMIN_EMAIL;
-                        
-                        if (isAdmin) {
-                            adminPanelButton.classList.remove('hidden');
-                        } else {
-                            adminPanelButton.classList.add('hidden');
-                        }
-                        
                         const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
                         const snap = await getDoc(userDocRef);
 
                         if (snap.exists()) {
                             userData = snap.data();
-                            
-                            // Get user radius
-                            userRadius = userData.locationRadius || 1500;
-                            userRadiusInfo.textContent = `${userRadius}m`;
                             
                             if (userData.faceDescriptor) {
                                 try {
