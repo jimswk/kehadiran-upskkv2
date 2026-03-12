@@ -1389,31 +1389,42 @@
         async function checkTodayAttendance() {
             if (!userId) return;
             
-            const todayDateId = getCurrentDateLocal();
-            const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
-            const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                todayAttendance = docSnap.data();
-                isClockedIn = !!todayAttendance.clockIn;
-                isClockedOut = !!todayAttendance.clockOut;
+            try {
+                const todayDateId = getCurrentDateLocal();
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
+                const docSnap = await getDoc(docRef);
                 
-                if (isClockedIn && !isClockedOut) {
-                    attendanceStatusValue.textContent = 'Telah Clock In';
-                    attendanceStatusValue.className = 'attendance-status-value warning';
-                } else if (isClockedIn && isClockedOut) {
-                    attendanceStatusValue.textContent = 'Telah Clock Out';
-                    attendanceStatusValue.className = 'attendance-status-value success';
+                if (docSnap.exists()) {
+                    todayAttendance = docSnap.data();
+                    isClockedIn = !!todayAttendance.clockIn;
+                    isClockedOut = !!todayAttendance.clockOut;
+                    
+                    if (isClockedIn && !isClockedOut) {
+                        attendanceStatusValue.textContent = 'Telah Clock In';
+                        attendanceStatusValue.className = 'attendance-status-value warning';
+                    } else if (isClockedIn && isClockedOut) {
+                        attendanceStatusValue.textContent = 'Telah Clock Out';
+                        attendanceStatusValue.className = 'attendance-status-value success';
+                    } else {
+                        attendanceStatusValue.textContent = 'Belum Clock In';
+                        attendanceStatusValue.className = 'attendance-status-value error';
+                    }
                 } else {
+                    todayAttendance = null;
+                    isClockedIn = false;
+                    isClockedOut = false;
                     attendanceStatusValue.textContent = 'Belum Clock In';
                     attendanceStatusValue.className = 'attendance-status-value error';
                 }
-            } else {
-                todayAttendance = null;
-                isClockedIn = false;
-                isClockedOut = false;
-                attendanceStatusValue.textContent = 'Belum Clock In';
-                attendanceStatusValue.className = 'attendance-status-value error';
+            } catch (error) {
+                console.error('Error checking attendance:', error);
+                if (error.code === 'permission-denied') {
+                    // If permission denied, assume not clocked in
+                    isClockedIn = false;
+                    isClockedOut = false;
+                    attendanceStatusValue.textContent = 'Belum Clock In';
+                    attendanceStatusValue.className = 'attendance-status-value error';
+                }
             }
             
             updateClockButtons();
@@ -1707,26 +1718,6 @@
             }
         }
 
-        // Debug function to check admin status
-        async function checkAdminStatus() {
-            try {
-                const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-                const adminSnap = await getDoc(adminRef);
-                console.log('Admin document exists:', adminSnap.exists());
-                if (adminSnap.exists()) {
-                    console.log('Admin data:', adminSnap.data());
-                }
-                
-                // Try to access users collection
-                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-                const testQuery = await getDocs(usersRef);
-                console.log('Can access users:', !testQuery.empty);
-                
-            } catch (error) {
-                console.error('Admin check error:', error);
-            }
-        }
-
         async function loadAllUsers() {
             if (!isAdmin) {
                 console.log('Not admin, cannot load users');
@@ -1766,7 +1757,6 @@
                                 createdAt: userData.createdAt,
                                 faceRegisteredAt: userData.faceRegisteredAt
                             });
-                            console.log(`✅ Loaded user: ${userData.name || uid}`);
                         } else {
                             // If no profile data, use the user document data
                             allUsers.push({
@@ -1777,7 +1767,6 @@
                                 role: userDoc.data().role || 'user',
                                 faceDescriptor: null
                             });
-                            console.log(`⚠️ No profile data for user ${uid}, using document data`);
                         }
                     } catch (e) {
                         console.error(`Error loading profile for ${uid}:`, e);
@@ -1804,10 +1793,17 @@
                 
             } catch (error) {
                 console.error('Error loading users:', error);
-                const tbody = document.getElementById('adminUsersTableBody');
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-                    Error: ${error.message}
-                </td></tr>`;
+                if (error.code === 'permission-denied') {
+                    const tbody = document.getElementById('adminUsersTableBody');
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
+                        Error: Kebenaran dinafikan. Sila semak Firebase Rules.
+                    </td></tr>`;
+                } else {
+                    const tbody = document.getElementById('adminUsersTableBody');
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
+                        Error: ${error.message}
+                    </td></tr>`;
+                }
             }
         }
 
@@ -1856,41 +1852,6 @@
             allUsers.forEach(user => {
                 select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
             });
-        }
-
-        // Fungsi untuk test kebenaran admin
-        async function testAdminPermissions() {
-            console.log('Testing admin permissions...');
-            console.log('Current user:', auth.currentUser?.uid);
-            console.log('Is admin flag:', isAdmin);
-            
-            try {
-                // Test 1: Check admin document
-                const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-                const adminSnap = await getDoc(adminRef);
-                console.log('Admin doc exists:', adminSnap.exists());
-                console.log('Admin doc data:', adminSnap.data());
-                
-                // Test 2: Try to read users collection
-                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-                const usersSnap = await getDocs(usersRef);
-                console.log('Can read users collection:', !usersSnap.empty);
-                console.log('Number of users:', usersSnap.size);
-                
-                // Test 3: Try to read a specific user's profile
-                if (!usersSnap.empty) {
-                    const firstUser = usersSnap.docs[0];
-                    const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', firstUser.id, 'profile', 'data');
-                    const profileSnap = await getDoc(profileRef);
-                    console.log('Can read user profile:', profileSnap.exists());
-                }
-                
-                showNotification('Test selesai - lihat console', new Date().toLocaleTimeString(), 'success');
-                
-            } catch (error) {
-                console.error('Permission test failed:', error);
-                showModal('Test Gagal', error.message, 'error');
-            }
         }
 
         window.editUser = function(userId) {
@@ -2668,16 +2629,28 @@
                             await checkTodayAttendance();
                             
                             // Set up attendance listener (using default-app-id for attendance data)
-                            const q = query(
-                                collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
-                                where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                                where('__name__', '<=', endDateInput.value)
-                            );
-                            
-                            onSnapshot(q, snap => {
-                                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                updateAttendanceTable(data);
-                            });
+                            try {
+                                const attendanceQuery = query(
+                                    collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+                                    where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                                    where('__name__', '<=', endDateInput.value)
+                                );
+                                
+                                onSnapshot(attendanceQuery, 
+                                    (snap) => {
+                                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                        updateAttendanceTable(data);
+                                    },
+                                    (error) => {
+                                        console.error('Attendance listener error:', error);
+                                        if (error.code === 'permission-denied') {
+                                            console.log('Permission denied for attendance - this is normal for new users');
+                                        }
+                                    }
+                                );
+                            } catch (e) {
+                                console.error('Error setting up attendance listener:', e);
+                            }
                             
                             // Load office location
                             await loadOfficeLocation();
