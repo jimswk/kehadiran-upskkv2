@@ -1110,7 +1110,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = 'default-app-id';
+        const appId = 'kehadiran-upskk';
         
         // Default office coordinates (will be updated from config)
         let officeCoordinates = {
@@ -1616,137 +1616,176 @@
             }
         }
 
-        async function saveOfficeLocation() {
-            const latitude = parseFloat(document.getElementById('adminLatitude').value);
-            const longitude = parseFloat(document.getElementById('adminLongitude').value);
-            const tolerance = parseInt(document.getElementById('adminTolerance').value);
-            
-            if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
-                showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
-                return;
-            }
-            
-            try {
-                const configRef = doc(db, 'artifacts', appId, 'config', 'office');
-                await setDoc(configRef, {
-                    latitude,
-                    longitude,
-                    tolerance,
-                    updatedBy: userId,
-                    updatedAt: new Date()
-                }, { merge: true });
-                
-                // Log perubahan
-                const logRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
-                await addDoc(logRef, {
-                    latitude,
-                    longitude,
-                    tolerance,
-                    updatedBy: userId,
-                    updatedAt: new Date()
-                });
-                
-                // Update global
-                officeCoordinates = { latitude, longitude };
-                locationTolerance = tolerance;
-                
-                showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
-                loadLocationLogs();
-            } catch (error) {
-                showModal('Ralat', 'Gagal menyimpan lokasi', 'error');
-            }
-        }
+		async function saveOfficeLocation() {
+			const latitude = parseFloat(document.getElementById('adminLatitude').value);
+			const longitude = parseFloat(document.getElementById('adminLongitude').value);
+			const tolerance = parseInt(document.getElementById('adminTolerance').value);
+			
+			if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
+				showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
+				return;
+			}
+			
+			try {
+				const configRef = doc(db, 'artifacts', appId, 'config', 'office');
+				await setDoc(configRef, {
+					latitude,
+					longitude,
+					tolerance,
+					updatedBy: userId,
+					updatedAt: new Date()
+				}, { merge: true });
+				
+				// Log perubahan
+				try {
+					const logRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
+					await addDoc(logRef, {
+						latitude,
+						longitude,
+						tolerance,
+						updatedBy: userId,
+						updatedAt: new Date()
+					});
+				} catch (logError) {
+					console.error('Error saving log:', logError);
+					// Continue even if log fails
+				}
+				
+				// Update global
+				officeCoordinates = { latitude, longitude };
+				locationTolerance = tolerance;
+				
+				showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
+				loadLocationLogs();
+			} catch (error) {
+				console.error('Error saving location:', error);
+				showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
+			}
+		}
 
-        async function loadLocationLogs() {
-            try {
-                const logsRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
-                const logsSnap = await getDocs(logsRef);
-                
-                const tbody = document.getElementById('adminLocationLogBody');
-                tbody.innerHTML = '';
-                
-                const sortedLogs = logsSnap.docs.sort((a, b) => {
-                    return b.data().updatedAt?.toDate() - a.data().updatedAt?.toDate();
-                });
-                
-                sortedLogs.forEach(logDoc => {
-                    const log = logDoc.data();
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${log.updatedAt?.toDate().toLocaleString() || '-'}</td>
-                        <td>${log.latitude?.toFixed(6)}, ${log.longitude?.toFixed(6)}</td>
-                        <td>${log.tolerance}m</td>
-                        <td>${log.updatedBy || '-'}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                if (sortedLogs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
-                }
-            } catch (error) {
-                console.error('Error loading logs:', error);
-            }
-        }
+		async function loadLocationLogs() {
+			try {
+				const logsRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
+				const logsSnap = await getDocs(logsRef);
+				
+				const tbody = document.getElementById('adminLocationLogBody');
+				tbody.innerHTML = '';
+				
+				if (logsSnap.empty) {
+					tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
+					return;
+				}
+				
+				const sortedLogs = logsSnap.docs.sort((a, b) => {
+					const dateA = a.data().updatedAt?.toDate() || new Date(0);
+					const dateB = b.data().updatedAt?.toDate() || new Date(0);
+					return dateB - dateA;
+				});
+				
+				sortedLogs.forEach(logDoc => {
+					const log = logDoc.data();
+					const row = document.createElement('tr');
+					const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
+					const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
+					
+					row.innerHTML = `
+						<td>${updatedAt}</td>
+						<td>${latLng}</td>
+						<td>${log.tolerance || 1500}m</td>
+						<td>${log.updatedBy || '-'}</td>
+					`;
+					tbody.appendChild(row);
+				});
+				
+			} catch (error) {
+				console.error('Error loading logs:', error);
+				const tbody = document.getElementById('adminLocationLogBody');
+				tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
+			}
+		}
 
-        async function loadAllUsers() {
-            if (!isAdmin) return;
-            
-            try {
-                const usersRef = collection(db, 'artifacts', appId, 'users');
-                const snapshot = await getDocs(usersRef);
-                
-                allUsers = [];
-                const tbody = document.getElementById('adminUsersTableBody');
-                tbody.innerHTML = '';
-                
-                for (const userDoc of snapshot.docs) {
-                    const userId = userDoc.id;
-                    const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
-                    const profileSnap = await getDoc(profileRef);
-                    
-                    if (profileSnap.exists()) {
-                        const userData = profileSnap.data();
-                        allUsers.push({
-                            id: userId,
-                            ...userData
-                        });
-                        
-                        const row = document.createElement('tr');
-                        const faceStatus = userData.faceDescriptor ? 
-                            '<span class="status-badge success">Didaftar</span>' : 
-                            '<span class="status-badge warning">Belum</span>';
-                        
-                        row.innerHTML = `
-                            <td>${userData.name || '-'}</td>
-                            <td>${userData.email || '-'}</td>
-                            <td>${userData.department || '-'}</td>
-                            <td><span class="status-badge ${userData.role === 'admin' ? 'success' : ''}">${userData.role || 'user'}</span></td>
-                            <td>${faceStatus}</td>
-                            <td>
-                                <button class="text-blue-400 hover:text-blue-300 mx-1" onclick="editUser('${userId}')">
-                                    <span class="material-symbols-outlined text-sm">edit</span>
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 mx-1" onclick="deleteUser('${userId}')">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
-                                </button>
-                                <button class="text-green-400 hover:text-green-300 mx-1" onclick="resetUserFace('${userId}')">
-                                    <span class="material-symbols-outlined text-sm">face</span>
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    }
-                }
-                
-                // Update statistik
-                updateAdminStats();
-                
-            } catch (error) {
-                console.error('Error loading users:', error);
-                showModal('Ralat', 'Gagal memuat senarai pengguna', 'error');
-            }
-        }
+		// Debug function to check admin status
+		async function checkAdminStatus() {
+			try {
+				const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
+				const adminSnap = await getDoc(adminRef);
+				console.log('Admin document exists:', adminSnap.exists());
+				if (adminSnap.exists()) {
+					console.log('Admin data:', adminSnap.data());
+				}
+				
+				// Try to access users collection
+				const usersRef = collection(db, 'artifacts', appId, 'users');
+				const testQuery = await getDocs(usersRef);
+				console.log('Can access users:', !testQuery.empty);
+				
+			} catch (error) {
+				console.error('Admin check error:', error);
+			}
+		}
+
+		async function loadAllUsers() {
+			if (!isAdmin) return;
+			
+			try {
+				const usersRef = collection(db, 'artifacts', appId, 'users');
+				const snapshot = await getDocs(usersRef);
+				
+				allUsers = [];
+				const tbody = document.getElementById('adminUsersTableBody');
+				tbody.innerHTML = '';
+				
+				for (const userDoc of snapshot.docs) {
+					const userId = userDoc.id;
+					const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+					const profileSnap = await getDoc(profileRef);
+					
+					if (profileSnap.exists()) {
+						const userData = profileSnap.data();
+						allUsers.push({
+							id: userId,
+							...userData
+						});
+						
+						const row = document.createElement('tr');
+						const faceStatus = userData.faceDescriptor ? 
+							'<span class="status-badge success">Didaftar</span>' : 
+							'<span class="status-badge warning">Belum</span>';
+						
+						row.innerHTML = `
+							<td>${userData.name || '-'}</td>
+							<td>${userData.email || '-'}</td>
+							<td>${userData.department || '-'}</td>
+							<td><span class="status-badge ${userData.role === 'admin' ? 'success' : ''}">${userData.role || 'user'}</span></td>
+							<td>${faceStatus}</td>
+							<td>
+								<button class="text-blue-400 hover:text-blue-300 mx-1" onclick="window.editUser('${userId}')">
+									<span class="material-symbols-outlined text-sm">edit</span>
+								</button>
+								<button class="text-red-400 hover:text-red-300 mx-1" onclick="window.deleteUser('${userId}')">
+									<span class="material-symbols-outlined text-sm">delete</span>
+								</button>
+								<button class="text-green-400 hover:text-green-300 mx-1" onclick="window.resetUserFace('${userId}')">
+									<span class="material-symbols-outlined text-sm">face</span>
+								</button>
+							</td>
+						`;
+						tbody.appendChild(row);
+					}
+				}
+				
+				// Update statistik
+				updateAdminStats();
+				
+			} catch (error) {
+				console.error('Error loading users:', error);
+				if (error.code === 'permission-denied') {
+					showModal('Kebenaran Dinafikan', 'Anda tidak mempunyai kebenaran admin. Sila log masuk semula.', 'error');
+				} else {
+					showModal('Ralat', 'Gagal memuat senarai pengguna: ' + error.message, 'error');
+				}
+			}
+		}
 
         function updateAdminStats() {
             const total = allUsers.length;
@@ -2475,10 +2514,16 @@
                         const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
                         const snap = await getDoc(userDocRef);
                         
-                        // Check if admin
-                        const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
-                        const adminSnap = await getDoc(adminRef);
-                        isAdmin = adminSnap.exists();
+						// Check if admin
+						try {
+							const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
+							const adminSnap = await getDoc(adminRef);
+							isAdmin = adminSnap.exists();
+							console.log('Is Admin:', isAdmin);
+						} catch (error) {
+							console.error('Error checking admin:', error);
+							isAdmin = false;
+						}
                         
                         // Show/hide admin button
                         document.getElementById('adminPanelBtn').style.display = isAdmin ? 'flex' : 'none';
@@ -2670,6 +2715,24 @@
                 });
             }
         });
+		
+		// Handle Firebase errors
+		function handleFirebaseError(error, defaultMessage = 'Ralat berlaku') {
+			console.error('Firebase Error:', error);
+			
+			if (error.code === 'permission-denied') {
+				showModal('Kebenaran Dinafikan', 'Anda tidak mempunyai kebenaran untuk mengakses data ini. Sila log masuk semula.', 'error');
+				return 'Kebenaran dinafikan';
+			}
+			
+			if (error.code === 'unavailable') {
+				showModal('Ralat Rangkaian', 'Sila semak sambungan internet anda.', 'error');
+				return 'Ralat rangkaian';
+			}
+			
+			showModal('Ralat', defaultMessage, 'error');
+			return defaultMessage;
+		}
     </script>
 </body>
 </html>
