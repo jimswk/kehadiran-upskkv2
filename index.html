@@ -1110,7 +1110,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = 'kehadiran-upskk';
+        const appId = 'default-app-id';
         
         // Default office coordinates (will be updated from config)
         let officeCoordinates = {
@@ -1593,75 +1593,79 @@
         }
 
         // ========== ADMIN FUNCTIONS ==========
-        async function loadOfficeLocation() {
-            try {
-                const configRef = doc(db, 'artifacts', appId, 'config', 'office');
-                const configSnap = await getDoc(configRef);
-                
-                if (configSnap.exists()) {
-                    officeConfig = configSnap.data();
-                    document.getElementById('adminLatitude').value = officeConfig.latitude;
-                    document.getElementById('adminLongitude').value = officeConfig.longitude;
-                    document.getElementById('adminTolerance').value = officeConfig.tolerance;
-                    
-                    // Update global variables
-                    officeCoordinates = {
-                        latitude: officeConfig.latitude,
-                        longitude: officeConfig.longitude
-                    };
-                    locationTolerance = officeConfig.tolerance;
-                }
-            } catch (error) {
-                console.error('Error loading config:', error);
-            }
+async function loadOfficeLocation() {
+    try {
+        // Try to load from kehadiran-upskk first (new config)
+        const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+        const configSnap = await getDoc(configRef);
+        
+        if (configSnap.exists()) {
+            officeConfig = configSnap.data();
+            document.getElementById('adminLatitude').value = officeConfig.latitude;
+            document.getElementById('adminLongitude').value = officeConfig.longitude;
+            document.getElementById('adminTolerance').value = officeConfig.tolerance;
+            
+            officeCoordinates = {
+                latitude: officeConfig.latitude,
+                longitude: officeConfig.longitude
+            };
+            locationTolerance = officeConfig.tolerance;
+            console.log('Loaded office config from kehadiran-upskk');
+        } else {
+            // Use defaults
+            console.log('Using default office config');
         }
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
 
-		async function saveOfficeLocation() {
-			const latitude = parseFloat(document.getElementById('adminLatitude').value);
-			const longitude = parseFloat(document.getElementById('adminLongitude').value);
-			const tolerance = parseInt(document.getElementById('adminTolerance').value);
-			
-			if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
-				showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
-				return;
-			}
-			
-			try {
-				const configRef = doc(db, 'artifacts', appId, 'config', 'office');
-				await setDoc(configRef, {
-					latitude,
-					longitude,
-					tolerance,
-					updatedBy: userId,
-					updatedAt: new Date()
-				}, { merge: true });
-				
-				// Log perubahan
-				try {
-					const logRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
-					await addDoc(logRef, {
-						latitude,
-						longitude,
-						tolerance,
-						updatedBy: userId,
-						updatedAt: new Date()
-					});
-				} catch (logError) {
-					console.error('Error saving log:', logError);
-					// Continue even if log fails
-				}
-				
-				// Update global
-				officeCoordinates = { latitude, longitude };
-				locationTolerance = tolerance;
-				
-				showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
-				loadLocationLogs();
-			} catch (error) {
-				console.error('Error saving location:', error);
-				showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
-			}
-		}
+async function saveOfficeLocation() {
+    const latitude = parseFloat(document.getElementById('adminLatitude').value);
+    const longitude = parseFloat(document.getElementById('adminLongitude').value);
+    const tolerance = parseInt(document.getElementById('adminTolerance').value);
+    
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
+        showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
+        return;
+    }
+    
+    try {
+        // Save to kehadiran-upskk (new config location)
+        const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+        await setDoc(configRef, {
+            latitude,
+            longitude,
+            tolerance,
+            updatedBy: userId,
+            updatedAt: new Date()
+        }, { merge: true });
+        
+        // Save log
+        try {
+            const logRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
+            await addDoc(logRef, {
+                latitude,
+                longitude,
+                tolerance,
+                updatedBy: userId,
+                updatedAt: new Date()
+            });
+        } catch (logError) {
+            console.error('Error saving log:', logError);
+        }
+        
+        // Update global
+        officeCoordinates = { latitude, longitude };
+        locationTolerance = tolerance;
+        
+        showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
+        loadLocationLogs();
+    } catch (error) {
+        console.error('Error saving location:', error);
+        showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
+    }
+}
 
 		async function loadLocationLogs() {
 			try {
@@ -1730,62 +1734,70 @@ async function loadAllUsers() {
         return;
     }
     
-    console.log('Loading all users as admin...');
+    console.log('Loading users from default-app-id...');
     
     try {
-        // First, try to get the users collection reference
-        const usersRef = collection(db, 'artifacts', appId, 'users');
-        console.log('Users ref:', usersRef);
+        // Use default-app-id untuk data lama
+        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+        const usersSnap = await getDocs(usersRef);
         
-        // Try a simple test query first
-        const testSnapshot = await getDocs(usersRef);
-        console.log('Test query successful, docs count:', testSnapshot.size);
+        console.log(`Found ${usersSnap.size} users in default-app-id`);
         
         allUsers = [];
         const tbody = document.getElementById('adminUsersTableBody');
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data...</td></tr>';
         
-        for (const userDoc of testSnapshot.docs) {
+        for (const userDoc of usersSnap.docs) {
             const userId = userDoc.id;
-            console.log('Processing user:', userId);
             
-            const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
-            const profileSnap = await getDoc(profileRef);
-            
-            if (profileSnap.exists()) {
-                const userData = profileSnap.data();
-                console.log('User data:', userData);
+            // Try to get profile data (path: /users/{userId}/profile/data)
+            try {
+                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                const profileSnap = await getDoc(profileRef);
                 
+                if (profileSnap.exists()) {
+                    const userData = profileSnap.data();
+                    allUsers.push({
+                        id: userId,
+                        ...userData
+                    });
+                } else {
+                    // If no profile/data, use the user document itself
+                    allUsers.push({
+                        id: userId,
+                        ...userDoc.data()
+                    });
+                }
+            } catch (e) {
+                // If error, just use user document
                 allUsers.push({
                     id: userId,
-                    ...userData
+                    ...userDoc.data()
                 });
             }
         }
         
-        // Update UI
-        updateAdminStats();
+        console.log(`Total users loaded: ${allUsers.length}`);
         renderUsersTable();
+        updateAdminStats();
         
     } catch (error) {
         console.error('Error loading users:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        
         const tbody = document.getElementById('adminUsersTableBody');
         tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-            Error: ${error.message}. Sila semak Firebase Rules.
+            Error: ${error.message}
         </td></tr>`;
-        
-        showModal('Ralat Kebenaran', 
-            'Anda tidak mempunyai kebenaran untuk melihat senarai pengguna. ' +
-            'Sila pastikan Firebase Rules dikemaskini.', 'error');
     }
 }
 
 function renderUsersTable() {
     const tbody = document.getElementById('adminUsersTableBody');
     tbody.innerHTML = '';
+    
+    if (allUsers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tiada pengguna</td></tr>';
+        return;
+    }
     
     allUsers.forEach(user => {
         const row = document.createElement('tr');
@@ -2577,96 +2589,78 @@ async function testAdminPermissions() {
 onAuthStateChanged(auth, async (user) => {
     console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
     
-    if (user) {
-        userId = user.uid;
-        console.log('User ID:', userId);
-        console.log('User email:', user.email);
+if (user) {
+    userId = user.uid;
+    
+    // Check admin in kehadiran-upskk (new admin location)
+    try {
+        const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+        const adminSnap = await getDoc(adminRef);
+        isAdmin = adminSnap.exists();
+        console.log('Admin check:', isAdmin);
+    } catch (error) {
+        console.error('Error checking admin:', error);
+        isAdmin = false;
+    }
+    
+    // Show/hide admin button
+    const adminBtn = document.getElementById('adminPanelBtn');
+    if (adminBtn) {
+        adminBtn.style.display = isAdmin ? 'flex' : 'none';
+    }
+    
+    // Get user profile from default-app-id (old user data)
+    const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+    const snap = await getDoc(userDocRef);
+    
+    if (snap.exists()) {
+        userData = snap.data();
+        console.log('User profile:', userData);
         
-        const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
-        const snap = await getDoc(userDocRef);
-        
-        // Check if admin
-        try {
-            const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
-            const adminSnap = await getDoc(adminRef);
-            isAdmin = adminSnap.exists();
-            console.log('Admin check:', {
-                exists: adminSnap.exists(),
-                data: adminSnap.data()
-            });
-        } catch (error) {
-            console.error('Error checking admin:', error);
-            isAdmin = false;
+        // Check face registration
+        if (userData.faceDescriptor) {
+            try {
+                JSON.parse(userData.faceDescriptor);
+                isFaceRegistered = true;
+                createFaceMatcher(userData.faceDescriptor);
+            } catch (e) {
+                isFaceRegistered = false;
+            }
         }
         
-        // Show/hide admin button
-        const adminBtn = document.getElementById('adminPanelBtn');
-        if (adminBtn) {
-            adminBtn.style.display = isAdmin ? 'flex' : 'none';
-            console.log('Admin button display:', adminBtn.style.display);
+        await checkTodayAttendance();
+        
+        // Set up attendance listener (using default-app-id for attendance data)
+        const q = query(
+            collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+            where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+            where('__name__', '<=', endDateInput.value)
+        );
+        
+        onSnapshot(q, snap => {
+            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            updateAttendanceTable(data);
+        });
+        
+        // Load office location
+        await loadOfficeLocation();
+        
+        if (isAdmin) {
+            loadAllUsers(); // This will now load from default-app-id
+            loadLocationLogs();
         }
-
-        if (snap.exists()) {
-            userData = snap.data();
-            console.log('User profile:', userData);
-            
-            // Load office config
-            await loadOfficeLocation();
-            
-            if (userData.faceDescriptor) {
-                try {
-                    JSON.parse(userData.faceDescriptor);
-                    isFaceRegistered = true;
-                    createFaceMatcher(userData.faceDescriptor);
-                } catch (e) {
-                    console.error('Face descriptor error:', e);
-                    isFaceRegistered = false;
-                }
-            }
-            
-            await checkTodayAttendance();
-            
-            // Set up real-time attendance listener
-            const q = query(
-                collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-                where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                where('__name__', '<=', endDateInput.value)
-            );
-            
-            onSnapshot(q, snap => {
-                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                updateAttendanceTable(data);
-            });
-
-            if (isAdmin) {
-                console.log('User is admin - loading admin data...');
-                // Load admin dashboard data
-                loadAllUsers();
-                loadLocationLogs();
-                
-                if (!isFaceRegistered) {
-                    showPage('faceRegistrationPage');
-                } else {
-                    showPage('dashboard');
-                    handleGeolocationCheck();
-                }
-            } else {
-                console.log('User is not admin');
-                if (!isFaceRegistered) {
-                    showPage('faceRegistrationPage');
-                } else {
-                    showPage('dashboard');
-                    handleGeolocationCheck();
-                }
-            }
-        } else {
-            console.log('No user profile found');
+        
+        // Show appropriate page
+        if (!isFaceRegistered) {
             showPage('faceRegistrationPage');
+        } else {
+            showPage('dashboard');
+            handleGeolocationCheck();
         }
     } else {
-        showPage('loginPage');
+        showPage('faceRegistrationPage');
     }
-});
+}
             } catch (error) {
                 console.error('Init error:', error);
                 showPage('loginPage');
