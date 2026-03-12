@@ -1120,6 +1120,7 @@
 
         // Global variables
         let userId = null;
+        let firestoreUserId = null; // ID sebenar dalam Firestore
         let isFaceRegistered = false;
         let userData = null;
         let videoStream = null;
@@ -1314,7 +1315,7 @@
             try {
                 const parsed = JSON.parse(descriptor);
                 const labeledDescriptors = [
-                    new faceapi.LabeledFaceDescriptors(userId, [new Float32Array(parsed)])
+                    new faceapi.LabeledFaceDescriptors(firestoreUserId, [new Float32Array(parsed)])
                 ];
                 faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
             } catch (e) {
@@ -1387,11 +1388,11 @@
         }
 
         async function checkTodayAttendance() {
-            if (!userId) return;
+            if (!firestoreUserId) return;
             
             try {
                 const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance', todayDateId);
                 const docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists()) {
@@ -1418,13 +1419,10 @@
                 }
             } catch (error) {
                 console.error('Error checking attendance:', error);
-                if (error.code === 'permission-denied') {
-                    // If permission denied, assume not clocked in
-                    isClockedIn = false;
-                    isClockedOut = false;
-                    attendanceStatusValue.textContent = 'Belum Clock In';
-                    attendanceStatusValue.className = 'attendance-status-value error';
-                }
+                isClockedIn = false;
+                isClockedOut = false;
+                attendanceStatusValue.textContent = 'Belum Clock In';
+                attendanceStatusValue.className = 'attendance-status-value error';
             }
             
             updateClockButtons();
@@ -1580,7 +1578,7 @@
                 if (detections) {
                     const match = faceMatcher.findBestMatch(detections.descriptor);
                     
-                    if (match.label === userId && match.distance < 0.6) {
+                    if (match.label === firestoreUserId && match.distance < 0.6) {
                         showNotification('Wajah Dikenali', new Date().toLocaleTimeString(), 'success');
                         return true;
                     } else {
@@ -1605,7 +1603,6 @@
         // ========== ADMIN FUNCTIONS ==========
         async function loadOfficeLocation() {
             try {
-                // Try to load from kehadiran-upskk first (new config)
                 const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
                 const configSnap = await getDoc(configRef);
                 
@@ -1621,9 +1618,6 @@
                     };
                     locationTolerance = officeConfig.tolerance;
                     console.log('Loaded office config from kehadiran-upskk');
-                } else {
-                    // Use defaults
-                    console.log('Using default office config');
                 }
             } catch (error) {
                 console.error('Error loading config:', error);
@@ -1641,7 +1635,6 @@
             }
             
             try {
-                // Save to kehadiran-upskk (new config location)
                 const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
                 await setDoc(configRef, {
                     latitude,
@@ -1651,7 +1644,6 @@
                     updatedAt: new Date()
                 }, { merge: true });
                 
-                // Save log
                 try {
                     const logRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
                     await addDoc(logRef, {
@@ -1665,7 +1657,6 @@
                     console.error('Error saving log:', logError);
                 }
                 
-                // Update global
                 officeCoordinates = { latitude, longitude };
                 locationTolerance = tolerance;
                 
@@ -1727,28 +1718,26 @@
             console.log('Loading users from default-app-id/users...');
             
             try {
-                // Get all user documents from users collection
                 const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
                 const usersSnap = await getDocs(usersRef);
                 
-                console.log(`Found ${usersSnap.size} user documents in default-app-id/users`);
+                console.log(`Found ${usersSnap.size} user documents`);
                 
                 allUsers = [];
                 const tbody = document.getElementById('adminUsersTableBody');
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>';
                 
                 for (const userDoc of usersSnap.docs) {
-                    const uid = userDoc.id;
+                    const firestoreId = userDoc.id;
                     
-                    // Get profile data from /users/{uid}/profile/data
                     try {
-                        const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
+                        const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', firestoreId, 'profile', 'data');
                         const profileSnap = await getDoc(profileRef);
                         
                         if (profileSnap.exists()) {
                             const userData = profileSnap.data();
                             allUsers.push({
-                                id: uid,
+                                id: firestoreId,
                                 name: userData.name || 'Tiada nama',
                                 email: userData.email || 'Tiada email',
                                 department: userData.department || 'Tiada',
@@ -1757,28 +1746,9 @@
                                 createdAt: userData.createdAt,
                                 faceRegisteredAt: userData.faceRegisteredAt
                             });
-                        } else {
-                            // If no profile data, use the user document data
-                            allUsers.push({
-                                id: uid,
-                                name: userDoc.data().name || 'Tiada nama',
-                                email: userDoc.data().email || 'Tiada email',
-                                department: userDoc.data().department || 'Tiada',
-                                role: userDoc.data().role || 'user',
-                                faceDescriptor: null
-                            });
                         }
                     } catch (e) {
-                        console.error(`Error loading profile for ${uid}:`, e);
-                        // Add user with basic info from document
-                        allUsers.push({
-                            id: uid,
-                            name: userDoc.data().name || 'Tiada nama',
-                            email: userDoc.data().email || 'Tiada email',
-                            department: userDoc.data().department || 'Tiada',
-                            role: userDoc.data().role || 'user',
-                            faceDescriptor: null
-                        });
+                        console.error(`Error loading profile for ${firestoreId}:`, e);
                     }
                 }
                 
@@ -1793,17 +1763,10 @@
                 
             } catch (error) {
                 console.error('Error loading users:', error);
-                if (error.code === 'permission-denied') {
-                    const tbody = document.getElementById('adminUsersTableBody');
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-                        Error: Kebenaran dinafikan. Sila semak Firebase Rules.
-                    </td></tr>`;
-                } else {
-                    const tbody = document.getElementById('adminUsersTableBody');
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-                        Error: ${error.message}
-                    </td></tr>`;
-                }
+                const tbody = document.getElementById('adminUsersTableBody');
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
+                    Error: ${error.message}
+                </td></tr>`;
             }
         }
 
@@ -1846,7 +1809,6 @@
             document.getElementById('adminTotalUsers').textContent = total;
             document.getElementById('adminFaceRegistered').textContent = faceRegistered;
             
-            // Isi dropdown laporan
             const select = document.getElementById('adminReportUserSelect');
             select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
             allUsers.forEach(user => {
@@ -1875,25 +1837,13 @@
             if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
             
             try {
-                // Delete profile data
                 await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
                 
-                // Delete all attendance records
                 const attendanceRef = collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance');
                 const attendanceSnap = await getDocs(attendanceRef);
                 
                 const deletePromises = attendanceSnap.docs.map(doc => deleteDoc(doc.ref));
                 await Promise.all(deletePromises);
-                
-                // Delete user document
-                await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId));
-                
-                // If admin, delete admin record from kehadiran-upskk
-                try {
-                    await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId));
-                } catch (e) {
-                    // Ignore if not exists
-                }
                 
                 showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
                 loadAllUsers();
@@ -1936,7 +1886,6 @@
                 let allData = [];
                 
                 if (selectedUser === 'all') {
-                    // Loop semua pengguna
                     for (const user of allUsers) {
                         const q = query(
                             collection(db, 'artifacts', 'default-app-id', 'users', user.id, 'attendance'),
@@ -1994,7 +1943,6 @@
                 
                 y += 10;
                 
-                // Table headers
                 const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
                 const colWidths = [40, 30, 30, 25, 25, 20, 20];
                 
@@ -2016,7 +1964,6 @@
                         doc.addPage();
                         y = 20;
                         
-                        // Redraw headers on new page
                         x = 20;
                         doc.setFont('helvetica', 'bold');
                         headers.forEach((header, i) => {
@@ -2082,34 +2029,19 @@
             
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                userId = userCredential.user.uid;
+                const authUid = userCredential.user.uid;
                 
-                // Tentukan role (admin vs user biasa)
-                let role = 'user';
-                const adminEmails = ['azzer@imi.gov.my']; // Senarai email admin
+                // Simpan profile pengguna di default-app-id dengan generate ID sendiri
+                const firestoreId = authUid; // Guna auth UID sebagai Firestore ID
                 
-                if (adminEmails.includes(email.toLowerCase())) {
-                    role = 'admin';
-                    
-                    // Buat entri khas untuk admin di kehadiran-upskk
-                    await setDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId), {
-                        email: email,
-                        name: name,
-                        role: 'super_admin',
-                        createdAt: new Date()
-                    });
-                    
-                    showNotification('Akaun ADMIN berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
-                }
-                
-                // Simpan profile pengguna di default-app-id (lokasi lama)
-                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), {
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', firestoreId, 'profile', 'data'), {
                     name, 
                     department, 
                     email,
-                    role: role,
+                    role: 'user',
                     faceDescriptor: null, 
-                    createdAt: new Date()
+                    createdAt: new Date(),
+                    authId: authUid
                 });
                 
                 showStatusMessage('Berjaya daftar! Sila daftar wajah.', 'success');
@@ -2204,7 +2136,7 @@
             }
             
             try {
-                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'profile', 'data'), 
                     { 
                         faceDescriptor: JSON.stringify(faceDescriptor), 
                         faceRegisteredAt: new Date() 
@@ -2266,7 +2198,7 @@
 
                 const now = new Date();
                 const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance', todayDateId);
 
                 await setDoc(docRef, {
                     date: now,
@@ -2323,7 +2255,7 @@
 
                 const now = new Date();
                 const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance', todayDateId);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
@@ -2409,15 +2341,13 @@
             }
 
             try {
-                // Dapatkan data dari Firebase
                 const q = query(
-                    collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+                    collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
                     where('__name__', '>=', startDateStr),
                     where('__name__', '<=', endDateStr)
                 );
                 const snap = await getDocs(q);
                 
-                // Buat peta untuk akses pantas data berdasarkan tarikh
                 const dataMap = {};
                 snap.docs.forEach(docSnap => {
                     const data = docSnap.data();
@@ -2477,13 +2407,11 @@
                 let totalHoursDecimal = 0;
                 let totalOTDecimal = 0;
                 
-                // Loop melalui setiap hari dalam julat
                 const currentDate = new Date(start);
                 while (currentDate <= end) {
                     const dateString = currentDate.toISOString().slice(0, 10);
                     const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
                     
-                    // Semak jika ada data untuk tarikh ini
                     const record = dataMap[dateString] || null;
                     
                     let clockInText = '';
@@ -2521,7 +2449,6 @@
                         }
                     }
                     
-                    // Tambah baris ke PDF
                     x = tableMarginX;
                     const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
                     
@@ -2535,7 +2462,6 @@
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
 
-                // Baris Statistik dalam jadual
                 doc.setFont('times', 'bold');
                 doc.rect(tableMarginX, y, tableWidth, rowHeight);
                 
@@ -2572,106 +2498,112 @@
                 startDateInput.value = firstDay.toISOString().split('T')[0];
                 endDateInput.value = lastDay.toISOString().split('T')[0];
                 
-                // Admin report default dates
                 document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
                 document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
                 
-                // Modal events
                 modalCancelBtn.addEventListener('click', hideModal);
                 modalOkBtn.addEventListener('click', hideModal);
                 modalOverlay.addEventListener('click', (e) => {
                     if (e.target === modalOverlay) hideModal();
                 });
                 
-                // Auth state listener
                 onAuthStateChanged(auth, async (user) => {
                     console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
                     
                     if (user) {
                         userId = user.uid;
+                        console.log('Auth UID:', userId);
                         
-                        // Check admin in kehadiran-upskk (new admin location)
+                        // Cari user profile berdasarkan email
                         try {
-                            const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-                            const adminSnap = await getDoc(adminRef);
-                            isAdmin = adminSnap.exists();
-                            console.log('Admin check:', isAdmin);
-                        } catch (error) {
-                            console.error('Error checking admin:', error);
-                            isAdmin = false;
-                        }
-                        
-                        // Show/hide admin button
-                        const adminBtn = document.getElementById('adminPanelBtn');
-                        if (adminBtn) {
-                            adminBtn.style.display = isAdmin ? 'flex' : 'none';
-                        }
-                        
-                        // Get user profile from default-app-id (old user data)
-                        const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
-                        const snap = await getDoc(userDocRef);
-                        
-                        if (snap.exists()) {
-                            userData = snap.data();
-                            console.log('User profile:', userData);
+                            const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                            const usersSnap = await getDocs(usersRef);
                             
-                            // Check face registration
-                            if (userData.faceDescriptor) {
-                                try {
-                                    JSON.parse(userData.faceDescriptor);
-                                    isFaceRegistered = true;
-                                    createFaceMatcher(userData.faceDescriptor);
-                                } catch (e) {
-                                    isFaceRegistered = false;
+                            let foundUser = null;
+                            let foundUserId = null;
+                            
+                            for (const userDoc of usersSnap.docs) {
+                                const uid = userDoc.id;
+                                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
+                                const profileSnap = await getDoc(profileRef);
+                                
+                                if (profileSnap.exists() && profileSnap.data().email === user.email) {
+                                    foundUser = profileSnap.data();
+                                    foundUserId = uid;
+                                    console.log('✅ Found user data with Firestore ID:', uid);
+                                    break;
                                 }
                             }
                             
-                            await checkTodayAttendance();
-                            
-                            // Set up attendance listener (using default-app-id for attendance data)
-                            try {
-                                const attendanceQuery = query(
-                                    collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
-                                    where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                                    where('__name__', '<=', endDateInput.value)
-                                );
+                            if (foundUser) {
+                                firestoreUserId = foundUserId;
+                                userData = foundUser;
                                 
-                                onSnapshot(attendanceQuery, 
-                                    (snap) => {
-                                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                        updateAttendanceTable(data);
-                                    },
-                                    (error) => {
-                                        console.error('Attendance listener error:', error);
-                                        if (error.code === 'permission-denied') {
-                                            console.log('Permission denied for attendance - this is normal for new users');
-                                        }
+                                // Set isAdmin berdasarkan role dalam profile
+                                isAdmin = (userData.role === 'admin');
+                                console.log('Is Admin:', isAdmin);
+                                
+                                // Show/hide admin button
+                                const adminBtn = document.getElementById('adminPanelBtn');
+                                if (adminBtn) {
+                                    adminBtn.style.display = isAdmin ? 'flex' : 'none';
+                                }
+                                
+                                // Check face registration
+                                if (userData.faceDescriptor) {
+                                    try {
+                                        JSON.parse(userData.faceDescriptor);
+                                        isFaceRegistered = true;
+                                        createFaceMatcher(userData.faceDescriptor);
+                                    } catch (e) {
+                                        isFaceRegistered = false;
                                     }
-                                );
-                            } catch (e) {
-                                console.error('Error setting up attendance listener:', e);
-                            }
-                            
-                            // Load office location
-                            await loadOfficeLocation();
-                            
-                            if (isAdmin) {
-                                loadAllUsers(); // This will now load from default-app-id
-                                loadLocationLogs();
-                            }
-                            
-                            // Show appropriate page
-                            if (!isFaceRegistered) {
-                                showPage('faceRegistrationPage');
+                                }
+                                
+                                await checkTodayAttendance();
+                                
+                                try {
+                                    const attendanceQuery = query(
+                                        collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
+                                        where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                                        where('__name__', '<=', endDateInput.value)
+                                    );
+                                    
+                                    onSnapshot(attendanceQuery, 
+                                        (snap) => {
+                                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                            updateAttendanceTable(data);
+                                        },
+                                        (error) => {
+                                            console.error('Attendance listener error:', error);
+                                        }
+                                    );
+                                } catch (e) {
+                                    console.error('Error setting up attendance listener:', e);
+                                }
+                                
+                                await loadOfficeLocation();
+                                
+                                if (isAdmin) {
+                                    loadAllUsers();
+                                    loadLocationLogs();
+                                }
+                                
+                                if (!isFaceRegistered) {
+                                    showPage('faceRegistrationPage');
+                                } else {
+                                    showPage('dashboard');
+                                    handleGeolocationCheck();
+                                }
                             } else {
-                                showPage('dashboard');
-                                handleGeolocationCheck();
+                                console.log('No user profile found for email:', user.email);
+                                showPage('faceRegistrationPage');
                             }
-                        } else {
+                        } catch (error) {
+                            console.error('Error finding user data:', error);
                             showPage('faceRegistrationPage');
                         }
                     } else {
-                        // User is logged out
                         showPage('loginPage');
                     }
                 });
@@ -2695,14 +2627,12 @@
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
             
-            // Admin panel button
             document.getElementById('adminPanelBtn').addEventListener('click', () => {
                 showPage('adminDashboard');
                 loadAllUsers();
                 loadLocationLogs();
             });
 
-            // Admin tabs
             document.querySelectorAll('.admin-tab').forEach(tab => {
                 tab.addEventListener('click', (e) => {
                     document.querySelectorAll('.admin-tab').forEach(t => {
@@ -2720,7 +2650,6 @@
                 });
             });
 
-            // Save user edit
             document.getElementById('adminSaveUserBtn').addEventListener('click', async () => {
                 const editUserId = document.getElementById('adminEditUserId').value;
                 const name = document.getElementById('adminEditName').value;
@@ -2733,14 +2662,6 @@
                         name, email, department, role
                     }, { merge: true });
                     
-                    if (role === 'admin') {
-                        await setDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', editUserId), {
-                            email, name, updatedAt: new Date()
-                        }, { merge: true });
-                    } else {
-                        await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', editUserId)).catch(() => {});
-                    }
-                    
                     hideAdminEditModal();
                     loadAllUsers();
                     showNotification('Pengguna dikemaskini', new Date().toLocaleTimeString(), 'success');
@@ -2750,13 +2671,9 @@
                 }
             });
 
-            // Save location
             document.getElementById('adminSaveLocationBtn').addEventListener('click', saveOfficeLocation);
-
-            // Admin PDF
             document.getElementById('adminGeneratePdfBtn').addEventListener('click', generateAdminPDF);
 
-            // Search users
             document.getElementById('adminSearchUser').addEventListener('input', (e) => {
                 const search = e.target.value.toLowerCase();
                 const rows = document.querySelectorAll('#adminUsersTableBody tr');
@@ -2766,10 +2683,8 @@
                 });
             });
 
-            // Refresh users
             document.getElementById('adminRefreshUsers').addEventListener('click', loadAllUsers);
             
-            // Enter key support for login
             document.getElementById('loginEmailInput')?.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') document.getElementById('loginPasswordInput')?.focus();
             });
@@ -2778,7 +2693,6 @@
                 if (e.key === 'Enter') window.handleEmailLogin();
             });
             
-            // Real-time clock
             setInterval(() => {
                 const now = new Date();
                 realTimeClock.textContent = now.toLocaleTimeString('ms-MY', { 
@@ -2789,10 +2703,8 @@
                 });
             }, 1000);
             
-            // Fix scroll on load
             setTimeout(() => window.scrollTo(0, 0), 100);
             
-            // Handle screen orientation changes
             if (window.screen && window.screen.orientation) {
                 window.screen.orientation.addEventListener('change', () => {
                     setTimeout(() => {
@@ -2808,24 +2720,6 @@
                 });
             }
         });
-        
-        // Handle Firebase errors
-        function handleFirebaseError(error, defaultMessage = 'Ralat berlaku') {
-            console.error('Firebase Error:', error);
-            
-            if (error.code === 'permission-denied') {
-                showModal('Kebenaran Dinafikan', 'Anda tidak mempunyai kebenaran untuk mengakses data ini. Sila log masuk semula.', 'error');
-                return 'Kebenaran dinafikan';
-            }
-            
-            if (error.code === 'unavailable') {
-                showModal('Ralat Rangkaian', 'Sila semak sambungan internet anda.', 'error');
-                return 'Ralat rangkaian';
-            }
-            
-            showModal('Ralat', defaultMessage, 'error');
-            return defaultMessage;
-        }
     </script>
 </body>
 </html>
