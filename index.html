@@ -660,7 +660,7 @@
                 <div id="statusMessage" class="message-box hidden"></div>
                 
                 <!-- Login Page -->
-                <div id="loginPage" class="hidden">
+                <div id="loginPage">
                     <div class="card max-w-md mx-auto">
                         <div class="text-center mb-6">
                             <div class="inline-flex items-center justify-center bg-blue-600 text-white rounded-full w-16 h-16 mb-4">
@@ -1110,7 +1110,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = 'default-app-id';
         
         // Default office coordinates (will be updated from config)
         let officeCoordinates = {
@@ -1391,7 +1390,7 @@
             if (!userId) return;
             
             const todayDateId = getCurrentDateLocal();
-            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+            const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
             const docSnap = await getDoc(docRef);
             
             if (docSnap.exists()) {
@@ -1593,490 +1592,515 @@
         }
 
         // ========== ADMIN FUNCTIONS ==========
-// ========== ADMIN FUNCTIONS ==========
-async function loadOfficeLocation() {
-    try {
-        // Try to load from kehadiran-upskk first (new config)
-        const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
-        const configSnap = await getDoc(configRef);
-        
-        if (configSnap.exists()) {
-            officeConfig = configSnap.data();
-            document.getElementById('adminLatitude').value = officeConfig.latitude;
-            document.getElementById('adminLongitude').value = officeConfig.longitude;
-            document.getElementById('adminTolerance').value = officeConfig.tolerance;
-            
-            officeCoordinates = {
-                latitude: officeConfig.latitude,
-                longitude: officeConfig.longitude
-            };
-            locationTolerance = officeConfig.tolerance;
-            console.log('Loaded office config from kehadiran-upskk');
-        } else {
-            // Use defaults
-            console.log('Using default office config');
-        }
-    } catch (error) {
-        console.error('Error loading config:', error);
-    }
-}
-
-async function saveOfficeLocation() {
-    const latitude = parseFloat(document.getElementById('adminLatitude').value);
-    const longitude = parseFloat(document.getElementById('adminLongitude').value);
-    const tolerance = parseInt(document.getElementById('adminTolerance').value);
-    
-    if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
-        showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
-        return;
-    }
-    
-    try {
-        // Save to kehadiran-upskk (new config location)
-        const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
-        await setDoc(configRef, {
-            latitude,
-            longitude,
-            tolerance,
-            updatedBy: userId,
-            updatedAt: new Date()
-        }, { merge: true });
-        
-        // Save log
-        try {
-            const logRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
-            await addDoc(logRef, {
-                latitude,
-                longitude,
-                tolerance,
-                updatedBy: userId,
-                updatedAt: new Date()
-            });
-        } catch (logError) {
-            console.error('Error saving log:', logError);
-        }
-        
-        // Update global
-        officeCoordinates = { latitude, longitude };
-        locationTolerance = tolerance;
-        
-        showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
-        loadLocationLogs();
-    } catch (error) {
-        console.error('Error saving location:', error);
-        showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
-    }
-}
-
-async function loadLocationLogs() {
-    try {
-        const logsRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
-        const logsSnap = await getDocs(logsRef);
-        
-        const tbody = document.getElementById('adminLocationLogBody');
-        tbody.innerHTML = '';
-        
-        if (logsSnap.empty) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
-            return;
-        }
-        
-        const sortedLogs = logsSnap.docs.sort((a, b) => {
-            const dateA = a.data().updatedAt?.toDate() || new Date(0);
-            const dateB = b.data().updatedAt?.toDate() || new Date(0);
-            return dateB - dateA;
-        });
-        
-        sortedLogs.forEach(logDoc => {
-            const log = logDoc.data();
-            const row = document.createElement('tr');
-            const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
-            const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
-            
-            row.innerHTML = `
-                <td>${updatedAt}</td>
-                <td>${latLng}</td>
-                <td>${log.tolerance || 1500}m</td>
-                <td>${log.updatedBy || '-'}</td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-    } catch (error) {
-        console.error('Error loading logs:', error);
-        const tbody = document.getElementById('adminLocationLogBody');
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
-    }
-}
-
-// Debug function to check admin status
-async function checkAdminStatus() {
-    try {
-        const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-        const adminSnap = await getDoc(adminRef);
-        console.log('Admin document exists:', adminSnap.exists());
-        if (adminSnap.exists()) {
-            console.log('Admin data:', adminSnap.data());
-        }
-        
-        // Try to access users collection
-        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-        const testQuery = await getDocs(usersRef);
-        console.log('Can access users:', !testQuery.empty);
-        
-    } catch (error) {
-        console.error('Admin check error:', error);
-    }
-}
-
-async function loadAllUsers() {
-    if (!isAdmin) {
-        console.log('Not admin, cannot load users');
-        return;
-    }
-    
-    console.log('Loading users from default-app-id...');
-    
-    try {
-        // Get all user IDs from the users collection
-        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-        const usersSnap = await getDocs(usersRef);
-        
-        console.log(`Found ${usersSnap.size} user IDs in default-app-id/users`);
-        
-        allUsers = [];
-        const tbody = document.getElementById('adminUsersTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>';
-        
-        for (const userDoc of usersSnap.docs) {
-            const uid = userDoc.id;
-            
-            // Get profile data from /users/{uid}/profile/data
+        async function loadOfficeLocation() {
             try {
-                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
-                const profileSnap = await getDoc(profileRef);
+                // Try to load from kehadiran-upskk first (new config)
+                const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+                const configSnap = await getDoc(configRef);
                 
-                if (profileSnap.exists()) {
-                    const userData = profileSnap.data();
-                    allUsers.push({
-                        id: uid,
-                        name: userData.name || 'Tiada nama',
-                        email: userData.email || 'Tiada email',
-                        department: userData.department || 'Tiada',
-                        role: userData.role || 'user',
-                        faceDescriptor: userData.faceDescriptor,
-                        createdAt: userData.createdAt,
-                        faceRegisteredAt: userData.faceRegisteredAt
-                    });
-                    console.log(`✅ Loaded user: ${userData.name || uid}`);
+                if (configSnap.exists()) {
+                    officeConfig = configSnap.data();
+                    document.getElementById('adminLatitude').value = officeConfig.latitude;
+                    document.getElementById('adminLongitude').value = officeConfig.longitude;
+                    document.getElementById('adminTolerance').value = officeConfig.tolerance;
+                    
+                    officeCoordinates = {
+                        latitude: officeConfig.latitude,
+                        longitude: officeConfig.longitude
+                    };
+                    locationTolerance = officeConfig.tolerance;
+                    console.log('Loaded office config from kehadiran-upskk');
                 } else {
-                    // If no profile data, still add user with basic info
-                    allUsers.push({
-                        id: uid,
-                        name: 'Tiada profil',
-                        email: 'tiada@email.com',
-                        department: '-',
-                        role: 'user',
-                        faceDescriptor: null
-                    });
-                    console.log(`⚠️ User ${uid} has no profile data`);
+                    // Use defaults
+                    console.log('Using default office config');
                 }
-            } catch (e) {
-                console.error(`Error loading profile for ${uid}:`, e);
+            } catch (error) {
+                console.error('Error loading config:', error);
             }
         }
-        
-        console.log(`Total users loaded: ${allUsers.length}`);
-        
-        if (allUsers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-yellow-500">Tiada pengguna dijumpai</td></tr>';
-        } else {
-            renderUsersTable();
-            updateAdminStats();
-        }
-        
-    } catch (error) {
-        console.error('Error loading users:', error);
-        const tbody = document.getElementById('adminUsersTableBody');
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-            Error: ${error.message}
-        </td></tr>`;
-    }
-}
 
-function renderUsersTable() {
-    const tbody = document.getElementById('adminUsersTableBody');
-    tbody.innerHTML = '';
-    
-    allUsers.forEach(user => {
-        const row = document.createElement('tr');
-        const faceStatus = user.faceDescriptor ? 
-            '<span class="status-badge success">Didaftar</span>' : 
-            '<span class="status-badge warning">Belum</span>';
-        
-        row.innerHTML = `
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td>${user.department}</td>
-            <td><span class="status-badge ${user.role === 'admin' ? 'success' : ''}">${user.role}</span></td>
-            <td>${faceStatus}</td>
-            <td>
-                <button class="text-blue-400 hover:text-blue-300 mx-1" onclick="window.editUser('${user.id}')">
-                    <span class="material-symbols-outlined text-sm">edit</span>
-                </button>
-                <button class="text-red-400 hover:text-red-300 mx-1" onclick="window.deleteUser('${user.id}')">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                </button>
-                <button class="text-green-400 hover:text-green-300 mx-1" onclick="window.resetUserFace('${user.id}')">
-                    <span class="material-symbols-outlined text-sm">face</span>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-function updateAdminStats() {
-    const total = allUsers.length;
-    const faceRegistered = allUsers.filter(u => u.faceDescriptor).length;
-    
-    document.getElementById('adminTotalUsers').textContent = total;
-    document.getElementById('adminFaceRegistered').textContent = faceRegistered;
-    
-    // Isi dropdown laporan
-    const select = document.getElementById('adminReportUserSelect');
-    select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
-    allUsers.forEach(user => {
-        select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
-    });
-}
-
-// Fungsi untuk test kebenaran admin
-async function testAdminPermissions() {
-    console.log('Testing admin permissions...');
-    console.log('Current user:', auth.currentUser?.uid);
-    console.log('Is admin flag:', isAdmin);
-    
-    try {
-        // Test 1: Check admin document
-        const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-        const adminSnap = await getDoc(adminRef);
-        console.log('Admin doc exists:', adminSnap.exists());
-        console.log('Admin doc data:', adminSnap.data());
-        
-        // Test 2: Try to read users collection
-        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-        const usersSnap = await getDocs(usersRef);
-        console.log('Can read users collection:', !usersSnap.empty);
-        console.log('Number of users:', usersSnap.size);
-        
-        // Test 3: Try to read a specific user's profile
-        if (!usersSnap.empty) {
-            const firstUser = usersSnap.docs[0];
-            const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', firstUser.id, 'profile', 'data');
-            const profileSnap = await getDoc(profileRef);
-            console.log('Can read user profile:', profileSnap.exists());
-        }
-        
-        showNotification('Test selesai - lihat console', new Date().toLocaleTimeString(), 'success');
-        
-    } catch (error) {
-        console.error('Permission test failed:', error);
-        showModal('Test Gagal', error.message, 'error');
-    }
-}
-
-window.editUser = function(userId) {
-    const user = allUsers.find(u => u.id === userId);
-    if (!user) return;
-    
-    document.getElementById('adminEditUserId').value = userId;
-    document.getElementById('adminEditName').value = user.name || '';
-    document.getElementById('adminEditEmail').value = user.email || '';
-    document.getElementById('adminEditDepartment').value = user.department || '';
-    document.getElementById('adminEditRole').value = user.role || 'user';
-    
-    document.getElementById('adminEditUserModal').style.display = 'flex';
-};
-
-window.hideAdminEditModal = function() {
-    document.getElementById('adminEditUserModal').style.display = 'none';
-};
-
-window.deleteUser = async function(userId) {
-    if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
-    
-    try {
-        // Delete profile data
-        await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
-        
-        // Delete all attendance records
-        const attendanceRef = collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance');
-        const attendanceSnap = await getDocs(attendanceRef);
-        
-        const deletePromises = attendanceSnap.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
-        
-        // If admin, delete admin record from kehadiran-upskk
-        try {
-            await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId));
-        } catch (e) {
-            // Ignore if not exists
-        }
-        
-        showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
-        loadAllUsers();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showModal('Ralat', 'Gagal memadam pengguna: ' + error.message, 'error');
-    }
-};
-
-window.resetUserFace = async function(userId) {
-    if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
-    
-    try {
-        await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
-            { faceDescriptor: null }, { merge: true });
-        showNotification('Wajah direset', new Date().toLocaleTimeString(), 'success');
-        loadAllUsers();
-    } catch (error) {
-        console.error('Error resetting face:', error);
-        showModal('Ralat', 'Gagal reset wajah: ' + error.message, 'error');
-    }
-};
-
-async function generateAdminPDF() {
-    const startDate = document.getElementById('adminReportStartDate').value;
-    const endDate = document.getElementById('adminReportEndDate').value;
-    const selectedUser = document.getElementById('adminReportUserSelect').value;
-    
-    if (!startDate || !endDate) {
-        showModal('Ralat', 'Sila pilih tarikh', 'error');
-        return;
-    }
-    
-    try {
-        const doc = new jsPDF({
-            format: 'a4',
-            unit: 'mm'
-        });
-        
-        let allData = [];
-        
-        if (selectedUser === 'all') {
-            // Loop semua pengguna
-            for (const user of allUsers) {
-                const q = query(
-                    collection(db, 'artifacts', 'default-app-id', 'users', user.id, 'attendance'),
-                    where('__name__', '>=', startDate),
-                    where('__name__', '<=', endDate)
-                );
-                const snap = await getDocs(q);
-                
-                snap.docs.forEach(docSnap => {
-                    allData.push({
-                        userName: user.name,
-                        department: user.department,
-                        date: docSnap.id,
-                        ...docSnap.data()
-                    });
-                });
-            }
-        } else {
-            const q = query(
-                collection(db, 'artifacts', 'default-app-id', 'users', selectedUser, 'attendance'),
-                where('__name__', '>=', startDate),
-                where('__name__', '<=', endDate)
-            );
-            const snap = await getDocs(q);
-            const user = allUsers.find(u => u.id === selectedUser);
+        async function saveOfficeLocation() {
+            const latitude = parseFloat(document.getElementById('adminLatitude').value);
+            const longitude = parseFloat(document.getElementById('adminLongitude').value);
+            const tolerance = parseInt(document.getElementById('adminTolerance').value);
             
-            snap.docs.forEach(docSnap => {
-                allData.push({
-                    userName: user?.name || 'Unknown',
-                    department: user?.department || '-',
-                    date: docSnap.id,
-                    ...docSnap.data()
+            if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
+                showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
+                return;
+            }
+            
+            try {
+                // Save to kehadiran-upskk (new config location)
+                const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+                await setDoc(configRef, {
+                    latitude,
+                    longitude,
+                    tolerance,
+                    updatedBy: userId,
+                    updatedAt: new Date()
+                }, { merge: true });
+                
+                // Save log
+                try {
+                    const logRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
+                    await addDoc(logRef, {
+                        latitude,
+                        longitude,
+                        tolerance,
+                        updatedBy: userId,
+                        updatedAt: new Date()
+                    });
+                } catch (logError) {
+                    console.error('Error saving log:', logError);
+                }
+                
+                // Update global
+                officeCoordinates = { latitude, longitude };
+                locationTolerance = tolerance;
+                
+                showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
+                loadLocationLogs();
+            } catch (error) {
+                console.error('Error saving location:', error);
+                showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
+            }
+        }
+
+        async function loadLocationLogs() {
+            try {
+                const logsRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
+                const logsSnap = await getDocs(logsRef);
+                
+                const tbody = document.getElementById('adminLocationLogBody');
+                tbody.innerHTML = '';
+                
+                if (logsSnap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
+                    return;
+                }
+                
+                const sortedLogs = logsSnap.docs.sort((a, b) => {
+                    const dateA = a.data().updatedAt?.toDate() || new Date(0);
+                    const dateB = b.data().updatedAt?.toDate() || new Date(0);
+                    return dateB - dateA;
                 });
+                
+                sortedLogs.forEach(logDoc => {
+                    const log = logDoc.data();
+                    const row = document.createElement('tr');
+                    const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
+                    const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
+                    
+                    row.innerHTML = `
+                        <td>${updatedAt}</td>
+                        <td>${latLng}</td>
+                        <td>${log.tolerance || 1500}m</td>
+                        <td>${log.updatedBy || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                const tbody = document.getElementById('adminLocationLogBody');
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
+            }
+        }
+
+        // Debug function to check admin status
+        async function checkAdminStatus() {
+            try {
+                const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+                const adminSnap = await getDoc(adminRef);
+                console.log('Admin document exists:', adminSnap.exists());
+                if (adminSnap.exists()) {
+                    console.log('Admin data:', adminSnap.data());
+                }
+                
+                // Try to access users collection
+                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                const testQuery = await getDocs(usersRef);
+                console.log('Can access users:', !testQuery.empty);
+                
+            } catch (error) {
+                console.error('Admin check error:', error);
+            }
+        }
+
+        async function loadAllUsers() {
+            if (!isAdmin) {
+                console.log('Not admin, cannot load users');
+                return;
+            }
+            
+            console.log('Loading users from default-app-id/users...');
+            
+            try {
+                // Get all user documents from users collection
+                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                const usersSnap = await getDocs(usersRef);
+                
+                console.log(`Found ${usersSnap.size} user documents in default-app-id/users`);
+                
+                allUsers = [];
+                const tbody = document.getElementById('adminUsersTableBody');
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>';
+                
+                for (const userDoc of usersSnap.docs) {
+                    const uid = userDoc.id;
+                    
+                    // Get profile data from /users/{uid}/profile/data
+                    try {
+                        const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
+                        const profileSnap = await getDoc(profileRef);
+                        
+                        if (profileSnap.exists()) {
+                            const userData = profileSnap.data();
+                            allUsers.push({
+                                id: uid,
+                                name: userData.name || 'Tiada nama',
+                                email: userData.email || 'Tiada email',
+                                department: userData.department || 'Tiada',
+                                role: userData.role || 'user',
+                                faceDescriptor: userData.faceDescriptor,
+                                createdAt: userData.createdAt,
+                                faceRegisteredAt: userData.faceRegisteredAt
+                            });
+                            console.log(`✅ Loaded user: ${userData.name || uid}`);
+                        } else {
+                            // If no profile data, use the user document data
+                            allUsers.push({
+                                id: uid,
+                                name: userDoc.data().name || 'Tiada nama',
+                                email: userDoc.data().email || 'Tiada email',
+                                department: userDoc.data().department || 'Tiada',
+                                role: userDoc.data().role || 'user',
+                                faceDescriptor: null
+                            });
+                            console.log(`⚠️ No profile data for user ${uid}, using document data`);
+                        }
+                    } catch (e) {
+                        console.error(`Error loading profile for ${uid}:`, e);
+                        // Add user with basic info from document
+                        allUsers.push({
+                            id: uid,
+                            name: userDoc.data().name || 'Tiada nama',
+                            email: userDoc.data().email || 'Tiada email',
+                            department: userDoc.data().department || 'Tiada',
+                            role: userDoc.data().role || 'user',
+                            faceDescriptor: null
+                        });
+                    }
+                }
+                
+                console.log(`Total users loaded: ${allUsers.length}`);
+                
+                if (allUsers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-yellow-500">Tiada pengguna dijumpai</td></tr>';
+                } else {
+                    renderUsersTable();
+                    updateAdminStats();
+                }
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                const tbody = document.getElementById('adminUsersTableBody');
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
+                    Error: ${error.message}
+                </td></tr>`;
+            }
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('adminUsersTableBody');
+            tbody.innerHTML = '';
+            
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                const faceStatus = user.faceDescriptor ? 
+                    '<span class="status-badge success">Didaftar</span>' : 
+                    '<span class="status-badge warning">Belum</span>';
+                
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.department}</td>
+                    <td><span class="status-badge ${user.role === 'admin' ? 'success' : ''}">${user.role}</span></td>
+                    <td>${faceStatus}</td>
+                    <td>
+                        <button class="text-blue-400 hover:text-blue-300 mx-1" onclick="window.editUser('${user.id}')">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button class="text-red-400 hover:text-red-300 mx-1" onclick="window.deleteUser('${user.id}')">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                        <button class="text-green-400 hover:text-green-300 mx-1" onclick="window.resetUserFace('${user.id}')">
+                            <span class="material-symbols-outlined text-sm">face</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
             });
         }
-        
-        // Generate PDF
-        let y = 20;
-        doc.setFontSize(16);
-        doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
-        
-        y += 10;
-        doc.setFontSize(10);
-        doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
-        y += 5;
-        doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
-        
-        y += 10;
-        
-        // Table headers
-        const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
-        const colWidths = [40, 30, 30, 25, 25, 20, 20];
-        
-        doc.setFont('helvetica', 'bold');
-        let x = 20;
-        headers.forEach((header, i) => {
-            doc.rect(x, y, colWidths[i], 8);
-            doc.text(header, x + 2, y + 5);
-            x += colWidths[i];
-        });
-        
-        y += 8;
-        doc.setFont('helvetica', 'normal');
-        
-        allData.sort((a, b) => a.date.localeCompare(b.date));
-        
-        allData.forEach(item => {
-            if (y > 280) {
-                doc.addPage();
-                y = 20;
+
+        function updateAdminStats() {
+            const total = allUsers.length;
+            const faceRegistered = allUsers.filter(u => u.faceDescriptor).length;
+            
+            document.getElementById('adminTotalUsers').textContent = total;
+            document.getElementById('adminFaceRegistered').textContent = faceRegistered;
+            
+            // Isi dropdown laporan
+            const select = document.getElementById('adminReportUserSelect');
+            select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
+            allUsers.forEach(user => {
+                select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
+            });
+        }
+
+        // Fungsi untuk test kebenaran admin
+        async function testAdminPermissions() {
+            console.log('Testing admin permissions...');
+            console.log('Current user:', auth.currentUser?.uid);
+            console.log('Is admin flag:', isAdmin);
+            
+            try {
+                // Test 1: Check admin document
+                const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+                const adminSnap = await getDoc(adminRef);
+                console.log('Admin doc exists:', adminSnap.exists());
+                console.log('Admin doc data:', adminSnap.data());
                 
-                // Redraw headers on new page
-                x = 20;
+                // Test 2: Try to read users collection
+                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                const usersSnap = await getDocs(usersRef);
+                console.log('Can read users collection:', !usersSnap.empty);
+                console.log('Number of users:', usersSnap.size);
+                
+                // Test 3: Try to read a specific user's profile
+                if (!usersSnap.empty) {
+                    const firstUser = usersSnap.docs[0];
+                    const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', firstUser.id, 'profile', 'data');
+                    const profileSnap = await getDoc(profileRef);
+                    console.log('Can read user profile:', profileSnap.exists());
+                }
+                
+                showNotification('Test selesai - lihat console', new Date().toLocaleTimeString(), 'success');
+                
+            } catch (error) {
+                console.error('Permission test failed:', error);
+                showModal('Test Gagal', error.message, 'error');
+            }
+        }
+
+        window.editUser = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            document.getElementById('adminEditUserId').value = userId;
+            document.getElementById('adminEditName').value = user.name || '';
+            document.getElementById('adminEditEmail').value = user.email || '';
+            document.getElementById('adminEditDepartment').value = user.department || '';
+            document.getElementById('adminEditRole').value = user.role || 'user';
+            
+            document.getElementById('adminEditUserModal').style.display = 'flex';
+        };
+
+        window.hideAdminEditModal = function() {
+            document.getElementById('adminEditUserModal').style.display = 'none';
+        };
+
+        window.deleteUser = async function(userId) {
+            if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
+            
+            try {
+                // Delete profile data
+                await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
+                
+                // Delete all attendance records
+                const attendanceRef = collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance');
+                const attendanceSnap = await getDocs(attendanceRef);
+                
+                const deletePromises = attendanceSnap.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+                
+                // Delete user document
+                await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId));
+                
+                // If admin, delete admin record from kehadiran-upskk
+                try {
+                    await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId));
+                } catch (e) {
+                    // Ignore if not exists
+                }
+                
+                showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
+                loadAllUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showModal('Ralat', 'Gagal memadam pengguna: ' + error.message, 'error');
+            }
+        };
+
+        window.resetUserFace = async function(userId) {
+            if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
+            
+            try {
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
+                    { faceDescriptor: null }, { merge: true });
+                showNotification('Wajah direset', new Date().toLocaleTimeString(), 'success');
+                loadAllUsers();
+            } catch (error) {
+                console.error('Error resetting face:', error);
+                showModal('Ralat', 'Gagal reset wajah: ' + error.message, 'error');
+            }
+        };
+
+        async function generateAdminPDF() {
+            const startDate = document.getElementById('adminReportStartDate').value;
+            const endDate = document.getElementById('adminReportEndDate').value;
+            const selectedUser = document.getElementById('adminReportUserSelect').value;
+            
+            if (!startDate || !endDate) {
+                showModal('Ralat', 'Sila pilih tarikh', 'error');
+                return;
+            }
+            
+            try {
+                const doc = new jsPDF({
+                    format: 'a4',
+                    unit: 'mm'
+                });
+                
+                let allData = [];
+                
+                if (selectedUser === 'all') {
+                    // Loop semua pengguna
+                    for (const user of allUsers) {
+                        const q = query(
+                            collection(db, 'artifacts', 'default-app-id', 'users', user.id, 'attendance'),
+                            where('__name__', '>=', startDate),
+                            where('__name__', '<=', endDate)
+                        );
+                        const snap = await getDocs(q);
+                        
+                        snap.docs.forEach(docSnap => {
+                            const data = docSnap.data();
+                            allData.push({
+                                userName: user.name,
+                                department: user.department,
+                                date: docSnap.id,
+                                clockIn: data.clockIn,
+                                clockOut: data.clockOut,
+                                totalHours: data.totalHours,
+                                totalOT: data.totalOT
+                            });
+                        });
+                    }
+                } else {
+                    const q = query(
+                        collection(db, 'artifacts', 'default-app-id', 'users', selectedUser, 'attendance'),
+                        where('__name__', '>=', startDate),
+                        where('__name__', '<=', endDate)
+                    );
+                    const snap = await getDocs(q);
+                    const user = allUsers.find(u => u.id === selectedUser);
+                    
+                    snap.docs.forEach(docSnap => {
+                        const data = docSnap.data();
+                        allData.push({
+                            userName: user?.name || 'Unknown',
+                            department: user?.department || '-',
+                            date: docSnap.id,
+                            clockIn: data.clockIn,
+                            clockOut: data.clockOut,
+                            totalHours: data.totalHours,
+                            totalOT: data.totalOT
+                        });
+                    });
+                }
+                
+                // Generate PDF
+                let y = 20;
+                doc.setFontSize(16);
+                doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
+                
+                y += 10;
+                doc.setFontSize(10);
+                doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
+                y += 5;
+                doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
+                
+                y += 10;
+                
+                // Table headers
+                const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
+                const colWidths = [40, 30, 30, 25, 25, 20, 20];
+                
                 doc.setFont('helvetica', 'bold');
+                let x = 20;
                 headers.forEach((header, i) => {
                     doc.rect(x, y, colWidths[i], 8);
                     doc.text(header, x + 2, y + 5);
                     x += colWidths[i];
                 });
+                
                 y += 8;
                 doc.setFont('helvetica', 'normal');
+                
+                allData.sort((a, b) => a.date.localeCompare(b.date));
+                
+                allData.forEach(item => {
+                    if (y > 280) {
+                        doc.addPage();
+                        y = 20;
+                        
+                        // Redraw headers on new page
+                        x = 20;
+                        doc.setFont('helvetica', 'bold');
+                        headers.forEach((header, i) => {
+                            doc.rect(x, y, colWidths[i], 8);
+                            doc.text(header, x + 2, y + 5);
+                            x += colWidths[i];
+                        });
+                        y += 8;
+                        doc.setFont('helvetica', 'normal');
+                    }
+                    
+                    x = 20;
+                    
+                    const clockInTime = item.clockIn ? item.clockIn.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const clockOutTime = item.clockOut ? item.clockOut.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const totalHours = item.totalHours ? item.totalHours.toFixed(1) : '-';
+                    const totalOT = item.totalOT ? item.totalOT.toFixed(1) : '-';
+                    
+                    const rowData = [
+                        item.userName?.substring(0, 15) || '-',
+                        item.department?.substring(0, 10) || '-',
+                        item.date,
+                        clockInTime,
+                        clockOutTime,
+                        totalHours,
+                        totalOT
+                    ];
+                    
+                    rowData.forEach((text, i) => {
+                        doc.rect(x, y, colWidths[i], 8);
+                        doc.text(text.toString(), x + 2, y + 5);
+                        x += colWidths[i];
+                    });
+                    
+                    y += 8;
+                });
+                
+                doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
+                showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
+                
+            } catch (error) {
+                console.error('Admin PDF error:', error);
+                showModal('Ralat', 'Gagal menjana laporan', 'error');
             }
-            
-            x = 20;
-            const rowData = [
-                item.userName?.substring(0, 15) || '-',
-                item.department?.substring(0, 10) || '-',
-                item.date,
-                item.clockIn?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
-                item.clockOut?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
-                item.totalHours ? item.totalHours.toFixed(1) : '-',
-                item.totalOT ? item.totalOT.toFixed(1) : '-'
-            ];
-            
-            rowData.forEach((text, i) => {
-                doc.rect(x, y, colWidths[i], 8);
-                doc.text(text.toString(), x + 2, y + 5);
-                x += colWidths[i];
-            });
-            
-            y += 8;
-        });
-        
-        doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
-        showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
-        
-    } catch (error) {
-        console.error('Admin PDF error:', error);
-        showModal('Ralat', 'Gagal menjana laporan', 'error');
-    }
-}
+        }
 
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
@@ -2106,8 +2130,8 @@ async function generateAdminPDF() {
                 if (adminEmails.includes(email.toLowerCase())) {
                     role = 'admin';
                     
-                    // Buat entri khas untuk admin
-                    await setDoc(doc(db, 'artifacts', appId, 'admin', userId), {
+                    // Buat entri khas untuk admin di kehadiran-upskk
+                    await setDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId), {
                         email: email,
                         name: name,
                         role: 'super_admin',
@@ -2117,7 +2141,8 @@ async function generateAdminPDF() {
                     showNotification('Akaun ADMIN berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
                 }
                 
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
+                // Simpan profile pengguna di default-app-id (lokasi lama)
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), {
                     name, 
                     department, 
                     email,
@@ -2218,7 +2243,7 @@ async function generateAdminPDF() {
             }
             
             try {
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), 
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
                     { 
                         faceDescriptor: JSON.stringify(faceDescriptor), 
                         faceRegisteredAt: new Date() 
@@ -2280,7 +2305,7 @@ async function generateAdminPDF() {
 
                 const now = new Date();
                 const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
 
                 await setDoc(docRef, {
                     date: now,
@@ -2337,7 +2362,7 @@ async function generateAdminPDF() {
 
                 const now = new Date();
                 const todayDateId = getCurrentDateLocal();
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'attendance', todayDateId);
+                const docRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance', todayDateId);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists() && docSnap.data().clockIn && !docSnap.data().clockOut) {
@@ -2425,7 +2450,7 @@ async function generateAdminPDF() {
             try {
                 // Dapatkan data dari Firebase
                 const q = query(
-                    collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+                    collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
                     where('__name__', '>=', startDateStr),
                     where('__name__', '<=', endDateStr)
                 );
@@ -2573,116 +2598,117 @@ async function generateAdminPDF() {
             }
         };
 
-// ========== INITIALIZATION ==========
-window.onload = async function() {
-    try {
-        await loadFaceModels();
-        
-        // Set default dates
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        
-        startDateInput.value = firstDay.toISOString().split('T')[0];
-        endDateInput.value = lastDay.toISOString().split('T')[0];
-        
-        // Admin report default dates
-        document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
-        
-        // Modal events
-        modalCancelBtn.addEventListener('click', hideModal);
-        modalOkBtn.addEventListener('click', hideModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) hideModal();
-        });
-        
-        // Auth state listener
-        onAuthStateChanged(auth, async (user) => {
-            console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
-            
-            if (user) {
-                userId = user.uid;
+        // ========== INITIALIZATION ==========
+        window.onload = async function() {
+            try {
+                await loadFaceModels();
                 
-                // Check admin in kehadiran-upskk (new admin location)
-                try {
-                    const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-                    const adminSnap = await getDoc(adminRef);
-                    isAdmin = adminSnap.exists();
-                    console.log('Admin check:', isAdmin);
-                } catch (error) {
-                    console.error('Error checking admin:', error);
-                    isAdmin = false;
-                }
+                // Set default dates
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                 
-                // Show/hide admin button
-                const adminBtn = document.getElementById('adminPanelBtn');
-                if (adminBtn) {
-                    adminBtn.style.display = isAdmin ? 'flex' : 'none';
-                }
+                startDateInput.value = firstDay.toISOString().split('T')[0];
+                endDateInput.value = lastDay.toISOString().split('T')[0];
                 
-                // Get user profile from default-app-id (old user data)
-                const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
-                const snap = await getDoc(userDocRef);
+                // Admin report default dates
+                document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
                 
-                if (snap.exists()) {
-                    userData = snap.data();
-                    console.log('User profile:', userData);
+                // Modal events
+                modalCancelBtn.addEventListener('click', hideModal);
+                modalOkBtn.addEventListener('click', hideModal);
+                modalOverlay.addEventListener('click', (e) => {
+                    if (e.target === modalOverlay) hideModal();
+                });
+                
+                // Auth state listener
+                onAuthStateChanged(auth, async (user) => {
+                    console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
                     
-                    // Check face registration
-                    if (userData.faceDescriptor) {
+                    if (user) {
+                        userId = user.uid;
+                        
+                        // Check admin in kehadiran-upskk (new admin location)
                         try {
-                            JSON.parse(userData.faceDescriptor);
-                            isFaceRegistered = true;
-                            createFaceMatcher(userData.faceDescriptor);
-                        } catch (e) {
-                            isFaceRegistered = false;
+                            const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+                            const adminSnap = await getDoc(adminRef);
+                            isAdmin = adminSnap.exists();
+                            console.log('Admin check:', isAdmin);
+                        } catch (error) {
+                            console.error('Error checking admin:', error);
+                            isAdmin = false;
                         }
-                    }
-                    
-                    await checkTodayAttendance();
-                    
-                    // Set up attendance listener (using default-app-id for attendance data)
-                    const q = query(
-                        collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
-                        where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                        where('__name__', '<=', endDateInput.value)
-                    );
-                    
-                    onSnapshot(q, snap => {
-                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        updateAttendanceTable(data);
-                    });
-                    
-                    // Load office location
-                    await loadOfficeLocation();
-                    
-                    if (isAdmin) {
-                        loadAllUsers(); // This will now load from default-app-id
-                        loadLocationLogs();
-                    }
-                    
-                    // Show appropriate page
-                    if (!isFaceRegistered) {
-                        showPage('faceRegistrationPage');
+                        
+                        // Show/hide admin button
+                        const adminBtn = document.getElementById('adminPanelBtn');
+                        if (adminBtn) {
+                            adminBtn.style.display = isAdmin ? 'flex' : 'none';
+                        }
+                        
+                        // Get user profile from default-app-id (old user data)
+                        const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                        const snap = await getDoc(userDocRef);
+                        
+                        if (snap.exists()) {
+                            userData = snap.data();
+                            console.log('User profile:', userData);
+                            
+                            // Check face registration
+                            if (userData.faceDescriptor) {
+                                try {
+                                    JSON.parse(userData.faceDescriptor);
+                                    isFaceRegistered = true;
+                                    createFaceMatcher(userData.faceDescriptor);
+                                } catch (e) {
+                                    isFaceRegistered = false;
+                                }
+                            }
+                            
+                            await checkTodayAttendance();
+                            
+                            // Set up attendance listener (using default-app-id for attendance data)
+                            const q = query(
+                                collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+                                where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                                where('__name__', '<=', endDateInput.value)
+                            );
+                            
+                            onSnapshot(q, snap => {
+                                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                updateAttendanceTable(data);
+                            });
+                            
+                            // Load office location
+                            await loadOfficeLocation();
+                            
+                            if (isAdmin) {
+                                loadAllUsers(); // This will now load from default-app-id
+                                loadLocationLogs();
+                            }
+                            
+                            // Show appropriate page
+                            if (!isFaceRegistered) {
+                                showPage('faceRegistrationPage');
+                            } else {
+                                showPage('dashboard');
+                                handleGeolocationCheck();
+                            }
+                        } else {
+                            showPage('faceRegistrationPage');
+                        }
                     } else {
-                        showPage('dashboard');
-                        handleGeolocationCheck();
+                        // User is logged out
+                        showPage('loginPage');
                     }
-                } else {
-                    showPage('faceRegistrationPage');
-                }
-            } else {
-                // User is logged out
+                });
+                
+            } catch (error) {
+                console.error('Init error:', error);
                 showPage('loginPage');
             }
-        }); // <-- Close onAuthStateChanged
-        
-    } catch (error) {
-        console.error('Init error:', error);
-        showPage('loginPage');
-    }
-};
+        };
+
         // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
@@ -2723,30 +2749,31 @@ window.onload = async function() {
 
             // Save user edit
             document.getElementById('adminSaveUserBtn').addEventListener('click', async () => {
-                const userId = document.getElementById('adminEditUserId').value;
+                const editUserId = document.getElementById('adminEditUserId').value;
                 const name = document.getElementById('adminEditName').value;
                 const email = document.getElementById('adminEditEmail').value;
                 const department = document.getElementById('adminEditDepartment').value;
                 const role = document.getElementById('adminEditRole').value;
                 
                 try {
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
+                    await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', editUserId, 'profile', 'data'), {
                         name, email, department, role
                     }, { merge: true });
                     
                     if (role === 'admin') {
-                        await setDoc(doc(db, 'artifacts', appId, 'admin', userId), {
+                        await setDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', editUserId), {
                             email, name, updatedAt: new Date()
                         }, { merge: true });
                     } else {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'admin', userId)).catch(() => {});
+                        await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', editUserId)).catch(() => {});
                     }
                     
                     hideAdminEditModal();
                     loadAllUsers();
                     showNotification('Pengguna dikemaskini', new Date().toLocaleTimeString(), 'success');
                 } catch (error) {
-                    showModal('Ralat', 'Gagal menyimpan', 'error');
+                    console.error('Error saving user:', error);
+                    showModal('Ralat', 'Gagal menyimpan: ' + error.message, 'error');
                 }
             });
 
@@ -2808,24 +2835,24 @@ window.onload = async function() {
                 });
             }
         });
-		
-		// Handle Firebase errors
-		function handleFirebaseError(error, defaultMessage = 'Ralat berlaku') {
-			console.error('Firebase Error:', error);
-			
-			if (error.code === 'permission-denied') {
-				showModal('Kebenaran Dinafikan', 'Anda tidak mempunyai kebenaran untuk mengakses data ini. Sila log masuk semula.', 'error');
-				return 'Kebenaran dinafikan';
-			}
-			
-			if (error.code === 'unavailable') {
-				showModal('Ralat Rangkaian', 'Sila semak sambungan internet anda.', 'error');
-				return 'Ralat rangkaian';
-			}
-			
-			showModal('Ralat', defaultMessage, 'error');
-			return defaultMessage;
-		}
+        
+        // Handle Firebase errors
+        function handleFirebaseError(error, defaultMessage = 'Ralat berlaku') {
+            console.error('Firebase Error:', error);
+            
+            if (error.code === 'permission-denied') {
+                showModal('Kebenaran Dinafikan', 'Anda tidak mempunyai kebenaran untuk mengakses data ini. Sila log masuk semula.', 'error');
+                return 'Kebenaran dinafikan';
+            }
+            
+            if (error.code === 'unavailable') {
+                showModal('Ralat Rangkaian', 'Sila semak sambungan internet anda.', 'error');
+                return 'Ralat rangkaian';
+            }
+            
+            showModal('Ralat', defaultMessage, 'error');
+            return defaultMessage;
+        }
     </script>
 </body>
 </html>
