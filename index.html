@@ -1028,7 +1028,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
@@ -1068,38 +1068,13 @@
         let isAdmin = false;
         let allUsers = [];
 
-        // DOM Elements
-        const loginPageDiv = document.getElementById('loginPage');
-        const accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
-        const faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
-        const dashboardDiv = document.getElementById('dashboard');
-        const adminDashboardDiv = document.getElementById('adminDashboard');
-        const statusMessageDiv = document.getElementById('statusMessage');
-        const videoElement = document.getElementById('videoElement');
-        const scanVideoElement = document.getElementById('scanVideoElement');
-        const attendanceTableBody = document.getElementById('attendanceTableBody');
-        const clockInBtn = document.getElementById('clockInBtn');
-        const clockOutBtn = document.getElementById('clockOutBtn');
-        const attendanceStatusValue = document.getElementById('attendanceStatusValue');
-        const locationStatusEl = document.getElementById('locationStatus');
-        const startDateInput = document.getElementById('startDateInput');
-        const endDateInput = document.getElementById('endDateInput');
-        const realTimeClock = document.getElementById('realTimeClock');
-        const livenessInstructions = document.getElementById('livenessInstructions');
-        const faceOverlay = document.getElementById('faceOverlay');
-        const modalOverlay = document.getElementById('modalOverlay');
-        const modalIcon = document.getElementById('modalIcon');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalCancelBtn = document.getElementById('modalCancelBtn');
-        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        const modalOkBtn = document.getElementById('modalOkBtn');
-        const successNotification = document.getElementById('successNotification');
-        const successNotifTitle = document.getElementById('successNotifTitle');
-        const successNotifTime = document.getElementById('successNotifTime');
-        const failNotification = document.getElementById('failNotification');
-        const failNotifTitle = document.getElementById('failNotifTitle');
-        const failNotifTime = document.getElementById('failNotifTime');
+        // DOM Elements - will be initialized in DOMContentLoaded
+        let loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminDashboardDiv;
+        let statusMessageDiv, videoElement, scanVideoElement, attendanceTableBody, clockInBtn, clockOutBtn;
+        let attendanceStatusValue, locationStatusEl, startDateInput, endDateInput, realTimeClock;
+        let livenessInstructions, faceOverlay, modalOverlay, modalIcon, modalTitle, modalMessage;
+        let modalCancelBtn, modalConfirmBtn, modalOkBtn, successNotification, successNotifTitle, successNotifTime;
+        let failNotification, failNotifTitle, failNotifTime;
 
         window.jsPDF = window.jspdf.jsPDF;
 
@@ -1527,8 +1502,8 @@
         // ========== ADMIN FUNCTIONS ==========
         async function loadOfficeLocation() {
             try {
-                // Try to load from config in kehadiran-upskk first (for backward compatibility)
-                const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+                // Try to load from config in default-app-id
+                const configRef = doc(db, 'artifacts', 'default-app-id', 'config', 'office');
                 const configSnap = await getDoc(configRef);
                 
                 if (configSnap.exists()) {
@@ -1538,24 +1513,12 @@
                     };
                     locationTolerance = configSnap.data().tolerance || 1500;
                 } else {
-                    // Try to load from default-app-id config
-                    const defaultConfigRef = doc(db, 'artifacts', 'default-app-id', 'config', 'office');
-                    const defaultConfigSnap = await getDoc(defaultConfigRef);
-                    
-                    if (defaultConfigSnap.exists()) {
-                        officeCoordinates = {
-                            latitude: defaultConfigSnap.data().latitude,
-                            longitude: defaultConfigSnap.data().longitude
-                        };
-                        locationTolerance = defaultConfigSnap.data().tolerance || 1500;
-                    } else {
-                        // Set default values if no config exists
-                        officeCoordinates = {
-                            latitude: 1.5329149992751578,
-                            longitude: 110.35895714753464
-                        };
-                        locationTolerance = 1500;
-                    }
+                    // Set default values if no config exists
+                    officeCoordinates = {
+                        latitude: 1.5329149992751578,
+                        longitude: 110.35895714753464
+                    };
+                    locationTolerance = 1500;
                 }
             } catch (error) {
                 console.error('Error loading config:', error);
@@ -1589,30 +1552,24 @@
                     updatedAt: new Date()
                 }, { merge: true });
                 
-                // Also save to kehadiran-upskk config for backward compatibility
-                const oldConfigRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
-                await setDoc(oldConfigRef, {
-                    latitude,
-                    longitude,
-                    tolerance,
-                    updatedBy: userId,
-                    updatedAt: new Date()
-                }, { merge: true });
-                
                 officeCoordinates = { latitude, longitude };
                 locationTolerance = tolerance;
                 
                 showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
                 
                 // Log the change
-                const logRef = collection(db, 'artifacts', 'default-app-id', 'config', 'office', 'logs');
-                await addDoc(logRef, {
-                    latitude,
-                    longitude,
-                    tolerance,
-                    updatedBy: userId,
-                    updatedAt: new Date()
-                });
+                try {
+                    const logRef = collection(db, 'artifacts', 'default-app-id', 'config', 'office', 'logs');
+                    await addDoc(logRef, {
+                        latitude,
+                        longitude,
+                        tolerance,
+                        updatedBy: userId,
+                        updatedAt: new Date()
+                    });
+                } catch (e) {
+                    console.log('Logging not available');
+                }
                 
             } catch (error) {
                 console.error('Error saving location:', error);
@@ -2288,145 +2245,41 @@
         }
 
         // ========== INITIALIZATION ==========
-        window.onload = async function() {
-            try {
-                await loadFaceModels();
-                
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                
-                const formatDate = (date) => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    return `${year}-${month}-${day}`;
-                };
-                
-                startDateInput.value = formatDate(firstDay);
-                endDateInput.value = formatDate(lastDay);
-                
-                document.getElementById('adminReportStartDate').value = formatDate(firstDay);
-                document.getElementById('adminReportEndDate').value = formatDate(lastDay);
-                
-                modalCancelBtn.addEventListener('click', hideModal);
-                modalOkBtn.addEventListener('click', hideModal);
-                modalOverlay.addEventListener('click', (e) => {
-                    if (e.target === modalOverlay) hideModal();
-                });
-                
-                onAuthStateChanged(auth, async (user) => {
-                    console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
-                    
-                    if (user) {
-                        userId = user.uid;
-                        console.log('Auth UID:', userId);
-                        
-                        // Try direct access first - the Firestore ID matches Auth UID
-                        try {
-                            const directProfileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
-                            const directProfileSnap = await getDoc(directProfileRef);
-                            
-                            if (directProfileSnap.exists()) {
-                                firestoreUserId = userId;
-                                userData = directProfileSnap.data();
-                                console.log('✅ Found user data with matching Auth UID');
-                            }
-                        } catch (e) {
-                            console.log('No direct match, will try email search');
-                        }
-                        
-                        // If not found, try searching by email
-                        if (!firestoreUserId) {
-                            try {
-                                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-                                const usersSnap = await getDocs(usersRef);
-                                
-                                for (const userDoc of usersSnap.docs) {
-                                    const uid = userDoc.id;
-                                    const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
-                                    const profileSnap = await getDoc(profileRef);
-                                    
-                                    if (profileSnap.exists() && profileSnap.data().email === user.email) {
-                                        firestoreUserId = uid;
-                                        userData = profileSnap.data();
-                                        console.log('✅ Found user data by email with Firestore ID:', uid);
-                                        break;
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('Error searching users:', error);
-                            }
-                        }
-                        
-                        if (firestoreUserId && userData) {
-                            // Check if user is admin from profile
-                            isAdmin = (userData.role === 'admin');
-                            console.log('Is Admin:', isAdmin);
-                            
-                            const adminBtn = document.getElementById('adminPanelBtn');
-                            if (adminBtn) {
-                                adminBtn.style.display = isAdmin ? 'flex' : 'none';
-                            }
-                            
-                            if (userData.faceDescriptor) {
-                                try {
-                                    JSON.parse(userData.faceDescriptor);
-                                    isFaceRegistered = true;
-                                    createFaceMatcher(userData.faceDescriptor);
-                                } catch (e) {
-                                    isFaceRegistered = false;
-                                }
-                            }
-                            
-                            await checkTodayAttendance();
-                            
-                            try {
-                                const attendanceQuery = query(
-                                    collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
-                                    where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                                    where('__name__', '<=', endDateInput.value),
-                                    orderBy('__name__', 'desc'),
-                                    limit(30)
-                                );
-                                
-                                onSnapshot(attendanceQuery, 
-                                    (snap) => {
-                                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                        updateAttendanceTable(data);
-                                    },
-                                    (error) => {
-                                        console.error('Attendance listener error:', error);
-                                    }
-                                );
-                            } catch (e) {
-                                console.error('Error setting up attendance listener:', e);
-                            }
-                            
-                            await loadOfficeLocation();
-                            
-                            if (!isFaceRegistered) {
-                                showPage('faceRegistrationPage');
-                            } else {
-                                showPage('dashboard');
-                                handleGeolocationCheck();
-                            }
-                        } else {
-                            console.log('No user profile found');
-                            showPage('faceRegistrationPage');
-                        }
-                    } else {
-                        showPage('loginPage');
-                    }
-                });
-                
-            } catch (error) {
-                console.error('Init error:', error);
-                showPage('loginPage');
-            }
-        };
-
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize DOM elements
+            loginPageDiv = document.getElementById('loginPage');
+            accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
+            faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
+            dashboardDiv = document.getElementById('dashboard');
+            adminDashboardDiv = document.getElementById('adminDashboard');
+            statusMessageDiv = document.getElementById('statusMessage');
+            videoElement = document.getElementById('videoElement');
+            scanVideoElement = document.getElementById('scanVideoElement');
+            attendanceTableBody = document.getElementById('attendanceTableBody');
+            clockInBtn = document.getElementById('clockInBtn');
+            clockOutBtn = document.getElementById('clockOutBtn');
+            attendanceStatusValue = document.getElementById('attendanceStatusValue');
+            locationStatusEl = document.getElementById('locationStatus');
+            startDateInput = document.getElementById('startDateInput');
+            endDateInput = document.getElementById('endDateInput');
+            realTimeClock = document.getElementById('realTimeClock');
+            livenessInstructions = document.getElementById('livenessInstructions');
+            faceOverlay = document.getElementById('faceOverlay');
+            modalOverlay = document.getElementById('modalOverlay');
+            modalIcon = document.getElementById('modalIcon');
+            modalTitle = document.getElementById('modalTitle');
+            modalMessage = document.getElementById('modalMessage');
+            modalCancelBtn = document.getElementById('modalCancelBtn');
+            modalConfirmBtn = document.getElementById('modalConfirmBtn');
+            modalOkBtn = document.getElementById('modalOkBtn');
+            successNotification = document.getElementById('successNotification');
+            successNotifTitle = document.getElementById('successNotifTitle');
+            successNotifTime = document.getElementById('successNotifTime');
+            failNotification = document.getElementById('failNotification');
+            failNotifTitle = document.getElementById('failNotifTitle');
+            failNotifTime = document.getElementById('failNotifTime');
+
+            // Set up event listeners
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
             document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
             document.getElementById('registerAccountBtn').addEventListener('click', window.handleAccountRegistration);
@@ -2551,6 +2404,12 @@
                 if (e.key === 'Enter') window.handleEmailLogin();
             });
             
+            modalCancelBtn.addEventListener('click', hideModal);
+            modalOkBtn.addEventListener('click', hideModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) hideModal();
+            });
+            
             setInterval(() => {
                 const now = new Date();
                 realTimeClock.textContent = now.toLocaleTimeString('ms-MY', { 
@@ -2577,7 +2436,146 @@
                     }, 300);
                 });
             }
+
+            // Initialize the app
+            initApp();
         });
+
+        async function initApp() {
+            try {
+                await loadFaceModels();
+                
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                
+                const formatDate = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+                
+                if (startDateInput) startDateInput.value = formatDate(firstDay);
+                if (endDateInput) endDateInput.value = formatDate(lastDay);
+                
+                const adminReportStartDate = document.getElementById('adminReportStartDate');
+                const adminReportEndDate = document.getElementById('adminReportEndDate');
+                if (adminReportStartDate) adminReportStartDate.value = formatDate(firstDay);
+                if (adminReportEndDate) adminReportEndDate.value = formatDate(lastDay);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
+                    
+                    if (user) {
+                        userId = user.uid;
+                        console.log('Auth UID:', userId);
+                        
+                        // Try direct access first - the Firestore ID matches Auth UID
+                        try {
+                            const directProfileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                            const directProfileSnap = await getDoc(directProfileRef);
+                            
+                            if (directProfileSnap.exists()) {
+                                firestoreUserId = userId;
+                                userData = directProfileSnap.data();
+                                console.log('✅ Found user data with matching Auth UID');
+                            }
+                        } catch (e) {
+                            console.log('No direct match, will try email search');
+                        }
+                        
+                        // If not found, try searching by email
+                        if (!firestoreUserId) {
+                            try {
+                                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                                const usersSnap = await getDocs(usersRef);
+                                
+                                for (const userDoc of usersSnap.docs) {
+                                    const uid = userDoc.id;
+                                    const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
+                                    const profileSnap = await getDoc(profileRef);
+                                    
+                                    if (profileSnap.exists() && profileSnap.data().email === user.email) {
+                                        firestoreUserId = uid;
+                                        userData = profileSnap.data();
+                                        console.log('✅ Found user data by email with Firestore ID:', uid);
+                                        break;
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error searching users:', error);
+                            }
+                        }
+                        
+                        if (firestoreUserId && userData) {
+                            // Check if user is admin from profile
+                            isAdmin = (userData.role === 'admin');
+                            console.log('Is Admin:', isAdmin);
+                            
+                            const adminBtn = document.getElementById('adminPanelBtn');
+                            if (adminBtn) {
+                                adminBtn.style.display = isAdmin ? 'flex' : 'none';
+                            }
+                            
+                            if (userData.faceDescriptor) {
+                                try {
+                                    JSON.parse(userData.faceDescriptor);
+                                    isFaceRegistered = true;
+                                    createFaceMatcher(userData.faceDescriptor);
+                                } catch (e) {
+                                    isFaceRegistered = false;
+                                }
+                            }
+                            
+                            await checkTodayAttendance();
+                            
+                            try {
+                                if (startDateInput && endDateInput) {
+                                    const attendanceQuery = query(
+                                        collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
+                                        where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                                        where('__name__', '<=', endDateInput.value),
+                                        orderBy('__name__', 'desc'),
+                                        limit(30)
+                                    );
+                                    
+                                    onSnapshot(attendanceQuery, 
+                                        (snap) => {
+                                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                            updateAttendanceTable(data);
+                                        },
+                                        (error) => {
+                                            console.error('Attendance listener error:', error);
+                                        }
+                                    );
+                                }
+                            } catch (e) {
+                                console.error('Error setting up attendance listener:', e);
+                            }
+                            
+                            await loadOfficeLocation();
+                            
+                            if (!isFaceRegistered) {
+                                showPage('faceRegistrationPage');
+                            } else {
+                                showPage('dashboard');
+                                handleGeolocationCheck();
+                            }
+                        } else {
+                            console.log('No user profile found');
+                            showPage('faceRegistrationPage');
+                        }
+                    } else {
+                        showPage('loginPage');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Init error:', error);
+                showPage('loginPage');
+            }
+        }
     </script>
 </body>
 </html>
