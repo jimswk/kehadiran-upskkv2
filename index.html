@@ -2561,111 +2561,116 @@ async function testAdminPermissions() {
             }
         };
 
-        // ========== INITIALIZATION ==========
-        window.onload = async function() {
-            try {
-                await loadFaceModels();
-                
-                // Set default dates
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                
-                startDateInput.value = firstDay.toISOString().split('T')[0];
-                endDateInput.value = lastDay.toISOString().split('T')[0];
-                
-                // Admin report default dates
-                document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
-                document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
-                
-                // Modal events
-                modalCancelBtn.addEventListener('click', hideModal);
-                modalOkBtn.addEventListener('click', hideModal);
-                modalOverlay.addEventListener('click', (e) => {
-                    if (e.target === modalOverlay) hideModal();
-                });
-                
-                // Auth state listener
-onAuthStateChanged(auth, async (user) => {
-    console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
-    
-    if (user) {
-        userId = user.uid;
+// ========== INITIALIZATION ==========
+window.onload = async function() {
+    try {
+        await loadFaceModels();
         
-        // Check admin in kehadiran-upskk (new admin location)
-        try {
-            const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
-            const adminSnap = await getDoc(adminRef);
-            isAdmin = adminSnap.exists();
-            console.log('Admin check:', isAdmin);
-        } catch (error) {
-            console.error('Error checking admin:', error);
-            isAdmin = false;
-        }
+        // Set default dates
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         
-        // Show/hide admin button
-        const adminBtn = document.getElementById('adminPanelBtn');
-        if (adminBtn) {
-            adminBtn.style.display = isAdmin ? 'flex' : 'none';
-        }
+        startDateInput.value = firstDay.toISOString().split('T')[0];
+        endDateInput.value = lastDay.toISOString().split('T')[0];
         
-        // Get user profile from default-app-id (old user data)
-        const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
-        const snap = await getDoc(userDocRef);
+        // Admin report default dates
+        document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
+        document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
         
-        if (snap.exists()) {
-            userData = snap.data();
-            console.log('User profile:', userData);
+        // Modal events
+        modalCancelBtn.addEventListener('click', hideModal);
+        modalOkBtn.addEventListener('click', hideModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) hideModal();
+        });
+        
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
             
-            // Check face registration
-            if (userData.faceDescriptor) {
+            if (user) {
+                userId = user.uid;
+                
+                // Check admin in kehadiran-upskk (new admin location)
                 try {
-                    JSON.parse(userData.faceDescriptor);
-                    isFaceRegistered = true;
-                    createFaceMatcher(userData.faceDescriptor);
-                } catch (e) {
-                    isFaceRegistered = false;
+                    const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+                    const adminSnap = await getDoc(adminRef);
+                    isAdmin = adminSnap.exists();
+                    console.log('Admin check:', isAdmin);
+                } catch (error) {
+                    console.error('Error checking admin:', error);
+                    isAdmin = false;
                 }
-            }
-            
-            await checkTodayAttendance();
-            
-            // Set up attendance listener (using default-app-id for attendance data)
-            const q = query(
-                collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
-                where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                where('__name__', '<=', endDateInput.value)
-            );
-            
-            onSnapshot(q, snap => {
-                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                updateAttendanceTable(data);
-            });
-            
-            // Load office location
-            await loadOfficeLocation();
-            
-            if (isAdmin) {
-                loadAllUsers(); // This will now load from default-app-id
-                loadLocationLogs();
-            }
-            
-            // Show appropriate page
-            if (!isFaceRegistered) {
-                showPage('faceRegistrationPage');
+                
+                // Show/hide admin button
+                const adminBtn = document.getElementById('adminPanelBtn');
+                if (adminBtn) {
+                    adminBtn.style.display = isAdmin ? 'flex' : 'none';
+                }
+                
+                // Get user profile from default-app-id (old user data)
+                const userDocRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                const snap = await getDoc(userDocRef);
+                
+                if (snap.exists()) {
+                    userData = snap.data();
+                    console.log('User profile:', userData);
+                    
+                    // Check face registration
+                    if (userData.faceDescriptor) {
+                        try {
+                            JSON.parse(userData.faceDescriptor);
+                            isFaceRegistered = true;
+                            createFaceMatcher(userData.faceDescriptor);
+                        } catch (e) {
+                            isFaceRegistered = false;
+                        }
+                    }
+                    
+                    await checkTodayAttendance();
+                    
+                    // Set up attendance listener (using default-app-id for attendance data)
+                    const q = query(
+                        collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+                        where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                        where('__name__', '<=', endDateInput.value)
+                    );
+                    
+                    onSnapshot(q, snap => {
+                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        updateAttendanceTable(data);
+                    });
+                    
+                    // Load office location
+                    await loadOfficeLocation();
+                    
+                    if (isAdmin) {
+                        loadAllUsers(); // This will now load from default-app-id
+                        loadLocationLogs();
+                    }
+                    
+                    // Show appropriate page
+                    if (!isFaceRegistered) {
+                        showPage('faceRegistrationPage');
+                    } else {
+                        showPage('dashboard');
+                        handleGeolocationCheck();
+                    }
+                } else {
+                    showPage('faceRegistrationPage');
+                }
             } else {
-                showPage('dashboard');
-                handleGeolocationCheck();
+                // User is logged out
+                showPage('loginPage');
             }
-        } else {
-            showPage('faceRegistrationPage');
-        }
-    } else {
-        // User is logged out
+        }); // <-- Close onAuthStateChanged
+        
+    } catch (error) {
+        console.error('Init error:', error);
         showPage('loginPage');
     }
-});
-
+};
         // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
