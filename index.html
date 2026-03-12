@@ -778,24 +778,6 @@
                         </div>
                     </div>
 
-                    <div class="card mb-6">
-                        <h2 class="text-xl font-bold text-white mb-4">Jana Laporan</h2>
-                        <div class="flex-col gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Tarikh Mula</label>
-                                <input class="input-field" type="date" id="startDateInput"/>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Tarikh Tamat</label>
-                                <input class="input-field" type="date" id="endDateInput"/>
-                            </div>
-                            <button class="btn-secondary" id="generatePdfBtn">
-                                <span class="material-symbols-outlined">assessment</span>
-                                <span>Jana Laporan PDF</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="card">
                         <h2 class="text-xl font-bold text-white mb-4">Sejarah Kehadiran</h2>
                         <div class="table-container hide-scrollbar">
@@ -1046,7 +1028,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
@@ -1545,6 +1527,7 @@
         // ========== ADMIN FUNCTIONS ==========
         async function loadOfficeLocation() {
             try {
+                // Try to load from config in kehadiran-upskk first (for backward compatibility)
                 const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
                 const configSnap = await getDoc(configRef);
                 
@@ -1553,10 +1536,35 @@
                         latitude: configSnap.data().latitude,
                         longitude: configSnap.data().longitude
                     };
-                    locationTolerance = configSnap.data().tolerance;
+                    locationTolerance = configSnap.data().tolerance || 1500;
+                } else {
+                    // Try to load from default-app-id config
+                    const defaultConfigRef = doc(db, 'artifacts', 'default-app-id', 'config', 'office');
+                    const defaultConfigSnap = await getDoc(defaultConfigRef);
+                    
+                    if (defaultConfigSnap.exists()) {
+                        officeCoordinates = {
+                            latitude: defaultConfigSnap.data().latitude,
+                            longitude: defaultConfigSnap.data().longitude
+                        };
+                        locationTolerance = defaultConfigSnap.data().tolerance || 1500;
+                    } else {
+                        // Set default values if no config exists
+                        officeCoordinates = {
+                            latitude: 1.5329149992751578,
+                            longitude: 110.35895714753464
+                        };
+                        locationTolerance = 1500;
+                    }
                 }
             } catch (error) {
                 console.error('Error loading config:', error);
+                // Set default values on error
+                officeCoordinates = {
+                    latitude: 1.5329149992751578,
+                    longitude: 110.35895714753464
+                };
+                locationTolerance = 1500;
             }
         }
 
@@ -1571,8 +1579,19 @@
             }
             
             try {
-                const configRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+                // Save to default-app-id config
+                const configRef = doc(db, 'artifacts', 'default-app-id', 'config', 'office');
                 await setDoc(configRef, {
+                    latitude,
+                    longitude,
+                    tolerance,
+                    updatedBy: userId,
+                    updatedAt: new Date()
+                }, { merge: true });
+                
+                // Also save to kehadiran-upskk config for backward compatibility
+                const oldConfigRef = doc(db, 'artifacts', 'kehadiran-upskk', 'config', 'office');
+                await setDoc(oldConfigRef, {
                     latitude,
                     longitude,
                     tolerance,
@@ -1584,6 +1603,17 @@
                 locationTolerance = tolerance;
                 
                 showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
+                
+                // Log the change
+                const logRef = collection(db, 'artifacts', 'default-app-id', 'config', 'office', 'logs');
+                await addDoc(logRef, {
+                    latitude,
+                    longitude,
+                    tolerance,
+                    updatedBy: userId,
+                    updatedAt: new Date()
+                });
+                
             } catch (error) {
                 console.error('Error saving location:', error);
                 showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
@@ -1608,6 +1638,7 @@
                         
                         if (profileSnap.exists()) {
                             const userData = profileSnap.data();
+                            
                             allUsers.push({
                                 id: firestoreId,
                                 name: userData.name || 'Tiada nama',
@@ -1627,6 +1658,7 @@
                 
             } catch (error) {
                 console.error('Error loading users:', error);
+                showModal('Ralat', 'Gagal memuatkan senarai pengguna: ' + error.message, 'error');
             }
         }
 
@@ -1697,8 +1729,10 @@
             if (!confirm('Anda pasti mahu padam pengguna ini?')) return;
             
             try {
+                // Delete user profile
                 await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
                 
+                // Delete attendance records
                 const attendanceRef = collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance');
                 const attendanceSnap = await getDocs(attendanceRef);
                 
@@ -1709,7 +1743,7 @@
                 loadAllUsers();
             } catch (error) {
                 console.error('Error deleting user:', error);
-                showModal('Ralat', 'Gagal memadam pengguna', 'error');
+                showModal('Ralat', 'Gagal memadam pengguna: ' + error.message, 'error');
             }
         };
 
@@ -1723,9 +1757,218 @@
                 loadAllUsers();
             } catch (error) {
                 console.error('Error resetting face:', error);
-                showModal('Ralat', 'Gagal reset wajah', 'error');
+                showModal('Ralat', 'Gagal reset wajah: ' + error.message, 'error');
             }
         };
+
+        // ========== PDF GENERATION FUNCTIONS ==========
+        function formatDecimalToTime(decimalHours) {
+            if (!decimalHours || decimalHours <= 0) return '-';
+            const hours = Math.floor(decimalHours);
+            const minutes = Math.round((decimalHours - hours) * 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        async function generateUserReport(userId, userName, startDate, endDate) {
+            const q = query(
+                collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance'),
+                where('__name__', '>=', startDate),
+                where('__name__', '<=', endDate),
+                orderBy('__name__', 'asc')
+            );
+            
+            const snap = await getDocs(q);
+            const attendanceData = snap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            // Create PDF
+            const doc = new jsPDF({
+                format: 'a4',
+                unit: 'mm'
+            });
+            
+            doc.setFont('helvetica', 'normal');
+            
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const tableWidth = pageWidth - (margin * 2);
+            
+            let y = 20;
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 58, 138); // Dark blue
+            doc.text('LAPORAN KEHADIRAN', pageWidth / 2, y, { align: 'center' });
+            
+            y += 10;
+            
+            // Subtitle
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text('Jabatan Imigresen Malaysia', pageWidth / 2, y, { align: 'center' });
+            
+            y += 10;
+            
+            // Get user profile for department
+            let department = 'Tiada';
+            try {
+                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                const profileSnap = await getDoc(profileRef);
+                if (profileSnap.exists()) {
+                    department = profileSnap.data().department || 'Tiada';
+                }
+            } catch (e) {
+                console.log('Could not load department');
+            }
+            
+            // User info
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Nama: ${userName}`, margin, y);
+            y += 7;
+            doc.text(`Jabatan: ${department}`, margin, y);
+            y += 7;
+            doc.text(`Tempoh: ${startDate} hingga ${endDate}`, margin, y);
+            
+            y += 10;
+            
+            // Table headers
+            const headers = ['Tarikh', 'Hari', 'Masuk', 'Keluar', 'Jumlah', 'OT'];
+            const colWidths = [35, 35, 30, 30, 30, 30];
+            let x = margin;
+            
+            doc.setFillColor(30, 58, 138); // Dark blue
+            doc.rect(x, y, tableWidth, 10, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            
+            headers.forEach((header, i) => {
+                doc.text(header, x + 2, y + 6);
+                x += colWidths[i];
+            });
+            
+            y += 10;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            
+            let totalHours = 0;
+            let totalOT = 0;
+            let rowCount = 0;
+            
+            attendanceData.forEach(record => {
+                if (y > pageHeight - 30) {
+                    doc.addPage();
+                    y = 20;
+                    
+                    // Redraw header on new page
+                    doc.setFillColor(30, 58, 138);
+                    doc.rect(margin, y, tableWidth, 10, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    
+                    x = margin;
+                    headers.forEach((header, i) => {
+                        doc.text(header, x + 2, y + 6);
+                        x += colWidths[i];
+                    });
+                    
+                    y += 10;
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                }
+                
+                x = margin;
+                
+                const date = record.id;
+                let weekday = record.weekday;
+                if (!weekday && record.date) {
+                    const dateObj = record.date.toDate();
+                    weekday = dateObj.toLocaleDateString('ms-MY', { weekday: 'long' });
+                } else if (!weekday) {
+                    const dateObj = new Date(date + 'T12:00:00');
+                    weekday = dateObj.toLocaleDateString('ms-MY', { weekday: 'long' });
+                }
+                
+                let clockIn = '-';
+                if (record.clockIn) {
+                    const time = record.clockIn.toDate();
+                    clockIn = time.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+                }
+                
+                let clockOut = '-';
+                if (record.clockOut) {
+                    const time = record.clockOut.toDate();
+                    clockOut = time.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+                }
+                
+                const hours = record.totalHours ? record.totalHours.toFixed(2) : '-';
+                const ot = record.totalOT ? record.totalOT.toFixed(2) : '-';
+                
+                if (record.totalHours) totalHours += record.totalHours;
+                if (record.totalOT) totalOT += record.totalOT;
+                
+                // Alternate row colors
+                if (rowCount % 2 === 0) {
+                    doc.setFillColor(245, 245, 245);
+                    doc.rect(margin, y - 4, tableWidth, 8, 'F');
+                }
+                
+                doc.text(date, x + 2, y);
+                x += colWidths[0];
+                
+                doc.text(weekday.substring(0, 3), x + 2, y);
+                x += colWidths[1];
+                
+                doc.text(clockIn, x + 2, y);
+                x += colWidths[2];
+                
+                doc.text(clockOut, x + 2, y);
+                x += colWidths[3];
+                
+                doc.text(hours.toString(), x + 2, y);
+                x += colWidths[4];
+                
+                doc.text(ot.toString(), x + 2, y);
+                
+                y += 8;
+                rowCount++;
+            });
+            
+            // Totals row
+            y += 2;
+            doc.setFillColor(220, 220, 220);
+            doc.rect(margin, y - 4, tableWidth, 8, 'F');
+            
+            doc.setFont('helvetica', 'bold');
+            x = margin;
+            
+            doc.text('JUMLAH', x + 2, y);
+            x += colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
+            
+            doc.text(totalHours.toFixed(2), x + 2, y);
+            x += colWidths[4];
+            
+            doc.text(totalOT.toFixed(2), x + 2, y);
+            
+            // Footer
+            y += 15;
+            if (y < pageHeight - 20) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Dijana pada: ${new Date().toLocaleString('ms-MY')}`, margin, pageHeight - 10);
+                doc.text('Sistem Kehadiran JIM - Dokumen Rasmi', pageWidth - margin, pageHeight - 10, { align: 'right' });
+            }
+            
+            doc.save(`Laporan_${userName.replace(/\s+/g, '_')}_${startDate}_to_${endDate}.pdf`);
+        }
 
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
@@ -1915,7 +2158,7 @@
 
                 await setDoc(docRef, {
                     date: now,
-                    weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+                    weekday: now.toLocaleDateString('ms-MY', { weekday: 'long' }),
                     clockIn: now,
                     locationIn: { lat: latitude, lng: longitude }
                 }, { merge: true });
@@ -1924,7 +2167,8 @@
                 await checkTodayAttendance();
                 handleGeolocationCheck();
             } catch (error) {
-                showModal('Ralat Lokasi', 'Gagal mendapatkan lokasi.', 'error');
+                console.error('Clock in error:', error);
+                showModal('Ralat Lokasi', 'Gagal mendapatkan lokasi. Sila pastikan GPS dihidupkan.', 'error');
             }
         };
 
@@ -1995,34 +2239,41 @@
                     handleGeolocationCheck();
                 }
             } catch (error) {
-                showModal('Ralat Lokasi', 'Gagal mendapatkan lokasi.', 'error');
+                console.error('Clock out error:', error);
+                showModal('Ralat Lokasi', 'Gagal mendapatkan lokasi. Sila pastikan GPS dihidupkan.', 'error');
             }
         };
 
-        // ========== PDF GENERATION ==========
-        function formatDecimalToTime(decimalHours) {
-            if (!decimalHours || decimalHours <= 0) return '';
-            const hours = Math.floor(decimalHours);
-            const minutes = Math.round((decimalHours - hours) * 60);
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        }
-
+        // ========== ATTENDANCE TABLE UPDATE ==========
         function updateAttendanceTable(data) {
             attendanceTableBody.innerHTML = '';
             data.sort((a, b) => new Date(b.id) - new Date(a.id)).forEach(item => {
                 const row = document.createElement('tr');
                 const date = item.id;
-                const weekday = item.date?.toDate ? item.date.toDate().toLocaleDateString('en-US', { weekday: 'long' }) : 
-                                new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
                 
-                const clockInTime = item.clockIn ? item.clockIn.toDate() : null;
+                let weekday = item.weekday;
+                if (!weekday && item.date) {
+                    const dateObj = item.date.toDate();
+                    weekday = dateObj.toLocaleDateString('ms-MY', { weekday: 'long' });
+                } else if (!weekday) {
+                    const dateObj = new Date(date + 'T12:00:00');
+                    weekday = dateObj.toLocaleDateString('ms-MY', { weekday: 'long' });
+                }
+                
+                let clockInTime = null;
+                if (item.clockIn) {
+                    clockInTime = item.clockIn.toDate();
+                }
                 const clockInDisplay = clockInTime ? clockInTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
                 
-                const clockOutTime = item.clockOut ? item.clockOut.toDate() : null;
+                let clockOutTime = null;
+                if (item.clockOut) {
+                    clockOutTime = item.clockOut.toDate();
+                }
                 const clockOutDisplay = clockOutTime ? clockOutTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
                 
-                const totalHours = item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
-                const totalOT = item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
+                const totalHours = item.totalHours !== undefined && item.totalHours !== null ? formatDecimalToTime(item.totalHours) : '-';
+                const totalOT = item.totalOT !== undefined && item.totalOT !== null ? formatDecimalToTime(item.totalOT) : '-';
 
                 row.innerHTML = `
                     <td>${date}</td>
@@ -2036,168 +2287,6 @@
             });
         }
 
-        window.generatePDF = async function() {
-            const startDateStr = startDateInput.value;
-            const endDateStr = endDateInput.value;
-
-            if (!startDateStr || !endDateStr) {
-                showModal('Ralat Input', 'Sila masukkan tarikh mula dan tamat.', 'error');
-                return;
-            }
-
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
-
-            if (start > end) {
-                showModal('Ralat Tarikh', 'Tarikh mula tidak boleh lepas tarikh tamat.', 'error');
-                return;
-            }
-
-            try {
-                const q = query(
-                    collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
-                    where('__name__', '>=', startDateStr),
-                    where('__name__', '<=', endDateStr)
-                );
-                const snap = await getDocs(q);
-                
-                const dataMap = {};
-                snap.docs.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const dateId = docSnap.id;
-                    dataMap[dateId] = {
-                        clockIn: data.clockIn,
-                        clockOut: data.clockOut,
-                        totalHours: data.totalHours,
-                        totalOT: data.totalOT,
-                        date: data.date
-                    };
-                });
-
-                const doc = new jsPDF({
-                    format: 'a4',
-                    unit: 'mm'
-                });
-
-                doc.setFont('times', 'normal');
-                
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const tableWidth = 180;
-                const tableMarginX = (pageWidth - tableWidth) / 2;
-                const rowHeight = 6;
-                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
-                const colWidths = [30, 30, 30, 30, 30, 30];
-
-                let y = 20;
-
-                doc.setFontSize(14);
-                doc.setFont('times', 'bold');
-                const title = 'Total Time Card';
-                const titleWidth = doc.getTextWidth(title);
-                doc.text(title, (pageWidth - titleWidth) / 2, y);
-
-                y += 10;
-                doc.setFontSize(10);
-                doc.setFont('times', 'normal');
-                doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
-                y += 5;
-                doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
-
-                y += 10;
-                doc.setFont('times', 'bold');
-                doc.setDrawColor(0);
-                doc.setLineWidth(0.2);
-                
-                let x = tableMarginX;
-                headers.forEach((header, i) => {
-                    doc.rect(x, y, colWidths[i], rowHeight);
-                    doc.text(header, x + 2, y + 4);
-                    x += colWidths[i];
-                });
-                
-                y += rowHeight;
-                doc.setFont('times', 'normal');
-                let totalHoursDecimal = 0;
-                let totalOTDecimal = 0;
-                
-                const currentDate = new Date(start);
-                while (currentDate <= end) {
-                    const dateString = currentDate.toISOString().slice(0, 10);
-                    const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                    
-                    const record = dataMap[dateString] || null;
-                    
-                    let clockInText = '';
-                    let clockOutText = '';
-                    let hoursText = '';
-                    let otText = '';
-                    
-                    if (record) {
-                        if (record.clockIn) {
-                            const clockInTime = record.clockIn.toDate();
-                            clockInText = clockInTime.toLocaleTimeString('en-GB', { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                hour12: false 
-                            });
-                        }
-                        
-                        if (record.clockOut) {
-                            const clockOutTime = record.clockOut.toDate();
-                            clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                hour12: false 
-                            });
-                        }
-                        
-                        if (record.totalHours !== undefined && record.totalHours !== null) {
-                            hoursText = formatDecimalToTime(record.totalHours);
-                            totalHoursDecimal += record.totalHours;
-                        }
-                        
-                        if (record.totalOT !== undefined && record.totalOT !== null) {
-                            otText = formatDecimalToTime(record.totalOT);
-                            totalOTDecimal += record.totalOT;
-                        }
-                    }
-                    
-                    x = tableMarginX;
-                    const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
-                    
-                    rowData.forEach((text, i) => {
-                        doc.rect(x, y, colWidths[i], rowHeight);
-                        doc.text(text, x + 2, y + 4);
-                        x += colWidths[i];
-                    });
-                    
-                    y += rowHeight;
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-
-                doc.setFont('times', 'bold');
-                doc.rect(tableMarginX, y, tableWidth, rowHeight);
-                
-                doc.text('Statistic', tableMarginX + 2, y + 4);
-                
-                const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
-                doc.text(totalHoursFormatted, 
-                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
-                    y + 4);
-                
-                const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-                doc.text(totalOTFormatted, 
-                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
-                    y + 4);
-                
-                doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
-                showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
-            } catch (error) {
-                console.error('PDF error:', error);
-                showModal('Ralat PDF', 'Gagal menjana laporan.', 'error');
-            }
-        };
-
         // ========== INITIALIZATION ==========
         window.onload = async function() {
             try {
@@ -2207,11 +2296,18 @@
                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
                 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                 
-                startDateInput.value = firstDay.toISOString().split('T')[0];
-                endDateInput.value = lastDay.toISOString().split('T')[0];
+                const formatDate = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
                 
-                document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
-                document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
+                startDateInput.value = formatDate(firstDay);
+                endDateInput.value = formatDate(lastDay);
+                
+                document.getElementById('adminReportStartDate').value = formatDate(firstDay);
+                document.getElementById('adminReportEndDate').value = formatDate(lastDay);
                 
                 modalCancelBtn.addEventListener('click', hideModal);
                 modalOkBtn.addEventListener('click', hideModal);
@@ -2226,7 +2322,7 @@
                         userId = user.uid;
                         console.log('Auth UID:', userId);
                         
-                        // Try direct access first - maybe the Firestore ID matches Auth UID
+                        // Try direct access first - the Firestore ID matches Auth UID
                         try {
                             const directProfileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
                             const directProfileSnap = await getDoc(directProfileRef);
@@ -2264,7 +2360,7 @@
                         }
                         
                         if (firestoreUserId && userData) {
-                            // Set isAdmin based on role in profile
+                            // Check if user is admin from profile
                             isAdmin = (userData.role === 'admin');
                             console.log('Is Admin:', isAdmin);
                             
@@ -2289,7 +2385,9 @@
                                 const attendanceQuery = query(
                                     collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
                                     where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                                    where('__name__', '<=', endDateInput.value)
+                                    where('__name__', '<=', endDateInput.value),
+                                    orderBy('__name__', 'desc'),
+                                    limit(30)
                                 );
                                 
                                 onSnapshot(attendanceQuery, 
@@ -2337,12 +2435,16 @@
             document.getElementById('returnToLoginBtn').addEventListener('click', () => showPage('loginPage'));
             document.getElementById('clockInBtn').addEventListener('click', window.handleClockIn);
             document.getElementById('clockOutBtn').addEventListener('click', window.handleClockOut);
-            document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
             
-            document.getElementById('adminPanelBtn').addEventListener('click', () => {
+            document.getElementById('adminPanelBtn').addEventListener('click', async () => {
                 showPage('adminDashboard');
-                loadAllUsers();
+                await loadAllUsers();
+                
+                // Load location settings
+                document.getElementById('adminLatitude').value = officeCoordinates.latitude;
+                document.getElementById('adminLongitude').value = officeCoordinates.longitude;
+                document.getElementById('adminTolerance').value = locationTolerance;
             });
 
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -2384,8 +2486,50 @@
             });
 
             document.getElementById('adminSaveLocationBtn').addEventListener('click', saveOfficeLocation);
-            document.getElementById('adminGeneratePdfBtn').addEventListener('click', () => {
-                showModal('Info', 'Fungusi ini akan ditambah kemudian', 'info');
+            
+            document.getElementById('adminGeneratePdfBtn').addEventListener('click', async () => {
+                const startDate = document.getElementById('adminReportStartDate').value;
+                const endDate = document.getElementById('adminReportEndDate').value;
+                const selectedUserId = document.getElementById('adminReportUserSelect').value;
+                
+                if (!startDate || !endDate) {
+                    showModal('Ralat', 'Sila pilih tarikh mula dan tamat', 'error');
+                    return;
+                }
+                
+                try {
+                    showModal('Info', 'Sedang menjana laporan...', 'info');
+                    
+                    if (selectedUserId === 'all') {
+                        // Generate report for all users
+                        let successCount = 0;
+                        for (const user of allUsers) {
+                            try {
+                                await generateUserReport(user.id, user.name, startDate, endDate);
+                                successCount++;
+                            } catch (e) {
+                                console.error(`Error generating report for ${user.name}:`, e);
+                            }
+                        }
+                        hideModal();
+                        showNotification(`${successCount} laporan pengguna dijana`, new Date().toLocaleTimeString(), 'success');
+                    } else {
+                        // Generate report for specific user
+                        const user = allUsers.find(u => u.id === selectedUserId);
+                        if (user) {
+                            await generateUserReport(user.id, user.name, startDate, endDate);
+                            hideModal();
+                            showNotification(`Laporan ${user.name} dijana`, new Date().toLocaleTimeString(), 'success');
+                        } else {
+                            hideModal();
+                            showModal('Ralat', 'Pengguna tidak dijumpai', 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error generating admin report:', error);
+                    hideModal();
+                    showModal('Ralat', 'Gagal menjana laporan: ' + error.message, 'error');
+                }
             });
 
             document.getElementById('adminSearchUser').addEventListener('input', (e) => {
@@ -2437,4 +2581,3 @@
     </script>
 </body>
 </html>
-
