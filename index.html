@@ -29,7 +29,6 @@
             --gold-color: #d97706;
         }
 
-        /* RESET DAN SCROLL OPTIMIZATION UNTUK TELEFON */
         html, body {
             height: 100%;
             width: 100%;
@@ -54,7 +53,6 @@
             bottom: 0;
         }
 
-        /* SCROLL CONTAINER - OPTIMIZED FOR MOBILE */
         .scroll-container {
             height: 100vh;
             width: 100%;
@@ -64,7 +62,6 @@
             position: relative;
         }
 
-        /* HEADER */
         .header-gradient {
             background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
             border-bottom: 3px solid var(--gold-color);
@@ -125,7 +122,6 @@
             margin-top: 0.5rem;
         }
 
-        /* MAIN CONTENT */
         .main-content {
             padding: 1rem;
             width: 100%;
@@ -133,7 +129,6 @@
             margin: 0 auto;
         }
 
-        /* CARD STYLES */
         .card {
             background-color: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(12px);
@@ -146,7 +141,6 @@
             margin-bottom: 1rem;
         }
 
-        /* BUTTONS - OPTIMIZED FOR TOUCH */
         .btn-primary {
             display: flex;
             align-items: center;
@@ -202,7 +196,6 @@
             touch-action: manipulation;
         }
 
-        /* INPUT FIELDS - OPTIMIZED FOR MOBILE */
         .input-field {
             width: 100%;
             border-radius: 0.75rem;
@@ -223,7 +216,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
         }
 
-        /* VIDEO CONTAINER - OPTIMIZED FOR PORTRAIT */
         .video-container {
             position: relative;
             width: 100%;
@@ -253,7 +245,6 @@
             pointer-events: none;
         }
 
-        /* FACE BOX */
         .face-box {
             position: absolute;
             border: 3px solid var(--secondary-color);
@@ -263,7 +254,6 @@
             z-index: 10;
         }
 
-        /* ATTENDANCE STATUS STYLES */
         .attendance-status-container {
             display: flex;
             flex-direction: column;
@@ -307,7 +297,6 @@
             border: 2px solid rgba(220, 38, 38, 0.3);
         }
 
-        /* STATUS BADGES */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -336,7 +325,6 @@
             border: 1px solid rgba(220, 38, 38, 0.3);
         }
 
-        /* NOTIFICATIONS */
         .notification {
             position: fixed;
             top: 1rem;
@@ -364,7 +352,6 @@
             border-left-color: var(--red-color);
         }
 
-        /* MODAL */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -410,7 +397,6 @@
             gap: 0.5rem;
         }
 
-        /* ATTENDANCE TABLE */
         .table-container {
             overflow-x: auto;
             border-radius: 0.75rem;
@@ -441,7 +427,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* MESSAGE BOX */
         .message-box {
             padding: 1rem;
             border-radius: 0.75rem;
@@ -468,7 +453,6 @@
             border: 1px solid rgba(96, 165, 250, 0.3);
         }
 
-        /* REAL TIME CLOCK */
         .real-time-clock {
             font-size: 2rem;
             font-weight: 700;
@@ -478,7 +462,6 @@
             text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
 
-        /* LOADING SPINNER */
         .loading {
             display: inline-block;
             width: 20px;
@@ -495,7 +478,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* UTILITY CLASSES */
         .hidden {
             display: none !important;
         }
@@ -537,7 +519,6 @@
         .max-w-md { max-width: 28rem; }
         .max-w-lg { max-width: 32rem; }
 
-        /* MOBILE OPTIMIZATIONS */
         @media (max-width: 640px) {
             .video-container {
                 height: 250px;
@@ -558,12 +539,10 @@
             }
         }
 
-        /* FIX FOR IOS */
         input, textarea, select {
             font-size: 16px !important;
         }
 
-        /* HIDE SCROLLBAR BUT ALLOW SCROLLING */
         .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -573,7 +552,6 @@
             display: none;
         }
 
-        /* ADMIN TABS */
         .admin-tab {
             transition: all 0.2s ease;
         }
@@ -582,7 +560,6 @@
             background: rgba(59, 130, 246, 0.1);
         }
         
-        /* MAP PLACEHOLDER */
         .map-placeholder {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border: 2px dashed #3b82f6;
@@ -590,9 +567,7 @@
     </style>
 </head>
 <body>
-    <!-- Scroll container utama -->
     <div class="scroll-container hide-scrollbar">
-        <!-- Notifications -->
         <div id="successNotification" class="notification">
             <p class="font-bold text-base" id="successNotifTitle">Berjaya!</p>
             <p class="text-sm text-gray-400 mt-1" id="successNotifTime">10:30:15</p>
@@ -603,7 +578,6 @@
             <p class="text-sm text-gray-400 mt-1" id="failNotifTime">10:30:15</p>
         </div>
 
-        <!-- Modal Popup -->
         <div id="modalOverlay" class="modal-overlay">
             <div class="modal">
                 <div class="modal-header">
@@ -623,7 +597,6 @@
             </div>
         </div>
 
-        <!-- Header -->
         <header class="header-gradient">
             <div class="header">
                 <div class="header-content">
@@ -653,13 +626,10 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div>
-                <!-- Status Message -->
                 <div id="statusMessage" class="message-box hidden"></div>
                 
-                <!-- Login Page -->
                 <div id="loginPage">
                     <div class="card max-w-md mx-auto">
                         <div class="text-center mb-6">
@@ -689,7 +659,6 @@
                     </div>
                 </div>
 
-                <!-- Registration Page -->
                 <div id="accountRegistrationPage" class="hidden">
                     <div class="card max-w-md mx-auto">
                         <div class="text-center mb-6">
@@ -724,7 +693,6 @@
                     </div>
                 </div>
                 
-                <!-- Face Registration Page -->
                 <div id="faceRegistrationPage" class="hidden">
                     <div class="card max-w-lg mx-auto">
                         <div class="text-center">
@@ -762,11 +730,8 @@
                     </div>
                 </div>
 
-                <!-- User Dashboard -->
                 <div id="dashboard" class="hidden">
-                    <!-- Clock In/Out Section -->
                     <div class="card mb-6">
-                        <!-- Status kehadiran -->
                         <div class="attendance-status-container">
                             <div class="attendance-status-label">STATUS KEHADIRAN</div>
                             <div class="attendance-status-value error" id="attendanceStatusValue">Belum Clock In</div>
@@ -778,7 +743,6 @@
                             <div id="faceOverlay"></div>
                         </div>
                         
-                        <!-- Butang Clock In/Out -->
                         <div class="flex-col gap-3 mt-4">
                             <button class="btn-primary btn-success" id="clockInBtn">
                                 <span class="material-symbols-outlined">login</span>
@@ -791,7 +755,6 @@
                         </div>
                         
                         <div class="flex-col gap-4 mt-4">
-                            <!-- Location Status -->
                             <div class="flex items-center gap-3 p-3 bg-blue-900/30 border border-blue-700/30 rounded-xl">
                                 <span class="material-symbols-outlined text-blue-400">location_on</span>
                                 <div>
@@ -800,7 +763,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Face Detection Status -->
                             <div class="flex items-center gap-3 p-3 bg-blue-900/30 border border-blue-700/30 rounded-xl">
                                 <span class="material-symbols-outlined text-blue-400">face</span>
                                 <div>
@@ -809,7 +771,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Real Time Clock -->
                             <div class="flex-col items-center justify-center rounded-xl bg-gray-800/50 p-4 border border-gray-700/50">
                                 <p class="real-time-clock" id="realTimeClock">00:00:00</p>
                                 <p class="text-xs text-gray-400 uppercase">Masa Semasa</p>
@@ -817,7 +778,6 @@
                         </div>
                     </div>
 
-                    <!-- Report Generation -->
                     <div class="card mb-6">
                         <h2 class="text-xl font-bold text-white mb-4">Jana Laporan</h2>
                         <div class="flex-col gap-4">
@@ -836,7 +796,6 @@
                         </div>
                     </div>
 
-                    <!-- Attendance History -->
                     <div class="card">
                         <h2 class="text-xl font-bold text-white mb-4">Sejarah Kehadiran</h2>
                         <div class="table-container hide-scrollbar">
@@ -857,9 +816,7 @@
                     </div>
                 </div>
 
-                <!-- Admin Dashboard -->
                 <div id="adminDashboard" class="hidden">
-                    <!-- Tabs Navigation -->
                     <div class="flex border-b border-gray-700 mb-4 overflow-x-auto hide-scrollbar">
                         <button class="admin-tab px-4 py-2 font-medium text-sm whitespace-nowrap border-b-2 border-blue-500 text-blue-400" data-tab="users">
                             <span class="material-symbols-outlined align-middle mr-1">group</span> Pengurusan Pengguna
@@ -875,7 +832,6 @@
                         </button>
                     </div>
                     
-                    <!-- Tab Content: Users Management -->
                     <div id="adminUsersTab" class="admin-tab-content">
                         <div class="card mb-4">
                             <div class="flex justify-between items-center mb-4">
@@ -905,7 +861,6 @@
                             </div>
                         </div>
                         
-                        <!-- Edit User Modal -->
                         <div id="adminEditUserModal" class="modal-overlay" style="display: none;">
                             <div class="modal max-w-lg">
                                 <div class="modal-header">
@@ -941,7 +896,6 @@
                         </div>
                     </div>
                     
-                    <!-- Tab Content: Location Settings -->
                     <div id="adminLocationTab" class="admin-tab-content hidden">
                         <div class="card">
                             <h2 class="text-xl font-bold text-white mb-4">Tetapan Lokasi Pejabat</h2>
@@ -998,7 +952,6 @@
                         </div>
                     </div>
                     
-                    <!-- Tab Content: All Reports -->
                     <div id="adminReportsTab" class="admin-tab-content hidden">
                         <div class="card">
                             <h2 class="text-xl font-bold text-white mb-4">Laporan Semua Pengguna</h2>
@@ -1034,7 +987,6 @@
                         </div>
                     </div>
                     
-                    <!-- Tab Content: System Settings -->
                     <div id="adminSettingsTab" class="admin-tab-content hidden">
                         <div class="card">
                             <h2 class="text-xl font-bold text-white mb-4">Tetapan Sistem</h2>
@@ -1096,7 +1048,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAB1Lqs-9EHLFI-pnMnKwyHYogNNQq7F8A",
             authDomain: "kehadiran-upskk.firebaseapp.com",
@@ -1111,16 +1062,16 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        // Default office coordinates (will be updated from config)
+        // Default office coordinates
         let officeCoordinates = {
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        let locationTolerance = 1500; // 1.5km
+        let locationTolerance = 1500;
 
         // Global variables
         let userId = null;
-        let firestoreUserId = null; // ID sebenar dalam Firestore
+        let firestoreUserId = null;
         let isFaceRegistered = false;
         let userData = null;
         let videoStream = null;
@@ -1134,11 +1085,6 @@
         // Admin variables
         let isAdmin = false;
         let allUsers = [];
-        let officeConfig = {
-            latitude: 1.5329149992751578,
-            longitude: 110.35895714753464,
-            tolerance: 1500
-        };
 
         // DOM Elements
         const loginPageDiv = document.getElementById('loginPage');
@@ -1264,7 +1210,6 @@
                     }
                 };
                 
-                // Check screen orientation
                 if (window.screen && window.screen.orientation) {
                     const orientation = window.screen.orientation.type;
                     isPortraitMode = orientation.includes('portrait');
@@ -1332,7 +1277,6 @@
             return detections ? Array.from(detections.descriptor) : null;
         }
 
-        // ========== FACE DETECTION HELPER FUNCTIONS ==========
         function getVideoDimensions(videoEl) {
             const videoWidth = videoEl.videoWidth;
             const videoHeight = videoEl.videoHeight;
@@ -1514,7 +1458,6 @@
             
             livenessInstructions.textContent = 'Sila senyum untuk pengesahan...';
             
-            // Face detection interval
             let faceDetectionInterval = setInterval(async () => {
                 const videoEl = scanVideoElement;
                 const dims = getVideoDimensions(videoEl);
@@ -1539,7 +1482,6 @@
                 }
             }, 100);
 
-            // Liveness check
             const checkLiveness = new Promise((resolve, reject) => {
                 let smileDetected = false;
                 let checkInterval = setInterval(async () => {
@@ -1607,17 +1549,11 @@
                 const configSnap = await getDoc(configRef);
                 
                 if (configSnap.exists()) {
-                    officeConfig = configSnap.data();
-                    document.getElementById('adminLatitude').value = officeConfig.latitude;
-                    document.getElementById('adminLongitude').value = officeConfig.longitude;
-                    document.getElementById('adminTolerance').value = officeConfig.tolerance;
-                    
                     officeCoordinates = {
-                        latitude: officeConfig.latitude,
-                        longitude: officeConfig.longitude
+                        latitude: configSnap.data().latitude,
+                        longitude: configSnap.data().longitude
                     };
-                    locationTolerance = officeConfig.tolerance;
-                    console.log('Loaded office config from kehadiran-upskk');
+                    locationTolerance = configSnap.data().tolerance;
                 }
             } catch (error) {
                 console.error('Error loading config:', error);
@@ -1644,88 +1580,24 @@
                     updatedAt: new Date()
                 }, { merge: true });
                 
-                try {
-                    const logRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
-                    await addDoc(logRef, {
-                        latitude,
-                        longitude,
-                        tolerance,
-                        updatedBy: userId,
-                        updatedAt: new Date()
-                    });
-                } catch (logError) {
-                    console.error('Error saving log:', logError);
-                }
-                
                 officeCoordinates = { latitude, longitude };
                 locationTolerance = tolerance;
                 
                 showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
-                loadLocationLogs();
             } catch (error) {
                 console.error('Error saving location:', error);
                 showModal('Ralat', 'Gagal menyimpan lokasi: ' + error.message, 'error');
             }
         }
 
-        async function loadLocationLogs() {
-            try {
-                const logsRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
-                const logsSnap = await getDocs(logsRef);
-                
-                const tbody = document.getElementById('adminLocationLogBody');
-                tbody.innerHTML = '';
-                
-                if (logsSnap.empty) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
-                    return;
-                }
-                
-                const sortedLogs = logsSnap.docs.sort((a, b) => {
-                    const dateA = a.data().updatedAt?.toDate() || new Date(0);
-                    const dateB = b.data().updatedAt?.toDate() || new Date(0);
-                    return dateB - dateA;
-                });
-                
-                sortedLogs.forEach(logDoc => {
-                    const log = logDoc.data();
-                    const row = document.createElement('tr');
-                    const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
-                    const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
-                    
-                    row.innerHTML = `
-                        <td>${updatedAt}</td>
-                        <td>${latLng}</td>
-                        <td>${log.tolerance || 1500}m</td>
-                        <td>${log.updatedBy || '-'}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-            } catch (error) {
-                console.error('Error loading logs:', error);
-                const tbody = document.getElementById('adminLocationLogBody');
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
-            }
-        }
-
         async function loadAllUsers() {
-            if (!isAdmin) {
-                console.log('Not admin, cannot load users');
-                return;
-            }
-            
-            console.log('Loading users from default-app-id/users...');
+            if (!isAdmin) return;
             
             try {
                 const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
                 const usersSnap = await getDocs(usersRef);
                 
-                console.log(`Found ${usersSnap.size} user documents`);
-                
                 allUsers = [];
-                const tbody = document.getElementById('adminUsersTableBody');
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>';
                 
                 for (const userDoc of usersSnap.docs) {
                     const firestoreId = userDoc.id;
@@ -1742,9 +1614,7 @@
                                 email: userData.email || 'Tiada email',
                                 department: userData.department || 'Tiada',
                                 role: userData.role || 'user',
-                                faceDescriptor: userData.faceDescriptor,
-                                createdAt: userData.createdAt,
-                                faceRegisteredAt: userData.faceRegisteredAt
+                                faceDescriptor: userData.faceDescriptor
                             });
                         }
                     } catch (e) {
@@ -1752,21 +1622,11 @@
                     }
                 }
                 
-                console.log(`Total users loaded: ${allUsers.length}`);
-                
-                if (allUsers.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-yellow-500">Tiada pengguna dijumpai</td></tr>';
-                } else {
-                    renderUsersTable();
-                    updateAdminStats();
-                }
+                renderUsersTable();
+                updateAdminStats();
                 
             } catch (error) {
                 console.error('Error loading users:', error);
-                const tbody = document.getElementById('adminUsersTableBody');
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">
-                    Error: ${error.message}
-                </td></tr>`;
             }
         }
 
@@ -1834,7 +1694,7 @@
         };
 
         window.deleteUser = async function(userId) {
-            if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
+            if (!confirm('Anda pasti mahu padam pengguna ini?')) return;
             
             try {
                 await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
@@ -1849,12 +1709,12 @@
                 loadAllUsers();
             } catch (error) {
                 console.error('Error deleting user:', error);
-                showModal('Ralat', 'Gagal memadam pengguna: ' + error.message, 'error');
+                showModal('Ralat', 'Gagal memadam pengguna', 'error');
             }
         };
 
         window.resetUserFace = async function(userId) {
-            if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
+            if (!confirm('Reset pendaftaran wajah?')) return;
             
             try {
                 await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
@@ -1863,152 +1723,9 @@
                 loadAllUsers();
             } catch (error) {
                 console.error('Error resetting face:', error);
-                showModal('Ralat', 'Gagal reset wajah: ' + error.message, 'error');
+                showModal('Ralat', 'Gagal reset wajah', 'error');
             }
         };
-
-        async function generateAdminPDF() {
-            const startDate = document.getElementById('adminReportStartDate').value;
-            const endDate = document.getElementById('adminReportEndDate').value;
-            const selectedUser = document.getElementById('adminReportUserSelect').value;
-            
-            if (!startDate || !endDate) {
-                showModal('Ralat', 'Sila pilih tarikh', 'error');
-                return;
-            }
-            
-            try {
-                const doc = new jsPDF({
-                    format: 'a4',
-                    unit: 'mm'
-                });
-                
-                let allData = [];
-                
-                if (selectedUser === 'all') {
-                    for (const user of allUsers) {
-                        const q = query(
-                            collection(db, 'artifacts', 'default-app-id', 'users', user.id, 'attendance'),
-                            where('__name__', '>=', startDate),
-                            where('__name__', '<=', endDate)
-                        );
-                        const snap = await getDocs(q);
-                        
-                        snap.docs.forEach(docSnap => {
-                            const data = docSnap.data();
-                            allData.push({
-                                userName: user.name,
-                                department: user.department,
-                                date: docSnap.id,
-                                clockIn: data.clockIn,
-                                clockOut: data.clockOut,
-                                totalHours: data.totalHours,
-                                totalOT: data.totalOT
-                            });
-                        });
-                    }
-                } else {
-                    const q = query(
-                        collection(db, 'artifacts', 'default-app-id', 'users', selectedUser, 'attendance'),
-                        where('__name__', '>=', startDate),
-                        where('__name__', '<=', endDate)
-                    );
-                    const snap = await getDocs(q);
-                    const user = allUsers.find(u => u.id === selectedUser);
-                    
-                    snap.docs.forEach(docSnap => {
-                        const data = docSnap.data();
-                        allData.push({
-                            userName: user?.name || 'Unknown',
-                            department: user?.department || '-',
-                            date: docSnap.id,
-                            clockIn: data.clockIn,
-                            clockOut: data.clockOut,
-                            totalHours: data.totalHours,
-                            totalOT: data.totalOT
-                        });
-                    });
-                }
-                
-                // Generate PDF
-                let y = 20;
-                doc.setFontSize(16);
-                doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
-                
-                y += 10;
-                doc.setFontSize(10);
-                doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
-                y += 5;
-                doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
-                
-                y += 10;
-                
-                const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
-                const colWidths = [40, 30, 30, 25, 25, 20, 20];
-                
-                doc.setFont('helvetica', 'bold');
-                let x = 20;
-                headers.forEach((header, i) => {
-                    doc.rect(x, y, colWidths[i], 8);
-                    doc.text(header, x + 2, y + 5);
-                    x += colWidths[i];
-                });
-                
-                y += 8;
-                doc.setFont('helvetica', 'normal');
-                
-                allData.sort((a, b) => a.date.localeCompare(b.date));
-                
-                allData.forEach(item => {
-                    if (y > 280) {
-                        doc.addPage();
-                        y = 20;
-                        
-                        x = 20;
-                        doc.setFont('helvetica', 'bold');
-                        headers.forEach((header, i) => {
-                            doc.rect(x, y, colWidths[i], 8);
-                            doc.text(header, x + 2, y + 5);
-                            x += colWidths[i];
-                        });
-                        y += 8;
-                        doc.setFont('helvetica', 'normal');
-                    }
-                    
-                    x = 20;
-                    
-                    const clockInTime = item.clockIn ? item.clockIn.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
-                    const clockOutTime = item.clockOut ? item.clockOut.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '-';
-                    const totalHours = item.totalHours ? item.totalHours.toFixed(1) : '-';
-                    const totalOT = item.totalOT ? item.totalOT.toFixed(1) : '-';
-                    
-                    const rowData = [
-                        item.userName?.substring(0, 15) || '-',
-                        item.department?.substring(0, 10) || '-',
-                        item.date,
-                        clockInTime,
-                        clockOutTime,
-                        totalHours,
-                        totalOT
-                    ];
-                    
-                    rowData.forEach((text, i) => {
-                        doc.rect(x, y, colWidths[i], 8);
-                        doc.text(text.toString(), x + 2, y + 5);
-                        x += colWidths[i];
-                    });
-                    
-                    y += 8;
-                });
-                
-                doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
-                showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
-                
-            } catch (error) {
-                console.error('Admin PDF error:', error);
-                showModal('Ralat', 'Gagal menjana laporan', 'error');
-            }
-        }
 
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
@@ -2031,17 +1748,13 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const authUid = userCredential.user.uid;
                 
-                // Simpan profile pengguna di default-app-id dengan generate ID sendiri
-                const firestoreId = authUid; // Guna auth UID sebagai Firestore ID
-                
-                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', firestoreId, 'profile', 'data'), {
+                await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', authUid, 'profile', 'data'), {
                     name, 
                     department, 
                     email,
                     role: 'user',
                     faceDescriptor: null, 
-                    createdAt: new Date(),
-                    authId: authUid
+                    createdAt: new Date()
                 });
                 
                 showStatusMessage('Berjaya daftar! Sila daftar wajah.', 'success');
@@ -2490,7 +2203,6 @@
             try {
                 await loadFaceModels();
                 
-                // Set default dates
                 const today = new Date();
                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
                 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -2514,93 +2226,95 @@
                         userId = user.uid;
                         console.log('Auth UID:', userId);
                         
-                        // Cari user profile berdasarkan email
+                        // Try direct access first - maybe the Firestore ID matches Auth UID
                         try {
-                            const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
-                            const usersSnap = await getDocs(usersRef);
+                            const directProfileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                            const directProfileSnap = await getDoc(directProfileRef);
                             
-                            let foundUser = null;
-                            let foundUserId = null;
-                            
-                            for (const userDoc of usersSnap.docs) {
-                                const uid = userDoc.id;
-                                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
-                                const profileSnap = await getDoc(profileRef);
-                                
-                                if (profileSnap.exists() && profileSnap.data().email === user.email) {
-                                    foundUser = profileSnap.data();
-                                    foundUserId = uid;
-                                    console.log('✅ Found user data with Firestore ID:', uid);
-                                    break;
-                                }
+                            if (directProfileSnap.exists()) {
+                                firestoreUserId = userId;
+                                userData = directProfileSnap.data();
+                                console.log('✅ Found user data with matching Auth UID');
                             }
-                            
-                            if (foundUser) {
-                                firestoreUserId = foundUserId;
-                                userData = foundUser;
+                        } catch (e) {
+                            console.log('No direct match, will try email search');
+                        }
+                        
+                        // If not found, try searching by email
+                        if (!firestoreUserId) {
+                            try {
+                                const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+                                const usersSnap = await getDocs(usersRef);
                                 
-                                // Set isAdmin berdasarkan role dalam profile
-                                isAdmin = (userData.role === 'admin');
-                                console.log('Is Admin:', isAdmin);
-                                
-                                // Show/hide admin button
-                                const adminBtn = document.getElementById('adminPanelBtn');
-                                if (adminBtn) {
-                                    adminBtn.style.display = isAdmin ? 'flex' : 'none';
-                                }
-                                
-                                // Check face registration
-                                if (userData.faceDescriptor) {
-                                    try {
-                                        JSON.parse(userData.faceDescriptor);
-                                        isFaceRegistered = true;
-                                        createFaceMatcher(userData.faceDescriptor);
-                                    } catch (e) {
-                                        isFaceRegistered = false;
+                                for (const userDoc of usersSnap.docs) {
+                                    const uid = userDoc.id;
+                                    const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
+                                    const profileSnap = await getDoc(profileRef);
+                                    
+                                    if (profileSnap.exists() && profileSnap.data().email === user.email) {
+                                        firestoreUserId = uid;
+                                        userData = profileSnap.data();
+                                        console.log('✅ Found user data by email with Firestore ID:', uid);
+                                        break;
                                     }
                                 }
-                                
-                                await checkTodayAttendance();
-                                
-                                try {
-                                    const attendanceQuery = query(
-                                        collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
-                                        where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
-                                        where('__name__', '<=', endDateInput.value)
-                                    );
-                                    
-                                    onSnapshot(attendanceQuery, 
-                                        (snap) => {
-                                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                            updateAttendanceTable(data);
-                                        },
-                                        (error) => {
-                                            console.error('Attendance listener error:', error);
-                                        }
-                                    );
-                                } catch (e) {
-                                    console.error('Error setting up attendance listener:', e);
-                                }
-                                
-                                await loadOfficeLocation();
-                                
-                                if (isAdmin) {
-                                    loadAllUsers();
-                                    loadLocationLogs();
-                                }
-                                
-                                if (!isFaceRegistered) {
-                                    showPage('faceRegistrationPage');
-                                } else {
-                                    showPage('dashboard');
-                                    handleGeolocationCheck();
-                                }
-                            } else {
-                                console.log('No user profile found for email:', user.email);
-                                showPage('faceRegistrationPage');
+                            } catch (error) {
+                                console.error('Error searching users:', error);
                             }
-                        } catch (error) {
-                            console.error('Error finding user data:', error);
+                        }
+                        
+                        if (firestoreUserId && userData) {
+                            // Set isAdmin based on role in profile
+                            isAdmin = (userData.role === 'admin');
+                            console.log('Is Admin:', isAdmin);
+                            
+                            const adminBtn = document.getElementById('adminPanelBtn');
+                            if (adminBtn) {
+                                adminBtn.style.display = isAdmin ? 'flex' : 'none';
+                            }
+                            
+                            if (userData.faceDescriptor) {
+                                try {
+                                    JSON.parse(userData.faceDescriptor);
+                                    isFaceRegistered = true;
+                                    createFaceMatcher(userData.faceDescriptor);
+                                } catch (e) {
+                                    isFaceRegistered = false;
+                                }
+                            }
+                            
+                            await checkTodayAttendance();
+                            
+                            try {
+                                const attendanceQuery = query(
+                                    collection(db, 'artifacts', 'default-app-id', 'users', firestoreUserId, 'attendance'),
+                                    where('__name__', '>=', startDateInput.value.split('-').slice(0, 2).join('-') + '-01'),
+                                    where('__name__', '<=', endDateInput.value)
+                                );
+                                
+                                onSnapshot(attendanceQuery, 
+                                    (snap) => {
+                                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                        updateAttendanceTable(data);
+                                    },
+                                    (error) => {
+                                        console.error('Attendance listener error:', error);
+                                    }
+                                );
+                            } catch (e) {
+                                console.error('Error setting up attendance listener:', e);
+                            }
+                            
+                            await loadOfficeLocation();
+                            
+                            if (!isFaceRegistered) {
+                                showPage('faceRegistrationPage');
+                            } else {
+                                showPage('dashboard');
+                                handleGeolocationCheck();
+                            }
+                        } else {
+                            console.log('No user profile found');
                             showPage('faceRegistrationPage');
                         }
                     } else {
@@ -2614,7 +2328,6 @@
             }
         };
 
-        // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginBtn').addEventListener('click', window.handleEmailLogin);
             document.getElementById('goToRegisterBtn').addEventListener('click', () => showPage('accountRegistrationPage'));
@@ -2630,7 +2343,6 @@
             document.getElementById('adminPanelBtn').addEventListener('click', () => {
                 showPage('adminDashboard');
                 loadAllUsers();
-                loadLocationLogs();
             });
 
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -2672,7 +2384,9 @@
             });
 
             document.getElementById('adminSaveLocationBtn').addEventListener('click', saveOfficeLocation);
-            document.getElementById('adminGeneratePdfBtn').addEventListener('click', generateAdminPDF);
+            document.getElementById('adminGeneratePdfBtn').addEventListener('click', () => {
+                showModal('Info', 'Fungusi ini akan ditambah kemudian', 'info');
+            });
 
             document.getElementById('adminSearchUser').addEventListener('input', (e) => {
                 const search = e.target.value.toLowerCase();
