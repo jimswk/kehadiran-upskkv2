@@ -1737,49 +1737,62 @@ async function loadAllUsers() {
     console.log('Loading users from default-app-id...');
     
     try {
-        // Use default-app-id untuk data lama
+        // Get all user IDs from the users collection
         const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
         const usersSnap = await getDocs(usersRef);
         
-        console.log(`Found ${usersSnap.size} users in default-app-id`);
+        console.log(`Found ${usersSnap.size} user IDs in default-app-id/users`);
         
         allUsers = [];
         const tbody = document.getElementById('adminUsersTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>';
         
         for (const userDoc of usersSnap.docs) {
-            const userId = userDoc.id;
+            const uid = userDoc.id;
             
-            // Try to get profile data (path: /users/{userId}/profile/data)
+            // Get profile data from /users/{uid}/profile/data
             try {
-                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data');
+                const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', uid, 'profile', 'data');
                 const profileSnap = await getDoc(profileRef);
                 
                 if (profileSnap.exists()) {
                     const userData = profileSnap.data();
                     allUsers.push({
-                        id: userId,
-                        ...userData
+                        id: uid,
+                        name: userData.name || 'Tiada nama',
+                        email: userData.email || 'Tiada email',
+                        department: userData.department || 'Tiada',
+                        role: userData.role || 'user',
+                        faceDescriptor: userData.faceDescriptor,
+                        createdAt: userData.createdAt,
+                        faceRegisteredAt: userData.faceRegisteredAt
                     });
+                    console.log(`✅ Loaded user: ${userData.name || uid}`);
                 } else {
-                    // If no profile/data, use the user document itself
+                    // If no profile data, still add user with basic info
                     allUsers.push({
-                        id: userId,
-                        ...userDoc.data()
+                        id: uid,
+                        name: 'Tiada profil',
+                        email: 'tiada@email.com',
+                        department: '-',
+                        role: 'user',
+                        faceDescriptor: null
                     });
+                    console.log(`⚠️ User ${uid} has no profile data`);
                 }
             } catch (e) {
-                // If error, just use user document
-                allUsers.push({
-                    id: userId,
-                    ...userDoc.data()
-                });
+                console.error(`Error loading profile for ${uid}:`, e);
             }
         }
         
         console.log(`Total users loaded: ${allUsers.length}`);
-        renderUsersTable();
-        updateAdminStats();
+        
+        if (allUsers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-yellow-500">Tiada pengguna dijumpai</td></tr>';
+        } else {
+            renderUsersTable();
+            updateAdminStats();
+        }
         
     } catch (error) {
         console.error('Error loading users:', error);
@@ -1794,11 +1807,6 @@ function renderUsersTable() {
     const tbody = document.getElementById('adminUsersTableBody');
     tbody.innerHTML = '';
     
-    if (allUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tiada pengguna</td></tr>';
-        return;
-    }
-    
     allUsers.forEach(user => {
         const row = document.createElement('tr');
         const faceStatus = user.faceDescriptor ? 
@@ -1806,10 +1814,10 @@ function renderUsersTable() {
             '<span class="status-badge warning">Belum</span>';
         
         row.innerHTML = `
-            <td>${user.name || '-'}</td>
-            <td>${user.email || '-'}</td>
-            <td>${user.department || '-'}</td>
-            <td><span class="status-badge ${user.role === 'admin' ? 'success' : ''}">${user.role || 'user'}</span></td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.department}</td>
+            <td><span class="status-badge ${user.role === 'admin' ? 'success' : ''}">${user.role}</span></td>
             <td>${faceStatus}</td>
             <td>
                 <button class="text-blue-400 hover:text-blue-300 mx-1" onclick="window.editUser('${user.id}')">
@@ -1824,6 +1832,21 @@ function renderUsersTable() {
             </td>
         `;
         tbody.appendChild(row);
+    });
+}
+
+function updateAdminStats() {
+    const total = allUsers.length;
+    const faceRegistered = allUsers.filter(u => u.faceDescriptor).length;
+    
+    document.getElementById('adminTotalUsers').textContent = total;
+    document.getElementById('adminFaceRegistered').textContent = faceRegistered;
+    
+    // Isi dropdown laporan
+    const select = document.getElementById('adminReportUserSelect');
+    select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
+    allUsers.forEach(user => {
+        select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
     });
 }
 
@@ -1897,42 +1920,48 @@ async function testAdminPermissions() {
             document.getElementById('adminEditUserModal').style.display = 'none';
         };
 
-        window.deleteUser = async function(userId) {
-            if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
-            
-            try {
-                // Delete user profile
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'));
-                
-                // Delete all attendance records
-                const attendanceRef = collection(db, 'artifacts', appId, 'users', userId, 'attendance');
-                const attendanceSnap = await getDocs(attendanceRef);
-                attendanceSnap.forEach(async (doc) => {
-                    await deleteDoc(doc.ref);
-                });
-                
-                // If admin, delete admin record
-                await deleteDoc(doc(db, 'artifacts', appId, 'admin', userId)).catch(() => {});
-                
-                showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
-                loadAllUsers();
-            } catch (error) {
-                showModal('Ralat', 'Gagal memadam pengguna', 'error');
-            }
-        };
+window.deleteUser = async function(userId) {
+    if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
+    
+    try {
+        // Delete profile data
+        await deleteDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'));
+        
+        // Delete all attendance records
+        const attendanceRef = collection(db, 'artifacts', 'default-app-id', 'users', userId, 'attendance');
+        const attendanceSnap = await getDocs(attendanceRef);
+        
+        const deletePromises = attendanceSnap.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        // If admin, delete admin record from kehadiran-upskk
+        try {
+            await deleteDoc(doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId));
+        } catch (e) {
+            // Ignore if not exists
+        }
+        
+        showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
+        loadAllUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showModal('Ralat', 'Gagal memadam pengguna: ' + error.message, 'error');
+    }
+};
 
-        window.resetUserFace = async function(userId) {
-            if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
-            
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), 
-                    { faceDescriptor: null }, { merge: true });
-                showNotification('Wajah direset', new Date().toLocaleTimeString(), 'success');
-                loadAllUsers();
-            } catch (error) {
-                showModal('Ralat', 'Gagal reset wajah', 'error');
-            }
-        };
+window.resetUserFace = async function(userId) {
+    if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
+    
+    try {
+        await setDoc(doc(db, 'artifacts', 'default-app-id', 'users', userId, 'profile', 'data'), 
+            { faceDescriptor: null }, { merge: true });
+        showNotification('Wajah direset', new Date().toLocaleTimeString(), 'success');
+        loadAllUsers();
+    } catch (error) {
+        console.error('Error resetting face:', error);
+        showModal('Ralat', 'Gagal reset wajah: ' + error.message, 'error');
+    }
+};
 
         async function generateAdminPDF() {
             const startDate = document.getElementById('adminReportStartDate').value;
