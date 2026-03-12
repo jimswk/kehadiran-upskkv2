@@ -1593,6 +1593,7 @@
         }
 
         // ========== ADMIN FUNCTIONS ==========
+// ========== ADMIN FUNCTIONS ==========
 async function loadOfficeLocation() {
     try {
         // Try to load from kehadiran-upskk first (new config)
@@ -1667,66 +1668,66 @@ async function saveOfficeLocation() {
     }
 }
 
-		async function loadLocationLogs() {
-			try {
-				const logsRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
-				const logsSnap = await getDocs(logsRef);
-				
-				const tbody = document.getElementById('adminLocationLogBody');
-				tbody.innerHTML = '';
-				
-				if (logsSnap.empty) {
-					tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
-					return;
-				}
-				
-				const sortedLogs = logsSnap.docs.sort((a, b) => {
-					const dateA = a.data().updatedAt?.toDate() || new Date(0);
-					const dateB = b.data().updatedAt?.toDate() || new Date(0);
-					return dateB - dateA;
-				});
-				
-				sortedLogs.forEach(logDoc => {
-					const log = logDoc.data();
-					const row = document.createElement('tr');
-					const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
-					const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
-					
-					row.innerHTML = `
-						<td>${updatedAt}</td>
-						<td>${latLng}</td>
-						<td>${log.tolerance || 1500}m</td>
-						<td>${log.updatedBy || '-'}</td>
-					`;
-					tbody.appendChild(row);
-				});
-				
-			} catch (error) {
-				console.error('Error loading logs:', error);
-				const tbody = document.getElementById('adminLocationLogBody');
-				tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
-			}
-		}
+async function loadLocationLogs() {
+    try {
+        const logsRef = collection(db, 'artifacts', 'kehadiran-upskk', 'config', 'office', 'logs');
+        const logsSnap = await getDocs(logsRef);
+        
+        const tbody = document.getElementById('adminLocationLogBody');
+        tbody.innerHTML = '';
+        
+        if (logsSnap.empty) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
+            return;
+        }
+        
+        const sortedLogs = logsSnap.docs.sort((a, b) => {
+            const dateA = a.data().updatedAt?.toDate() || new Date(0);
+            const dateB = b.data().updatedAt?.toDate() || new Date(0);
+            return dateB - dateA;
+        });
+        
+        sortedLogs.forEach(logDoc => {
+            const log = logDoc.data();
+            const row = document.createElement('tr');
+            const updatedAt = log.updatedAt?.toDate().toLocaleString() || '-';
+            const latLng = `${log.latitude?.toFixed(6) || '0'}, ${log.longitude?.toFixed(6) || '0'}`;
+            
+            row.innerHTML = `
+                <td>${updatedAt}</td>
+                <td>${latLng}</td>
+                <td>${log.tolerance || 1500}m</td>
+                <td>${log.updatedBy || '-'}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        const tbody = document.getElementById('adminLocationLogBody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Gagal memuat log</td></tr>';
+    }
+}
 
-		// Debug function to check admin status
-		async function checkAdminStatus() {
-			try {
-				const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
-				const adminSnap = await getDoc(adminRef);
-				console.log('Admin document exists:', adminSnap.exists());
-				if (adminSnap.exists()) {
-					console.log('Admin data:', adminSnap.data());
-				}
-				
-				// Try to access users collection
-				const usersRef = collection(db, 'artifacts', appId, 'users');
-				const testQuery = await getDocs(usersRef);
-				console.log('Can access users:', !testQuery.empty);
-				
-			} catch (error) {
-				console.error('Admin check error:', error);
-			}
-		}
+// Debug function to check admin status
+async function checkAdminStatus() {
+    try {
+        const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
+        const adminSnap = await getDoc(adminRef);
+        console.log('Admin document exists:', adminSnap.exists());
+        if (adminSnap.exists()) {
+            console.log('Admin data:', adminSnap.data());
+        }
+        
+        // Try to access users collection
+        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
+        const testQuery = await getDocs(usersRef);
+        console.log('Can access users:', !testQuery.empty);
+        
+    } catch (error) {
+        console.error('Admin check error:', error);
+    }
+}
 
 async function loadAllUsers() {
     if (!isAdmin) {
@@ -1850,7 +1851,7 @@ function updateAdminStats() {
     });
 }
 
-		// Fungsi untuk test kebenaran admin
+// Fungsi untuk test kebenaran admin
 async function testAdminPermissions() {
     console.log('Testing admin permissions...');
     console.log('Current user:', auth.currentUser?.uid);
@@ -1858,13 +1859,13 @@ async function testAdminPermissions() {
     
     try {
         // Test 1: Check admin document
-        const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
+        const adminRef = doc(db, 'artifacts', 'kehadiran-upskk', 'admin', userId);
         const adminSnap = await getDoc(adminRef);
         console.log('Admin doc exists:', adminSnap.exists());
         console.log('Admin doc data:', adminSnap.data());
         
         // Test 2: Try to read users collection
-        const usersRef = collection(db, 'artifacts', appId, 'users');
+        const usersRef = collection(db, 'artifacts', 'default-app-id', 'users');
         const usersSnap = await getDocs(usersRef);
         console.log('Can read users collection:', !usersSnap.empty);
         console.log('Number of users:', usersSnap.size);
@@ -1872,7 +1873,7 @@ async function testAdminPermissions() {
         // Test 3: Try to read a specific user's profile
         if (!usersSnap.empty) {
             const firstUser = usersSnap.docs[0];
-            const profileRef = doc(db, 'artifacts', appId, 'users', firstUser.id, 'profile', 'data');
+            const profileRef = doc(db, 'artifacts', 'default-app-id', 'users', firstUser.id, 'profile', 'data');
             const profileSnap = await getDoc(profileRef);
             console.log('Can read user profile:', profileSnap.exists());
         }
@@ -1885,40 +1886,22 @@ async function testAdminPermissions() {
     }
 }
 
-// Panggil function ni dari console
-// testAdminPermissions();
+window.editUser = function(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    document.getElementById('adminEditUserId').value = userId;
+    document.getElementById('adminEditName').value = user.name || '';
+    document.getElementById('adminEditEmail').value = user.email || '';
+    document.getElementById('adminEditDepartment').value = user.department || '';
+    document.getElementById('adminEditRole').value = user.role || 'user';
+    
+    document.getElementById('adminEditUserModal').style.display = 'flex';
+};
 
-        function updateAdminStats() {
-            const total = allUsers.length;
-            const faceRegistered = allUsers.filter(u => u.faceDescriptor).length;
-            
-            document.getElementById('adminTotalUsers').textContent = total;
-            document.getElementById('adminFaceRegistered').textContent = faceRegistered;
-            
-            // Isi dropdown laporan
-            const select = document.getElementById('adminReportUserSelect');
-            select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
-            allUsers.forEach(user => {
-                select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
-            });
-        }
-
-        window.editUser = function(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) return;
-            
-            document.getElementById('adminEditUserId').value = userId;
-            document.getElementById('adminEditName').value = user.name || '';
-            document.getElementById('adminEditEmail').value = user.email || '';
-            document.getElementById('adminEditDepartment').value = user.department || '';
-            document.getElementById('adminEditRole').value = user.role || 'user';
-            
-            document.getElementById('adminEditUserModal').style.display = 'flex';
-        };
-
-        window.hideAdminEditModal = function() {
-            document.getElementById('adminEditUserModal').style.display = 'none';
-        };
+window.hideAdminEditModal = function() {
+    document.getElementById('adminEditUserModal').style.display = 'none';
+};
 
 window.deleteUser = async function(userId) {
     if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
@@ -1963,137 +1946,137 @@ window.resetUserFace = async function(userId) {
     }
 };
 
-        async function generateAdminPDF() {
-            const startDate = document.getElementById('adminReportStartDate').value;
-            const endDate = document.getElementById('adminReportEndDate').value;
-            const selectedUser = document.getElementById('adminReportUserSelect').value;
-            
-            if (!startDate || !endDate) {
-                showModal('Ralat', 'Sila pilih tarikh', 'error');
-                return;
-            }
-            
-            try {
-                const doc = new jsPDF({
-                    format: 'a4',
-                    unit: 'mm'
-                });
+async function generateAdminPDF() {
+    const startDate = document.getElementById('adminReportStartDate').value;
+    const endDate = document.getElementById('adminReportEndDate').value;
+    const selectedUser = document.getElementById('adminReportUserSelect').value;
+    
+    if (!startDate || !endDate) {
+        showModal('Ralat', 'Sila pilih tarikh', 'error');
+        return;
+    }
+    
+    try {
+        const doc = new jsPDF({
+            format: 'a4',
+            unit: 'mm'
+        });
+        
+        let allData = [];
+        
+        if (selectedUser === 'all') {
+            // Loop semua pengguna
+            for (const user of allUsers) {
+                const q = query(
+                    collection(db, 'artifacts', 'default-app-id', 'users', user.id, 'attendance'),
+                    where('__name__', '>=', startDate),
+                    where('__name__', '<=', endDate)
+                );
+                const snap = await getDocs(q);
                 
-                let allData = [];
-                
-                if (selectedUser === 'all') {
-                    // Loop semua pengguna
-                    for (const user of allUsers) {
-                        const q = query(
-                            collection(db, 'artifacts', appId, 'users', user.id, 'attendance'),
-                            where('__name__', '>=', startDate),
-                            where('__name__', '<=', endDate)
-                        );
-                        const snap = await getDocs(q);
-                        
-                        snap.docs.forEach(docSnap => {
-                            allData.push({
-                                userName: user.name,
-                                department: user.department,
-                                date: docSnap.id,
-                                ...docSnap.data()
-                            });
-                        });
-                    }
-                } else {
-                    const q = query(
-                        collection(db, 'artifacts', appId, 'users', selectedUser, 'attendance'),
-                        where('__name__', '>=', startDate),
-                        where('__name__', '<=', endDate)
-                    );
-                    const snap = await getDocs(q);
-                    const user = allUsers.find(u => u.id === selectedUser);
-                    
-                    snap.docs.forEach(docSnap => {
-                        allData.push({
-                            userName: user?.name || 'Unknown',
-                            department: user?.department || '-',
-                            date: docSnap.id,
-                            ...docSnap.data()
-                        });
+                snap.docs.forEach(docSnap => {
+                    allData.push({
+                        userName: user.name,
+                        department: user.department,
+                        date: docSnap.id,
+                        ...docSnap.data()
                     });
-                }
+                });
+            }
+        } else {
+            const q = query(
+                collection(db, 'artifacts', 'default-app-id', 'users', selectedUser, 'attendance'),
+                where('__name__', '>=', startDate),
+                where('__name__', '<=', endDate)
+            );
+            const snap = await getDocs(q);
+            const user = allUsers.find(u => u.id === selectedUser);
+            
+            snap.docs.forEach(docSnap => {
+                allData.push({
+                    userName: user?.name || 'Unknown',
+                    department: user?.department || '-',
+                    date: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+        }
+        
+        // Generate PDF
+        let y = 20;
+        doc.setFontSize(16);
+        doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
+        
+        y += 10;
+        doc.setFontSize(10);
+        doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
+        y += 5;
+        doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
+        
+        y += 10;
+        
+        // Table headers
+        const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
+        const colWidths = [40, 30, 30, 25, 25, 20, 20];
+        
+        doc.setFont('helvetica', 'bold');
+        let x = 20;
+        headers.forEach((header, i) => {
+            doc.rect(x, y, colWidths[i], 8);
+            doc.text(header, x + 2, y + 5);
+            x += colWidths[i];
+        });
+        
+        y += 8;
+        doc.setFont('helvetica', 'normal');
+        
+        allData.sort((a, b) => a.date.localeCompare(b.date));
+        
+        allData.forEach(item => {
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
                 
-                // Generate PDF
-                let y = 20;
-                doc.setFontSize(16);
-                doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
-                
-                y += 10;
-                doc.setFontSize(10);
-                doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
-                y += 5;
-                doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
-                
-                y += 10;
-                
-                // Table headers
-                const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
-                const colWidths = [40, 30, 30, 25, 25, 20, 20];
-                
+                // Redraw headers on new page
+                x = 20;
                 doc.setFont('helvetica', 'bold');
-                let x = 20;
                 headers.forEach((header, i) => {
                     doc.rect(x, y, colWidths[i], 8);
                     doc.text(header, x + 2, y + 5);
                     x += colWidths[i];
                 });
-                
                 y += 8;
                 doc.setFont('helvetica', 'normal');
-                
-                allData.sort((a, b) => a.date.localeCompare(b.date));
-                
-                allData.forEach(item => {
-                    if (y > 280) {
-                        doc.addPage();
-                        y = 20;
-                        
-                        // Redraw headers on new page
-                        x = 20;
-                        doc.setFont('helvetica', 'bold');
-                        headers.forEach((header, i) => {
-                            doc.rect(x, y, colWidths[i], 8);
-                            doc.text(header, x + 2, y + 5);
-                            x += colWidths[i];
-                        });
-                        y += 8;
-                        doc.setFont('helvetica', 'normal');
-                    }
-                    
-                    x = 20;
-                    const rowData = [
-                        item.userName?.substring(0, 15) || '-',
-                        item.department?.substring(0, 10) || '-',
-                        item.date,
-                        item.clockIn?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
-                        item.clockOut?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
-                        item.totalHours ? item.totalHours.toFixed(1) : '-',
-                        item.totalOT ? item.totalOT.toFixed(1) : '-'
-                    ];
-                    
-                    rowData.forEach((text, i) => {
-                        doc.rect(x, y, colWidths[i], 8);
-                        doc.text(text.toString(), x + 2, y + 5);
-                        x += colWidths[i];
-                    });
-                    
-                    y += 8;
-                });
-                
-                doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
-                showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
-                
-            } catch (error) {
-                console.error('Admin PDF error:', error);
-                showModal('Ralat', 'Gagal menjana laporan', 'error');
             }
-        }
+            
+            x = 20;
+            const rowData = [
+                item.userName?.substring(0, 15) || '-',
+                item.department?.substring(0, 10) || '-',
+                item.date,
+                item.clockIn?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
+                item.clockOut?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
+                item.totalHours ? item.totalHours.toFixed(1) : '-',
+                item.totalOT ? item.totalOT.toFixed(1) : '-'
+            ];
+            
+            rowData.forEach((text, i) => {
+                doc.rect(x, y, colWidths[i], 8);
+                doc.text(text.toString(), x + 2, y + 5);
+                x += colWidths[i];
+            });
+            
+            y += 8;
+        });
+        
+        doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
+        showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
+        
+    } catch (error) {
+        console.error('Admin PDF error:', error);
+        showModal('Ralat', 'Gagal menjana laporan', 'error');
+    }
+}
 
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
