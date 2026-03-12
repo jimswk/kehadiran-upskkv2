@@ -572,6 +572,21 @@
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
+        /* ADMIN TABS */
+        .admin-tab {
+            transition: all 0.2s ease;
+        }
+        
+        .admin-tab:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* MAP PLACEHOLDER */
+        .map-placeholder {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px dashed #3b82f6;
+        }
     </style>
 </head>
 <body>
@@ -625,7 +640,11 @@
                     </div>
                     <span class="official-badge">RASMI</span>
                 </div>
-                <div class="mt-3 sm:mt-0">
+                <div class="mt-3 sm:mt-0 flex items-center">
+                    <button class="flex items-center gap-2 rounded-lg h-10 px-4 bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white mr-2" id="adminPanelBtn" style="display: none;">
+                        <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                        <span class="hidden sm:inline">Admin</span>
+                    </button>
                     <button class="flex items-center gap-2 rounded-lg h-10 px-4 bg-transparent hover:bg-gray-700 text-sm font-medium text-gray-200 border border-gray-600" id="signOutBtn">
                         <span>Log Keluar</span>
                         <span class="material-symbols-outlined text-sm">logout</span>
@@ -716,9 +735,7 @@
                         <div class="mt-6">
                             <div class="video-container">
                                 <video id="videoElement" autoplay muted playsinline></video>
-                                <div class="face-guide">
-                                    <div class="face-guide-text">Posisikan wajah anda di sini</div>
-                                </div>
+                                <div class="face-guide"></div>
                             </div>
                             <div class="mt-4 flex-col gap-2 text-sm text-gray-400">
                                 <div class="flex items-center gap-2">
@@ -745,11 +762,11 @@
                     </div>
                 </div>
 
-                <!-- Dashboard -->
+                <!-- User Dashboard -->
                 <div id="dashboard" class="hidden">
                     <!-- Clock In/Out Section -->
                     <div class="card mb-6">
-                        <!-- Status kehadiran menggunakan container baru -->
+                        <!-- Status kehadiran -->
                         <div class="attendance-status-container">
                             <div class="attendance-status-label">STATUS KEHADIRAN</div>
                             <div class="attendance-status-value error" id="attendanceStatusValue">Belum Clock In</div>
@@ -761,7 +778,7 @@
                             <div id="faceOverlay"></div>
                         </div>
                         
-                        <!-- Butang Clock In/Out tepat di bawah video-container -->
+                        <!-- Butang Clock In/Out -->
                         <div class="flex-col gap-3 mt-4">
                             <button class="btn-primary btn-success" id="clockInBtn">
                                 <span class="material-symbols-outlined">login</span>
@@ -839,6 +856,237 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Admin Dashboard -->
+                <div id="adminDashboard" class="hidden">
+                    <!-- Tabs Navigation -->
+                    <div class="flex border-b border-gray-700 mb-4 overflow-x-auto hide-scrollbar">
+                        <button class="admin-tab px-4 py-2 font-medium text-sm whitespace-nowrap border-b-2 border-blue-500 text-blue-400" data-tab="users">
+                            <span class="material-symbols-outlined align-middle mr-1">group</span> Pengurusan Pengguna
+                        </button>
+                        <button class="admin-tab px-4 py-2 font-medium text-sm whitespace-nowrap text-gray-400 hover:text-white" data-tab="location">
+                            <span class="material-symbols-outlined align-middle mr-1">location_on</span> Tetapan Lokasi
+                        </button>
+                        <button class="admin-tab px-4 py-2 font-medium text-sm whitespace-nowrap text-gray-400 hover:text-white" data-tab="reports">
+                            <span class="material-symbols-outlined align-middle mr-1">summarize</span> Laporan Semua
+                        </button>
+                        <button class="admin-tab px-4 py-2 font-medium text-sm whitespace-nowrap text-gray-400 hover:text-white" data-tab="settings">
+                            <span class="material-symbols-outlined align-middle mr-1">settings</span> Tetapan Sistem
+                        </button>
+                    </div>
+                    
+                    <!-- Tab Content: Users Management -->
+                    <div id="adminUsersTab" class="admin-tab-content">
+                        <div class="card mb-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-white">Senarai Pengguna</h2>
+                                <div class="flex gap-2">
+                                    <input type="text" id="adminSearchUser" placeholder="Cari pengguna..." class="input-field py-2 px-3 min-h-[40px] text-sm w-48">
+                                    <button id="adminRefreshUsers" class="btn-secondary py-2 px-3 min-h-[40px]">
+                                        <span class="material-symbols-outlined">refresh</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container hide-scrollbar">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama</th>
+                                            <th>Email</th>
+                                            <th>Jabatan</th>
+                                            <th>Role</th>
+                                            <th>Status Wajah</th>
+                                            <th>Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminUsersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit User Modal -->
+                        <div id="adminEditUserModal" class="modal-overlay" style="display: none;">
+                            <div class="modal max-w-lg">
+                                <div class="modal-header">
+                                    <h3 class="font-bold text-xl text-white">Edit Pengguna</h3>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="adminEditUserId">
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Nama</label>
+                                        <input type="text" id="adminEditName" class="input-field py-2 px-3 min-h-[40px]">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                        <input type="email" id="adminEditEmail" class="input-field py-2 px-3 min-h-[40px]">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Jabatan</label>
+                                        <input type="text" id="adminEditDepartment" class="input-field py-2 px-3 min-h-[40px]">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Role</label>
+                                        <select id="adminEditRole" class="input-field py-2 px-3 min-h-[40px]">
+                                            <option value="user">User Biasa</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer flex-row gap-2">
+                                    <button class="btn-secondary flex-1" onclick="hideAdminEditModal()">Batal</button>
+                                    <button class="btn-primary flex-1" id="adminSaveUserBtn">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Content: Location Settings -->
+                    <div id="adminLocationTab" class="admin-tab-content hidden">
+                        <div class="card">
+                            <h2 class="text-xl font-bold text-white mb-4">Tetapan Lokasi Pejabat</h2>
+                            
+                            <div class="mb-4">
+                                <div id="adminLocationMap" class="w-full h-64 bg-gray-800 rounded-lg mb-3 relative map-placeholder">
+                                    <div class="absolute inset-0 flex items-center justify-center text-gray-500">
+                                        <span class="material-symbols-outlined text-6xl">map</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Latitud</label>
+                                        <input type="number" step="any" id="adminLatitude" class="input-field py-2 px-3 min-h-[40px]" value="1.5329149992751578">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-1">Longitud</label>
+                                        <input type="number" step="any" id="adminLongitude" class="input-field py-2 px-3 min-h-[40px]" value="110.35895714753464">
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Tolerance (meter)</label>
+                                    <input type="number" id="adminTolerance" class="input-field py-2 px-3 min-h-[40px]" value="1500">
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button id="adminSaveLocationBtn" class="btn-primary">
+                                        <span class="material-symbols-outlined">save</span>
+                                        <span>Simpan Lokasi</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-700 pt-4 mt-4">
+                                <h3 class="font-bold text-white mb-3">Log Perubahan Lokasi</h3>
+                                <div class="table-container">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr>
+                                                <th>Tarikh</th>
+                                                <th>Lat/Lng</th>
+                                                <th>Tolerance</th>
+                                                <th>Diubah Oleh</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="adminLocationLogBody">
+                                            <tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Content: All Reports -->
+                    <div id="adminReportsTab" class="admin-tab-content hidden">
+                        <div class="card">
+                            <h2 class="text-xl font-bold text-white mb-4">Laporan Semua Pengguna</h2>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Tarikh Mula</label>
+                                    <input type="date" id="adminReportStartDate" class="input-field py-2 px-3 min-h-[40px]">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Tarikh Tamat</label>
+                                    <input type="date" id="adminReportEndDate" class="input-field py-2 px-3 min-h-[40px]">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Pilih Pengguna</label>
+                                <select id="adminReportUserSelect" class="input-field py-2 px-3 min-h-[40px]">
+                                    <option value="all">SEMUA PENGGUNA</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button id="adminGeneratePdfBtn" class="btn-primary flex-1">
+                                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                                    <span>Jana PDF</span>
+                                </button>
+                                <button id="adminExportExcelBtn" class="btn-secondary flex-1">
+                                    <span class="material-symbols-outlined">table_chart</span>
+                                    <span>Excel</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Content: System Settings -->
+                    <div id="adminSettingsTab" class="admin-tab-content hidden">
+                        <div class="card">
+                            <h2 class="text-xl font-bold text-white mb-4">Tetapan Sistem</h2>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="adminRequireFace" class="w-5 h-5" checked>
+                                    <span class="text-white">Wajib pengesahan wajah untuk clock in/out</span>
+                                </label>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="adminRequireLocation" class="w-5 h-5" checked>
+                                    <span class="text-white">Wajib lokasi dalam kawasan pejabat</span>
+                                </label>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Masa bekerja normal (jam/hari)</label>
+                                <input type="number" id="adminWorkHours" class="input-field py-2 px-3 min-h-[40px]" value="8" step="0.5" min="0" max="24">
+                            </div>
+                            
+                            <button id="adminSaveSettingsBtn" class="btn-primary">
+                                <span class="material-symbols-outlined">save</span>
+                                <span>Simpan Tetapan</span>
+                            </button>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <h3 class="font-bold text-white mb-3">Statistik Sistem</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-gray-800 p-3 rounded-lg">
+                                    <p class="text-sm text-gray-400">Jumlah Pengguna</p>
+                                    <p class="text-2xl font-bold" id="adminTotalUsers">0</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-lg">
+                                    <p class="text-sm text-gray-400">Wajah Didaftar</p>
+                                    <p class="text-2xl font-bold" id="adminFaceRegistered">0</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-lg">
+                                    <p class="text-sm text-gray-400">Kehadiran Hari Ini</p>
+                                    <p class="text-2xl font-bold" id="adminTodayAttendance">0</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-lg">
+                                    <p class="text-sm text-gray-400">Belum Clock Out</p>
+                                    <p class="text-2xl font-bold" id="adminNotClockedOut">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -846,7 +1094,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -864,12 +1112,12 @@
         const auth = getAuth(app);
         const appId = 'default-app-id';
         
-        // Office coordinates
-        const officeCoordinates = {
+        // Default office coordinates (will be updated from config)
+        let officeCoordinates = {
             latitude: 1.5329149992751578,
             longitude: 110.35895714753464
         };
-        const locationTolerance = 1500; // 1.5km
+        let locationTolerance = 1500; // 1.5km
 
         // Global variables
         let userId = null;
@@ -882,12 +1130,22 @@
         let isClockedIn = false;
         let isClockedOut = false;
         let isPortraitMode = true;
+        
+        // Admin variables
+        let isAdmin = false;
+        let allUsers = [];
+        let officeConfig = {
+            latitude: 1.5329149992751578,
+            longitude: 110.35895714753464,
+            tolerance: 1500
+        };
 
         // DOM Elements
         const loginPageDiv = document.getElementById('loginPage');
         const accountRegistrationPageDiv = document.getElementById('accountRegistrationPage');
         const faceRegistrationPageDiv = document.getElementById('faceRegistrationPage');
         const dashboardDiv = document.getElementById('dashboard');
+        const adminDashboardDiv = document.getElementById('adminDashboard');
         const statusMessageDiv = document.getElementById('statusMessage');
         const videoElement = document.getElementById('videoElement');
         const scanVideoElement = document.getElementById('scanVideoElement');
@@ -975,11 +1233,12 @@
         }
 
         function showPage(pageId) {
-            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv].forEach(p => {
-                p.classList.add('hidden');
+            [loginPageDiv, accountRegistrationPageDiv, faceRegistrationPageDiv, dashboardDiv, adminDashboardDiv].forEach(p => {
+                if (p) p.classList.add('hidden');
             });
             
-            document.getElementById(pageId).classList.remove('hidden');
+            const page = document.getElementById(pageId);
+            if (page) page.classList.remove('hidden');
             
             stopCamera();
             hideStatusMessage();
@@ -996,7 +1255,6 @@
         async function startCamera(videoEl) {
             stopCamera();
             try {
-                // Force portrait mode for mobile
                 const constraints = {
                     video: {
                         facingMode: 'user',
@@ -1012,7 +1270,6 @@
                     isPortraitMode = orientation.includes('portrait');
                     
                     if (isPortraitMode) {
-                        // Swap dimensions for portrait
                         constraints.video.width = { ideal: 480 };
                         constraints.video.height = { ideal: 640 };
                     }
@@ -1021,7 +1278,6 @@
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoEl.srcObject = videoStream;
                 
-                // Wait for video metadata to load
                 await new Promise((resolve) => {
                     videoEl.onloadedmetadata = () => {
                         videoEl.play().catch(console.error);
@@ -1083,23 +1339,19 @@
             const containerWidth = videoEl.clientWidth;
             const containerHeight = videoEl.clientHeight;
             
-            // Calculate aspect ratios
             const videoAspectRatio = videoWidth / videoHeight;
             const containerAspectRatio = containerWidth / containerHeight;
             
             let displayWidth, displayHeight;
             
             if (containerAspectRatio > videoAspectRatio) {
-                // Container is wider than video
                 displayHeight = containerHeight;
                 displayWidth = videoAspectRatio * displayHeight;
             } else {
-                // Container is taller than video
                 displayWidth = containerWidth;
                 displayHeight = displayWidth / videoAspectRatio;
             }
             
-            // Calculate offsets for centering
             const offsetX = (containerWidth - displayWidth) / 2;
             const offsetY = (containerHeight - displayHeight) / 2;
             
@@ -1116,9 +1368,6 @@
         }
 
         function adjustFaceBoxForPortrait(box, dims) {
-            // Face-api returns coordinates based on video dimensions
-            // We need to adjust for portrait display
-            
             const adjustedBox = {
                 x: box.x * dims.scaleX + dims.offsetX,
                 y: box.y * dims.scaleY + dims.offsetY,
@@ -1150,7 +1399,6 @@
                 isClockedIn = !!todayAttendance.clockIn;
                 isClockedOut = !!todayAttendance.clockOut;
                 
-                // Update attendance status dengan gaya baru
                 if (isClockedIn && !isClockedOut) {
                     attendanceStatusValue.textContent = 'Telah Clock In';
                     attendanceStatusValue.className = 'attendance-status-value warning';
@@ -1258,7 +1506,7 @@
             
             livenessInstructions.textContent = 'Sila senyum untuk pengesahan...';
             
-            // Face detection interval - FIXED FOR PORTRAIT
+            // Face detection interval
             let faceDetectionInterval = setInterval(async () => {
                 const videoEl = scanVideoElement;
                 const dims = getVideoDimensions(videoEl);
@@ -1344,6 +1592,363 @@
             }
         }
 
+        // ========== ADMIN FUNCTIONS ==========
+        async function loadOfficeLocation() {
+            try {
+                const configRef = doc(db, 'artifacts', appId, 'config', 'office');
+                const configSnap = await getDoc(configRef);
+                
+                if (configSnap.exists()) {
+                    officeConfig = configSnap.data();
+                    document.getElementById('adminLatitude').value = officeConfig.latitude;
+                    document.getElementById('adminLongitude').value = officeConfig.longitude;
+                    document.getElementById('adminTolerance').value = officeConfig.tolerance;
+                    
+                    // Update global variables
+                    officeCoordinates = {
+                        latitude: officeConfig.latitude,
+                        longitude: officeConfig.longitude
+                    };
+                    locationTolerance = officeConfig.tolerance;
+                }
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+
+        async function saveOfficeLocation() {
+            const latitude = parseFloat(document.getElementById('adminLatitude').value);
+            const longitude = parseFloat(document.getElementById('adminLongitude').value);
+            const tolerance = parseInt(document.getElementById('adminTolerance').value);
+            
+            if (isNaN(latitude) || isNaN(longitude) || isNaN(tolerance)) {
+                showModal('Ralat Input', 'Sila masukkan nilai yang sah', 'error');
+                return;
+            }
+            
+            try {
+                const configRef = doc(db, 'artifacts', appId, 'config', 'office');
+                await setDoc(configRef, {
+                    latitude,
+                    longitude,
+                    tolerance,
+                    updatedBy: userId,
+                    updatedAt: new Date()
+                }, { merge: true });
+                
+                // Log perubahan
+                const logRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
+                await addDoc(logRef, {
+                    latitude,
+                    longitude,
+                    tolerance,
+                    updatedBy: userId,
+                    updatedAt: new Date()
+                });
+                
+                // Update global
+                officeCoordinates = { latitude, longitude };
+                locationTolerance = tolerance;
+                
+                showNotification('Lokasi dikemaskini', new Date().toLocaleTimeString(), 'success');
+                loadLocationLogs();
+            } catch (error) {
+                showModal('Ralat', 'Gagal menyimpan lokasi', 'error');
+            }
+        }
+
+        async function loadLocationLogs() {
+            try {
+                const logsRef = collection(db, 'artifacts', appId, 'config', 'office', 'logs');
+                const logsSnap = await getDocs(logsRef);
+                
+                const tbody = document.getElementById('adminLocationLogBody');
+                tbody.innerHTML = '';
+                
+                const sortedLogs = logsSnap.docs.sort((a, b) => {
+                    return b.data().updatedAt?.toDate() - a.data().updatedAt?.toDate();
+                });
+                
+                sortedLogs.forEach(logDoc => {
+                    const log = logDoc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${log.updatedAt?.toDate().toLocaleString() || '-'}</td>
+                        <td>${log.latitude?.toFixed(6)}, ${log.longitude?.toFixed(6)}</td>
+                        <td>${log.tolerance}m</td>
+                        <td>${log.updatedBy || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                if (sortedLogs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500">Tiada rekod</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading logs:', error);
+            }
+        }
+
+        async function loadAllUsers() {
+            if (!isAdmin) return;
+            
+            try {
+                const usersRef = collection(db, 'artifacts', appId, 'users');
+                const snapshot = await getDocs(usersRef);
+                
+                allUsers = [];
+                const tbody = document.getElementById('adminUsersTableBody');
+                tbody.innerHTML = '';
+                
+                for (const userDoc of snapshot.docs) {
+                    const userId = userDoc.id;
+                    const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                    const profileSnap = await getDoc(profileRef);
+                    
+                    if (profileSnap.exists()) {
+                        const userData = profileSnap.data();
+                        allUsers.push({
+                            id: userId,
+                            ...userData
+                        });
+                        
+                        const row = document.createElement('tr');
+                        const faceStatus = userData.faceDescriptor ? 
+                            '<span class="status-badge success">Didaftar</span>' : 
+                            '<span class="status-badge warning">Belum</span>';
+                        
+                        row.innerHTML = `
+                            <td>${userData.name || '-'}</td>
+                            <td>${userData.email || '-'}</td>
+                            <td>${userData.department || '-'}</td>
+                            <td><span class="status-badge ${userData.role === 'admin' ? 'success' : ''}">${userData.role || 'user'}</span></td>
+                            <td>${faceStatus}</td>
+                            <td>
+                                <button class="text-blue-400 hover:text-blue-300 mx-1" onclick="editUser('${userId}')">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300 mx-1" onclick="deleteUser('${userId}')">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                                <button class="text-green-400 hover:text-green-300 mx-1" onclick="resetUserFace('${userId}')">
+                                    <span class="material-symbols-outlined text-sm">face</span>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                }
+                
+                // Update statistik
+                updateAdminStats();
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showModal('Ralat', 'Gagal memuat senarai pengguna', 'error');
+            }
+        }
+
+        function updateAdminStats() {
+            const total = allUsers.length;
+            const faceRegistered = allUsers.filter(u => u.faceDescriptor).length;
+            
+            document.getElementById('adminTotalUsers').textContent = total;
+            document.getElementById('adminFaceRegistered').textContent = faceRegistered;
+            
+            // Isi dropdown laporan
+            const select = document.getElementById('adminReportUserSelect');
+            select.innerHTML = '<option value="all">SEMUA PENGGUNA</option>';
+            allUsers.forEach(user => {
+                select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
+            });
+        }
+
+        window.editUser = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            document.getElementById('adminEditUserId').value = userId;
+            document.getElementById('adminEditName').value = user.name || '';
+            document.getElementById('adminEditEmail').value = user.email || '';
+            document.getElementById('adminEditDepartment').value = user.department || '';
+            document.getElementById('adminEditRole').value = user.role || 'user';
+            
+            document.getElementById('adminEditUserModal').style.display = 'flex';
+        };
+
+        window.hideAdminEditModal = function() {
+            document.getElementById('adminEditUserModal').style.display = 'none';
+        };
+
+        window.deleteUser = async function(userId) {
+            if (!confirm('Anda pasti mahu padam pengguna ini? Data kehadiran akan turut dipadam.')) return;
+            
+            try {
+                // Delete user profile
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'));
+                
+                // Delete all attendance records
+                const attendanceRef = collection(db, 'artifacts', appId, 'users', userId, 'attendance');
+                const attendanceSnap = await getDocs(attendanceRef);
+                attendanceSnap.forEach(async (doc) => {
+                    await deleteDoc(doc.ref);
+                });
+                
+                // If admin, delete admin record
+                await deleteDoc(doc(db, 'artifacts', appId, 'admin', userId)).catch(() => {});
+                
+                showNotification('Pengguna dipadam', new Date().toLocaleTimeString(), 'success');
+                loadAllUsers();
+            } catch (error) {
+                showModal('Ralat', 'Gagal memadam pengguna', 'error');
+            }
+        };
+
+        window.resetUserFace = async function(userId) {
+            if (!confirm('Reset pendaftaran wajah untuk pengguna ini?')) return;
+            
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), 
+                    { faceDescriptor: null }, { merge: true });
+                showNotification('Wajah direset', new Date().toLocaleTimeString(), 'success');
+                loadAllUsers();
+            } catch (error) {
+                showModal('Ralat', 'Gagal reset wajah', 'error');
+            }
+        };
+
+        async function generateAdminPDF() {
+            const startDate = document.getElementById('adminReportStartDate').value;
+            const endDate = document.getElementById('adminReportEndDate').value;
+            const selectedUser = document.getElementById('adminReportUserSelect').value;
+            
+            if (!startDate || !endDate) {
+                showModal('Ralat', 'Sila pilih tarikh', 'error');
+                return;
+            }
+            
+            try {
+                const doc = new jsPDF({
+                    format: 'a4',
+                    unit: 'mm'
+                });
+                
+                let allData = [];
+                
+                if (selectedUser === 'all') {
+                    // Loop semua pengguna
+                    for (const user of allUsers) {
+                        const q = query(
+                            collection(db, 'artifacts', appId, 'users', user.id, 'attendance'),
+                            where('__name__', '>=', startDate),
+                            where('__name__', '<=', endDate)
+                        );
+                        const snap = await getDocs(q);
+                        
+                        snap.docs.forEach(docSnap => {
+                            allData.push({
+                                userName: user.name,
+                                department: user.department,
+                                date: docSnap.id,
+                                ...docSnap.data()
+                            });
+                        });
+                    }
+                } else {
+                    const q = query(
+                        collection(db, 'artifacts', appId, 'users', selectedUser, 'attendance'),
+                        where('__name__', '>=', startDate),
+                        where('__name__', '<=', endDate)
+                    );
+                    const snap = await getDocs(q);
+                    const user = allUsers.find(u => u.id === selectedUser);
+                    
+                    snap.docs.forEach(docSnap => {
+                        allData.push({
+                            userName: user?.name || 'Unknown',
+                            department: user?.department || '-',
+                            date: docSnap.id,
+                            ...docSnap.data()
+                        });
+                    });
+                }
+                
+                // Generate PDF
+                let y = 20;
+                doc.setFontSize(16);
+                doc.text('LAPORAN KEHADIRAN - JIM', 105, y, { align: 'center' });
+                
+                y += 10;
+                doc.setFontSize(10);
+                doc.text(`Tempoh: ${startDate} hingga ${endDate}`, 20, y);
+                y += 5;
+                doc.text(`Dijana pada: ${new Date().toLocaleString()}`, 20, y);
+                
+                y += 10;
+                
+                // Table headers
+                const headers = ['Nama', 'Jabatan', 'Tarikh', 'Masuk', 'Keluar', 'Jam', 'OT'];
+                const colWidths = [40, 30, 30, 25, 25, 20, 20];
+                
+                doc.setFont('helvetica', 'bold');
+                let x = 20;
+                headers.forEach((header, i) => {
+                    doc.rect(x, y, colWidths[i], 8);
+                    doc.text(header, x + 2, y + 5);
+                    x += colWidths[i];
+                });
+                
+                y += 8;
+                doc.setFont('helvetica', 'normal');
+                
+                allData.sort((a, b) => a.date.localeCompare(b.date));
+                
+                allData.forEach(item => {
+                    if (y > 280) {
+                        doc.addPage();
+                        y = 20;
+                        
+                        // Redraw headers on new page
+                        x = 20;
+                        doc.setFont('helvetica', 'bold');
+                        headers.forEach((header, i) => {
+                            doc.rect(x, y, colWidths[i], 8);
+                            doc.text(header, x + 2, y + 5);
+                            x += colWidths[i];
+                        });
+                        y += 8;
+                        doc.setFont('helvetica', 'normal');
+                    }
+                    
+                    x = 20;
+                    const rowData = [
+                        item.userName?.substring(0, 15) || '-',
+                        item.department?.substring(0, 10) || '-',
+                        item.date,
+                        item.clockIn?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
+                        item.clockOut?.toDate().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) || '-',
+                        item.totalHours ? item.totalHours.toFixed(1) : '-',
+                        item.totalOT ? item.totalOT.toFixed(1) : '-'
+                    ];
+                    
+                    rowData.forEach((text, i) => {
+                        doc.rect(x, y, colWidths[i], 8);
+                        doc.text(text.toString(), x + 2, y + 5);
+                        x += colWidths[i];
+                    });
+                    
+                    y += 8;
+                });
+                
+                doc.save(`Laporan_Admin_${startDate}_to_${endDate}.pdf`);
+                showNotification('Laporan dijana', new Date().toLocaleTimeString(), 'success');
+                
+            } catch (error) {
+                console.error('Admin PDF error:', error);
+                showModal('Ralat', 'Gagal menjana laporan', 'error');
+            }
+        }
+
         // ========== MAIN HANDLERS ==========
         window.handleAccountRegistration = async function() {
             const name = document.getElementById('registerNameInput').value.trim();
@@ -1365,9 +1970,29 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 userId = userCredential.user.uid;
                 
+                // Tentukan role (admin vs user biasa)
+                let role = 'user';
+                const adminEmails = ['admin@jim.gov.my', 'ketua@jim.gov.my']; // Senarai email admin
+                
+                if (adminEmails.includes(email.toLowerCase())) {
+                    role = 'admin';
+                    
+                    // Buat entri khas untuk admin
+                    await setDoc(doc(db, 'artifacts', appId, 'admin', userId), {
+                        email: email,
+                        name: name,
+                        role: 'super_admin',
+                        createdAt: new Date()
+                    });
+                    
+                    showNotification('Akaun ADMIN berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
+                }
+                
                 await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
                     name, 
                     department, 
+                    email,
+                    role: role,
                     faceDescriptor: null, 
                     createdAt: new Date()
                 });
@@ -1475,7 +2100,13 @@
                 createFaceMatcher(JSON.stringify(faceDescriptor));
                 showNotification('Wajah berjaya didaftarkan!', new Date().toLocaleTimeString(), 'success');
                 
-                setTimeout(() => showPage('dashboard'), 1500);
+                setTimeout(() => {
+                    if (isAdmin) {
+                        showPage('adminDashboard');
+                    } else {
+                        showPage('dashboard');
+                    }
+                }, 1500);
             } catch (error) {
                 showStatusMessage('Gagal menyimpan data wajah', 'error');
             } finally {
@@ -1645,183 +2276,173 @@
             });
         }
 
-window.generatePDF = async function() {
-    const startDateStr = startDateInput.value;
-    const endDateStr = endDateInput.value;
+        window.generatePDF = async function() {
+            const startDateStr = startDateInput.value;
+            const endDateStr = endDateInput.value;
 
-    if (!startDateStr || !endDateStr) {
-        showModal('Ralat Input', 'Sila masukkan tarikh mula dan tamat.', 'error');
-        return;
-    }
-
-    const start = new Date(startDateStr);
-    const end = new Date(endDateStr);
-
-    if (start > end) {
-        showModal('Ralat Tarikh', 'Tarikh mula tidak boleh lepas tarikh tamat.', 'error');
-        return;
-    }
-
-    try {
-        // Dapatkan data dari Firebase
-        const q = query(
-            collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
-            where('__name__', '>=', startDateStr),
-            where('__name__', '<=', endDateStr)
-        );
-        const snap = await getDocs(q);
-        
-        // Buat peta untuk akses pantas data berdasarkan tarikh
-        const dataMap = {};
-        snap.docs.forEach(docSnap => {
-            const data = docSnap.data();
-            const dateId = docSnap.id; // Format: YYYY-MM-DD
-            dataMap[dateId] = {
-                clockIn: data.clockIn,
-                clockOut: data.clockOut,
-                totalHours: data.totalHours,
-                totalOT: data.totalOT,
-                date: data.date
-            };
-        });
-
-        // Debug: log data yang diperoleh
-        console.log('Data dari Firebase:', dataMap);
-        console.log('Julat tarikh:', startDateStr, 'hingga', endDateStr);
-        
-        const doc = new jsPDF({
-            format: 'a4',
-            unit: 'mm'
-        });
-
-        doc.setFont('times', 'normal');
-        
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const tableWidth = 180;
-        const tableMarginX = (pageWidth - tableWidth) / 2;
-        const rowHeight = 6;
-        const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
-        const colWidths = [30, 30, 30, 30, 30, 30];
-
-        let y = 20;
-
-        doc.setFontSize(14);
-        doc.setFont('times', 'bold');
-        const title = 'Total Time Card';
-        const titleWidth = doc.getTextWidth(title);
-        doc.text(title, (pageWidth - titleWidth) / 2, y);
-
-        y += 10;
-        doc.setFontSize(10);
-        doc.setFont('times', 'normal');
-        doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
-        y += 5;
-        doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
-
-        y += 10;
-        doc.setFont('times', 'bold');
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.2);
-        
-        let x = tableMarginX;
-        headers.forEach((header, i) => {
-            doc.rect(x, y, colWidths[i], rowHeight);
-            doc.text(header, x + 2, y + 4);
-            x += colWidths[i];
-        });
-        
-        y += rowHeight;
-        doc.setFont('times', 'normal');
-        let totalHoursDecimal = 0;
-        let totalOTDecimal = 0;
-        
-        // Loop melalui setiap hari dalam julat
-        const currentDate = new Date(start);
-        while (currentDate <= end) {
-            const dateString = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-            const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-            
-            // Semak jika ada data untuk tarikh ini
-            const record = dataMap[dateString] || null;
-            
-            let clockInText = '';
-            let clockOutText = '';
-            let hoursText = '';
-            let otText = '';
-            
-            if (record) {
-                // Format masa untuk Clock In
-                if (record.clockIn) {
-                    const clockInTime = record.clockIn.toDate();
-                    clockInText = clockInTime.toLocaleTimeString('en-GB', { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: false 
-                    });
-                }
-                
-                // Format masa untuk Clock Out
-                if (record.clockOut) {
-                    const clockOutTime = record.clockOut.toDate();
-                    clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: false 
-                    });
-                }
-                
-                // Format jumlah jam dan OT
-                if (record.totalHours !== undefined && record.totalHours !== null) {
-                    hoursText = formatDecimalToTime(record.totalHours);
-                    totalHoursDecimal += record.totalHours;
-                }
-                
-                if (record.totalOT !== undefined && record.totalOT !== null) {
-                    otText = formatDecimalToTime(record.totalOT);
-                    totalOTDecimal += record.totalOT;
-                }
+            if (!startDateStr || !endDateStr) {
+                showModal('Ralat Input', 'Sila masukkan tarikh mula dan tamat.', 'error');
+                return;
             }
-            
-            // Tambah baris ke PDF
-            x = tableMarginX;
-            const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
-            
-            rowData.forEach((text, i) => {
-                doc.rect(x, y, colWidths[i], rowHeight);
-                doc.text(text, x + 2, y + 4);
-                x += colWidths[i];
-            });
-            
-            y += rowHeight;
-            currentDate.setDate(currentDate.getDate() + 1); // Hari berikutnya
-        }
 
-        // Baris Statistik dalam jadual
-        doc.setFont('times', 'bold');
-        doc.rect(tableMarginX, y, tableWidth, rowHeight);
-        
-        // Kolom pertama: "Statistic"
-        doc.text('Statistic', tableMarginX + 2, y + 4);
-        
-        // Kolom "Total Hours" (kolom ke-5): jumlah jam
-        const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
-        doc.text(totalHoursFormatted, 
-            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
-            y + 4);
-        
-        // Kolom "Total OT" (kolom ke-6): jumlah OT
-        const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
-        doc.text(totalOTFormatted, 
-            tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
-            y + 4);
-        
-        doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
-        showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
-    } catch (error) {
-        console.error('PDF error:', error);
-        showModal('Ralat PDF', 'Gagal menjana laporan.', 'error');
-    }
-};
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+
+            if (start > end) {
+                showModal('Ralat Tarikh', 'Tarikh mula tidak boleh lepas tarikh tamat.', 'error');
+                return;
+            }
+
+            try {
+                // Dapatkan data dari Firebase
+                const q = query(
+                    collection(db, 'artifacts', appId, 'users', userId, 'attendance'),
+                    where('__name__', '>=', startDateStr),
+                    where('__name__', '<=', endDateStr)
+                );
+                const snap = await getDocs(q);
+                
+                // Buat peta untuk akses pantas data berdasarkan tarikh
+                const dataMap = {};
+                snap.docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dateId = docSnap.id;
+                    dataMap[dateId] = {
+                        clockIn: data.clockIn,
+                        clockOut: data.clockOut,
+                        totalHours: data.totalHours,
+                        totalOT: data.totalOT,
+                        date: data.date
+                    };
+                });
+
+                const doc = new jsPDF({
+                    format: 'a4',
+                    unit: 'mm'
+                });
+
+                doc.setFont('times', 'normal');
+                
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const tableWidth = 180;
+                const tableMarginX = (pageWidth - tableWidth) / 2;
+                const rowHeight = 6;
+                const headers = ["Date", "Weekday", "Clock In", "Clock Out", "Total Hours", "Total OT"];
+                const colWidths = [30, 30, 30, 30, 30, 30];
+
+                let y = 20;
+
+                doc.setFontSize(14);
+                doc.setFont('times', 'bold');
+                const title = 'Total Time Card';
+                const titleWidth = doc.getTextWidth(title);
+                doc.text(title, (pageWidth - titleWidth) / 2, y);
+
+                y += 10;
+                doc.setFontSize(10);
+                doc.setFont('times', 'normal');
+                doc.text(`Start Date ${startDateStr} End Date ${endDateStr}`, tableMarginX, y);
+                y += 5;
+                doc.text(`First Name: ${userData?.name || 'Pengguna'}, Department: ${userData?.department || 'Tiada'}`, tableMarginX, y);
+
+                y += 10;
+                doc.setFont('times', 'bold');
+                doc.setDrawColor(0);
+                doc.setLineWidth(0.2);
+                
+                let x = tableMarginX;
+                headers.forEach((header, i) => {
+                    doc.rect(x, y, colWidths[i], rowHeight);
+                    doc.text(header, x + 2, y + 4);
+                    x += colWidths[i];
+                });
+                
+                y += rowHeight;
+                doc.setFont('times', 'normal');
+                let totalHoursDecimal = 0;
+                let totalOTDecimal = 0;
+                
+                // Loop melalui setiap hari dalam julat
+                const currentDate = new Date(start);
+                while (currentDate <= end) {
+                    const dateString = currentDate.toISOString().slice(0, 10);
+                    const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+                    
+                    // Semak jika ada data untuk tarikh ini
+                    const record = dataMap[dateString] || null;
+                    
+                    let clockInText = '';
+                    let clockOutText = '';
+                    let hoursText = '';
+                    let otText = '';
+                    
+                    if (record) {
+                        if (record.clockIn) {
+                            const clockInTime = record.clockIn.toDate();
+                            clockInText = clockInTime.toLocaleTimeString('en-GB', { 
+                                hour: '2-digit', 
+                                minute: '2-digit', 
+                                hour12: false 
+                            });
+                        }
+                        
+                        if (record.clockOut) {
+                            const clockOutTime = record.clockOut.toDate();
+                            clockOutText = clockOutTime.toLocaleTimeString('en-GB', { 
+                                hour: '2-digit', 
+                                minute: '2-digit', 
+                                hour12: false 
+                            });
+                        }
+                        
+                        if (record.totalHours !== undefined && record.totalHours !== null) {
+                            hoursText = formatDecimalToTime(record.totalHours);
+                            totalHoursDecimal += record.totalHours;
+                        }
+                        
+                        if (record.totalOT !== undefined && record.totalOT !== null) {
+                            otText = formatDecimalToTime(record.totalOT);
+                            totalOTDecimal += record.totalOT;
+                        }
+                    }
+                    
+                    // Tambah baris ke PDF
+                    x = tableMarginX;
+                    const rowData = [dateString, weekday, clockInText, clockOutText, hoursText, otText];
+                    
+                    rowData.forEach((text, i) => {
+                        doc.rect(x, y, colWidths[i], rowHeight);
+                        doc.text(text, x + 2, y + 4);
+                        x += colWidths[i];
+                    });
+                    
+                    y += rowHeight;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                // Baris Statistik dalam jadual
+                doc.setFont('times', 'bold');
+                doc.rect(tableMarginX, y, tableWidth, rowHeight);
+                
+                doc.text('Statistic', tableMarginX + 2, y + 4);
+                
+                const totalHoursFormatted = formatDecimalToTime(totalHoursDecimal);
+                doc.text(totalHoursFormatted, 
+                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, 
+                    y + 4);
+                
+                const totalOTFormatted = formatDecimalToTime(totalOTDecimal);
+                doc.text(totalOTFormatted, 
+                    tableMarginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, 
+                    y + 4);
+                
+                doc.save(`Laporan_Kehadiran_${startDateStr}_to_${endDateStr}.pdf`);
+                showNotification('Laporan berjaya dijana!', new Date().toLocaleTimeString(), 'success');
+            } catch (error) {
+                console.error('PDF error:', error);
+                showModal('Ralat PDF', 'Gagal menjana laporan.', 'error');
+            }
+        };
 
         // ========== INITIALIZATION ==========
         window.onload = async function() {
@@ -1836,6 +2457,10 @@ window.generatePDF = async function() {
                 startDateInput.value = firstDay.toISOString().split('T')[0];
                 endDateInput.value = lastDay.toISOString().split('T')[0];
                 
+                // Admin report default dates
+                document.getElementById('adminReportStartDate').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('adminReportEndDate').value = lastDay.toISOString().split('T')[0];
+                
                 // Modal events
                 modalCancelBtn.addEventListener('click', hideModal);
                 modalOkBtn.addEventListener('click', hideModal);
@@ -1849,9 +2474,20 @@ window.generatePDF = async function() {
                         userId = user.uid;
                         const userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
                         const snap = await getDoc(userDocRef);
+                        
+                        // Check if admin
+                        const adminRef = doc(db, 'artifacts', appId, 'admin', userId);
+                        const adminSnap = await getDoc(adminRef);
+                        isAdmin = adminSnap.exists();
+                        
+                        // Show/hide admin button
+                        document.getElementById('adminPanelBtn').style.display = isAdmin ? 'flex' : 'none';
 
                         if (snap.exists()) {
                             userData = snap.data();
+                            
+                            // Load office config
+                            await loadOfficeLocation();
                             
                             if (userData.faceDescriptor) {
                                 try {
@@ -1877,11 +2513,24 @@ window.generatePDF = async function() {
                                 updateAttendanceTable(data);
                             });
 
-                            if (!isFaceRegistered) {
-                                showPage('faceRegistrationPage');
+                            if (isAdmin) {
+                                // Load admin dashboard data
+                                loadAllUsers();
+                                loadLocationLogs();
+                                
+                                if (!isFaceRegistered) {
+                                    showPage('faceRegistrationPage');
+                                } else {
+                                    showPage('dashboard');
+                                    handleGeolocationCheck();
+                                }
                             } else {
-                                showPage('dashboard');
-                                handleGeolocationCheck();
+                                if (!isFaceRegistered) {
+                                    showPage('faceRegistrationPage');
+                                } else {
+                                    showPage('dashboard');
+                                    handleGeolocationCheck();
+                                }
                             }
                         } else {
                             showPage('faceRegistrationPage');
@@ -1908,6 +2557,79 @@ window.generatePDF = async function() {
             document.getElementById('clockOutBtn').addEventListener('click', window.handleClockOut);
             document.getElementById('generatePdfBtn').addEventListener('click', window.generatePDF);
             document.getElementById('signOutBtn').addEventListener('click', window.handleSignOut);
+            
+            // Admin panel button
+            document.getElementById('adminPanelBtn').addEventListener('click', () => {
+                showPage('adminDashboard');
+                loadAllUsers();
+                loadLocationLogs();
+            });
+
+            // Admin tabs
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.admin-tab').forEach(t => {
+                        t.classList.remove('border-blue-500', 'text-blue-400');
+                        t.classList.add('text-gray-400');
+                    });
+                    tab.classList.add('border-blue-500', 'text-blue-400');
+                    tab.classList.remove('text-gray-400');
+                    
+                    const tabName = tab.dataset.tab;
+                    document.querySelectorAll('.admin-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`admin${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`).classList.remove('hidden');
+                });
+            });
+
+            // Save user edit
+            document.getElementById('adminSaveUserBtn').addEventListener('click', async () => {
+                const userId = document.getElementById('adminEditUserId').value;
+                const name = document.getElementById('adminEditName').value;
+                const email = document.getElementById('adminEditEmail').value;
+                const department = document.getElementById('adminEditDepartment').value;
+                const role = document.getElementById('adminEditRole').value;
+                
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), {
+                        name, email, department, role
+                    }, { merge: true });
+                    
+                    if (role === 'admin') {
+                        await setDoc(doc(db, 'artifacts', appId, 'admin', userId), {
+                            email, name, updatedAt: new Date()
+                        }, { merge: true });
+                    } else {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'admin', userId)).catch(() => {});
+                    }
+                    
+                    hideAdminEditModal();
+                    loadAllUsers();
+                    showNotification('Pengguna dikemaskini', new Date().toLocaleTimeString(), 'success');
+                } catch (error) {
+                    showModal('Ralat', 'Gagal menyimpan', 'error');
+                }
+            });
+
+            // Save location
+            document.getElementById('adminSaveLocationBtn').addEventListener('click', saveOfficeLocation);
+
+            // Admin PDF
+            document.getElementById('adminGeneratePdfBtn').addEventListener('click', generateAdminPDF);
+
+            // Search users
+            document.getElementById('adminSearchUser').addEventListener('input', (e) => {
+                const search = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#adminUsersTableBody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(search) ? '' : 'none';
+                });
+            });
+
+            // Refresh users
+            document.getElementById('adminRefreshUsers').addEventListener('click', loadAllUsers);
             
             // Enter key support for login
             document.getElementById('loginEmailInput')?.addEventListener('keypress', (e) => {
@@ -1937,9 +2659,7 @@ window.generatePDF = async function() {
                 window.screen.orientation.addEventListener('change', () => {
                     setTimeout(() => {
                         if (document.getElementById('dashboard') && !document.getElementById('dashboard').classList.contains('hidden')) {
-                            // Refresh video display if on dashboard
                             if (scanVideoElement.srcObject) {
-                                const stream = scanVideoElement.srcObject;
                                 stopCamera();
                                 setTimeout(() => {
                                     startCamera(scanVideoElement);
